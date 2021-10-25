@@ -8,5 +8,5 @@ devel
 .viminfo
 .catkin_workspace  
 install
-rosserial/
-libraries/
+rosserial
+libraries
