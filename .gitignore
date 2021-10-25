@@ -1,3 +1,10 @@
 build
 devel
+.ros
+.cache                          
+.rviz
+.config
+.python_history                  
+.viminfo
+
 
