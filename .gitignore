@@ -6,5 +6,6 @@ devel
 .config
 .python_history                  
 .viminfo
-
+.catkin_workspace  
+install
 
