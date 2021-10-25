@@ -9,4 +9,4 @@ devel
 .catkin_workspace  
 install
 rosserial/
-libraries/*
+libraries/
