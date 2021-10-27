@@ -1,71 +1,20 @@
 /*
+  
   Receive 6 servo angle values from ESP 8266 through wifi at a time, 
   then issue control of 6 Servo Motors
   Author: Rico Ruotong Jia, 2021
+  BSD license, all text above must be included in any redistribution
 */
-#include <Wire.h>
-#include <Adafruit_PWMServoDriver.h>
 #include <ros.h>  // must before message declaration
 #include <rjje_arm/MotionControl.h>
+#include "servo_control.h"
 
-#define SERVO_FREQ 50
-#define SERVO_MIN 120
-#define SERVO_MAX 480
-#define SERVO_MAX_ANGULAR_VEL 10  //10 degrees/second
-
-const double MAX_ANGULAR_INCREMENT = SERVO_MAX_ANGULAR_VEL/SERVO_FREQ; 
-
-int sign(double i){
-  if (i == 0) return 0; 
-  else if (i < 0) return -1; 
-  else return 1;
-}
-
-struct Motor{
-  // In robotics a common convention is the right-hand rotation, which defines the positive direction of rotation is counter-clockwise of positive z-axis. 
-  // Below all angles follow the right-hand convention 
-  double min_angle_ = 0;  
-  double max_angle_ = 180;   
-  // In my setup, all motors have the neutral position at 90
-  double neutral_angle_=90;   
-  double last_angle_ = neutral_angle_;
-  double offset_=0;   //offset should is added on commanded_angle
-  // Therefore we need to "flip" the angle about the neutral position if necessary.
-  bool is_claw_ = false;
-  bool flip_rotation_ = false;   
-
-  /**
-  * @brief: For claw, commanded_angle is the commanded angle between two fingers.
-  * @param: commanded_angle: angle commanded by the motion controller
-  * @return: angle to be executed on servo after neccesary conversion. 
-            -1 if the commanded_angle exceeds angle limits
-  */
-  double get_real_angle (double commanded_angle){
-     if (is_claw_){
-         double rotation_angle = commanded_angle/2;
-         if (min_angle_ <= rotation_angle && rotation_angle <= max_angle_){
-            return max_angle_-rotation_angle - 10;    //offset is 10, due to mislignment of rudder and finger 
-         }
-         else return -1; 
-     }
-     else{
-       commanded_angle += offset_; 
-       double real_angle = (flip_rotation_) ? 180 - commanded_angle : commanded_angle;
-       if (min_angle_ <= real_angle && real_angle <= max_angle_){
-         real_angle = last_angle_ + 0.5*(real_angle - last_angle_) ; 
-         last_angle_ = real_angle;
-         return real_angle; 
-       }
-       else{
-         return -1;
-       }
-     }
-  }
-}; 
+static const int DELAY = 1000/UPDATE_FREQUENCY;
+static double step_angle = 0.6;   //deg
 
 // Declarations
-Motor motors[6]; 
-double commanded_angles[6] = {90, 90, 90, 90, 90, 120};
+static Motor motors[6]; 
+static double commanded_angles[6] = {90, 90, 90, 90, 90, 120};
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40); 
 ros::NodeHandle nh; 
 
@@ -77,42 +26,10 @@ void sub_cb(const rjje_arm::MotionControl& motion_control_msg){
 
 ros::Subscriber<rjje_arm::MotionControl> sub("/motion_control_msg", sub_cb); 
 
-void set_angle(const double& real_angle, const short& channel_id){
-    int pulselength = map(real_angle, 0, 180, SERVO_MIN, SERVO_MAX);
-    pwm.setPWM(channel_id, 0, pulselength);
-}
 
-//==============================================================================
-void stop_arm(){
-    double degrees[6] = {90, 90, 90, 90, 90, 120};
-    for (unsigned int channel_id = 0; channel_id < 4; ++channel_id){
-      int pulselength = map(degrees[channel_id], 0, 180, SERVO_MIN, SERVO_MAX);
-      pwm.setPWM(channel_id, 0, pulselength);
-    }
-    Serial.println("RJJE Arm Stopped");
-}
-
-double step_angle = 0.6;   //deg
-const int UPDATE_FREQUENCY = 100;
-const int DELAY = 1000/UPDATE_FREQUENCY;
-void test_arm(){
-    static double degrees[6] = {90, 90, 90, 30, 90, 120};
-    for (unsigned int channel_id = 0; channel_id < 6; ++channel_id){
-        commanded_angles[channel_id] += sign(degrees[channel_id] - commanded_angles[channel_id]) * step_angle;
-        double real_angle = motors[channel_id].get_real_angle(commanded_angles[channel_id]);
-        if (real_angle != -1){
-            set_angle(real_angle, channel_id);
-        }
-    }
-    /* Serial.println(String(commanded_angles[3])); */
-}
-
-//==============================================================================
 void setup(){  
-  Serial.begin(19200);
+  /* Serial.begin(19200); //comment out ros node stuff if using this */
   pwm.begin();
-  // Tune oscillator frequency until the output PWM is around 50Hz, 
-  // maybe using an oscilloscope
   pwm.setOscillatorFrequency(27000000);
   pwm.setPWMFreq(SERVO_FREQ);  // Analog servos run at ~50 Hz updates
   delay(20); 
@@ -142,32 +59,22 @@ void setup(){
   motors[2].flip_rotation_ = true; 
   motors[2].offset_ = 5; 
   motors[3].flip_rotation_ = true; 
-  motors[3].offset_ = 5; 
+  motors[3].offset_ = 10; 
   motors[5].is_claw_ = true;
 
-  //TODO
-  /* nh.initNode();  */
-  /* nh.subscribe(sub);  */
+  nh.initNode(); 
+  nh.subscribe(sub); 
 }
 
 void loop(){ 
     unsigned long start = millis();
+    /* back_to_neutral(motors, pwm); */
+    /* test_arm(commanded_angles, motors, step_angle, pwm); */
 
-    test_arm(); 
-    /* stop_arm(); */
-
-    /**
     for (unsigned int channel_id = 0; channel_id < 6; ++channel_id){
-        double real_angle = motors[channel_id].get_real_angle(commanded_angles[channel_id]);  
-        if (real_angle != -1){
-            set_angle(real_angle, channel_id); 
-        }
-        //Serial.println("channel_id" + String(channel_id) + "real angle: " + String(real_angle));
+        motors[channel_id].set_angle(commanded_angles[channel_id], channel_id, pwm);
     }
-    //TODO
-    // nh.loginfo("Program info");
     nh.spinOnce();
-    **/
 
     delay(DELAY + start - millis());
 }
