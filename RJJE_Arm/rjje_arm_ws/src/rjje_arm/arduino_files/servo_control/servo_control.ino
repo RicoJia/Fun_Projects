@@ -52,11 +52,6 @@ struct Motor{
        commanded_angle += offset_; 
        double real_angle = (flip_rotation_) ? 180 - commanded_angle : commanded_angle;
        if (min_angle_ <= real_angle && real_angle <= max_angle_){
-         /*
-         if (abs(real_angle-last_angle_) > 3.5){
-    real_angle = last_angle_ + sign(real_angle - last_angle_) * 3.5; 
-         }
-         */
          real_angle = last_angle_ + 0.5*(real_angle - last_angle_) ; 
          last_angle_ = real_angle;
          return real_angle; 
@@ -87,9 +82,35 @@ void set_angle(const double& real_angle, const short& channel_id){
     pwm.setPWM(channel_id, 0, pulselength);
 }
 
+//==============================================================================
+void stop_arm(){
+    double degrees[6] = {90, 90, 90, 90, 90, 120};
+    for (unsigned int channel_id = 0; channel_id < 4; ++channel_id){
+      int pulselength = map(degrees[channel_id], 0, 180, SERVO_MIN, SERVO_MAX);
+      pwm.setPWM(channel_id, 0, pulselength);
+    }
+    Serial.println("RJJE Arm Stopped");
+}
+
+double step_angle = 0.6;   //deg
+const int UPDATE_FREQUENCY = 100;
+const int DELAY = 1000/UPDATE_FREQUENCY;
+void test_arm(){
+    static double degrees[6] = {90, 90, 90, 30, 90, 120};
+    for (unsigned int channel_id = 0; channel_id < 6; ++channel_id){
+        commanded_angles[channel_id] += sign(degrees[channel_id] - commanded_angles[channel_id]) * step_angle;
+        double real_angle = motors[channel_id].get_real_angle(commanded_angles[channel_id]);
+        if (real_angle != -1){
+            set_angle(real_angle, channel_id);
+        }
+    }
+    /* Serial.println(String(commanded_angles[3])); */
+}
+
+//==============================================================================
 void setup(){  
+  Serial.begin(19200);
   pwm.begin();
-  //Serial.begin(9600);
   // Tune oscillator frequency until the output PWM is around 50Hz, 
   // maybe using an oscilloscope
   pwm.setOscillatorFrequency(27000000);
@@ -104,20 +125,6 @@ void setup(){
       motor 4: [0, 180] 
       motor 5[0, 130]
     */
-  /*
-  motors[0].min_angle_ = 5;
-  motors[0].max_angle_ = 170;
-  motors[1].min_angle_ = 5;
-  motors[1].max_angle_ = 170;
-  motors[2].min_angle_ = 35;
-  motors[3].max_angle_ = 170;
-  motors[3].min_angle_ = 10;
-  motors[3].max_angle_ = 180;
-  motors[4].min_angle_ = 0;
-  motors[4].max_angle_ = 180; 
-  motors[5].min_angle_ = 0;
-  motors[5].max_angle_ = 90;   // single finger can rotate 90 degrees max. So in total two fingers can be 180 degrees apart
-  */
   motors[0].min_angle_ = 0;
   motors[0].max_angle_ = 180;
   motors[1].min_angle_ = 0;
@@ -138,21 +145,18 @@ void setup(){
   motors[3].offset_ = 5; 
   motors[5].is_claw_ = true;
 
-  nh.initNode(); 
-  nh.subscribe(sub); 
-}
-
-void stop_arm(){
-    double degrees[5] = {80, 80, 80, 120, 80};
-    for (unsigned int channel_id = 0; channel_id < 4; ++channel_id){
-      int pulselength = map(degrees[channel_id], 0, 180, SERVO_MIN, SERVO_MAX);
-      pwm.setPWM(channel_id, 0, pulselength);
-    }
-    Serial.println("RJJE Arm Stopped");
+  //TODO
+  /* nh.initNode();  */
+  /* nh.subscribe(sub);  */
 }
 
 void loop(){ 
+    unsigned long start = millis();
 
+    test_arm(); 
+    /* stop_arm(); */
+
+    /**
     for (unsigned int channel_id = 0; channel_id < 6; ++channel_id){
         double real_angle = motors[channel_id].get_real_angle(commanded_angles[channel_id]);  
         if (real_angle != -1){
@@ -162,8 +166,8 @@ void loop(){
     }
     //TODO
     // nh.loginfo("Program info");
-
     nh.spinOnce();
-    // fresh frequency: 100hz
-    delay(20);
+    **/
+
+    delay(DELAY + start - millis());
 }
