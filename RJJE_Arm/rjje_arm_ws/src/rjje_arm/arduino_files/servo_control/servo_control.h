@@ -21,6 +21,15 @@ inline int sign(double i){
   else return 1;
 }
 
+/**
+* @brief: get 1 decimal place double. 
+* @param: num: pointer to the integer part of a received number
+* @return:  number in double after 1 decimal place double. 
+*/
+inline double array_to_double(const byte* num){
+   return num[0] + 0.1 * num[1];  
+}
+
 struct Motor{
   // In robotics a common convention is the right-hand rotation, which defines the positive direction of rotation is counter-clockwise of positive z-axis. 
   // Below all angles follow the right-hand convention 

@@ -10,27 +10,16 @@
 #include "servo_control.h"
 
 static const int DELAY = 1000/UPDATE_FREQUENCY;
-static double step_angle = 0.6;   //deg
 
 // Declarations
 static Motor motors[6]; 
-static double commanded_angles[6] = {90, 90, 90, 90, 90, 120};
-static double current_angles[6] = {90, 90, 90, 90, 90, 120};
+static byte commanded_angles[6] = {90, 90, 90, 90, 90, 120};
+static byte current_angles[6] = {90, 90, 90, 90, 90, 120};
+static double step_angles[24] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; 
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40); 
-ros::NodeHandle nh; 
-
-void srv_cb(const rjje_arm::MotionControlRequest& req, rjje_arm::MotionControlResponse& resp){
-    for (char channel_id = 0; channel_id < 6; ++channel_id){
-      commanded_angles[channel_id] = req.commanded_angles[channel_id]; 
-    }
-    nh.loginfo("received by rosserial");
-    // execute the join angles
-}
-
-ros::ServiceServer<rjje_arm::MotionControlRequest, rjje_arm::MotionControlResponse> move_joints_service("move_joints_service", srv_cb); 
 
 void setup(){  
-  /* Serial.begin(19200); //comment out ros node stuff if using this */
+  Serial.begin(9600); //comment out ros node stuff if using this
   pwm.begin();
   pwm.setOscillatorFrequency(27000000);
   pwm.setPWMFreq(SERVO_FREQ);  // Analog servos run at ~50 Hz updates
@@ -63,21 +52,33 @@ void setup(){
   motors[3].flip_rotation_ = true; 
   motors[3].offset_ = 10; 
   motors[5].is_claw_ = true;
-
-  nh.initNode(); 
-  nh.advertiseService<rjje_arm::MotionControlRequest, rjje_arm::MotionControlResponse>(move_joints_service); 
 }
 
-void loop(){ 
-    unsigned long start = millis();
-    /* back_to_neutral(motors, pwm); */
-    /* test_arm(commanded_angles, motors, step_angle, pwm); */
+void update_command_angles(){
+// Python sends joint angles, execution time, and gets a response back
+    if (Serial.available()){
+        size_t num_bytes = Serial.readBytes(commanded_angles,6); 
+        Serial.println("debug1");
 
+        byte execution_time_buf[2];
+        Serial.readBytes(execution_time_buf,2);
+        double execution_time = array_to_double(execution_time_buf);
+        Serial.println(String(execution_time));
+    }
+}
+
+
+void loop(){ 
+    update_command_angles();
+    unsigned long start = millis();
+    /* Serial.println(commanded_angles[3]);  */
     /* for (char channel_id = 0; channel_id < 6; ++channel_id){ */
     /*     commanded_angles[channel_id] += sign(current_angles[channel_id] - commanded_angles[channel_id]) * step_angle; */
     /*     motors[channel_id].set_angle(commanded_angles[channel_id], channel_id, pwm); */
     /* } */
-    nh.spinOnce();
-
     delay(DELAY + start - millis());
+    /* back_to_neutral(motors, pwm); */
+    /* test_arm(commanded_angles, motors, step_angle, pwm); */
+
+
 }
