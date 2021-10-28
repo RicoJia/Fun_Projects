@@ -10,17 +10,16 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  MotionControl.msg
-)
-
-## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
+# add_message_files(
+  # FILES
+  # MotionControl.msg
 # )
+
+# Generate services in the 'srv' folder
+add_service_files(
+  FILES
+  MotionControl.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -56,7 +55,7 @@ generate_messages(
 # )
 
 catkin_package(
- DEPENDS message_runtime
+ DEPENDS message_runtime std_msgs
 )
 
 ###########

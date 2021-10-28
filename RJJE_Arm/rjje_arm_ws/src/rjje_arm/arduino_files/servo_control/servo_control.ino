@@ -15,17 +15,19 @@ static double step_angle = 0.6;   //deg
 // Declarations
 static Motor motors[6]; 
 static double commanded_angles[6] = {90, 90, 90, 90, 90, 120};
+static double current_angles[6] = {90, 90, 90, 90, 90, 120};
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40); 
 ros::NodeHandle nh; 
 
-void sub_cb(const rjje_arm::MotionControl& motion_control_msg){
-  for (unsigned channel_id = 0; channel_id < 6; ++channel_id){
-    commanded_angles[channel_id] = motion_control_msg.commanded_angles[channel_id]; 
-  }
+void srv_cb(const rjje_arm::MotionControlRequest& req, rjje_arm::MotionControlResponse& resp){
+    for (char channel_id = 0; channel_id < 6; ++channel_id){
+      commanded_angles[channel_id] = req.commanded_angles[channel_id]; 
+    }
+    nh.loginfo("received by rosserial");
+    // execute the join angles
 }
 
-ros::Subscriber<rjje_arm::MotionControl> sub("/motion_control_msg", sub_cb); 
-
+ros::ServiceServer<rjje_arm::MotionControlRequest, rjje_arm::MotionControlResponse> move_joints_service("move_joints_service", srv_cb); 
 
 void setup(){  
   /* Serial.begin(19200); //comment out ros node stuff if using this */
@@ -63,7 +65,7 @@ void setup(){
   motors[5].is_claw_ = true;
 
   nh.initNode(); 
-  nh.subscribe(sub); 
+  nh.advertiseService<rjje_arm::MotionControlRequest, rjje_arm::MotionControlResponse>(move_joints_service); 
 }
 
 void loop(){ 
@@ -71,9 +73,10 @@ void loop(){
     /* back_to_neutral(motors, pwm); */
     /* test_arm(commanded_angles, motors, step_angle, pwm); */
 
-    for (unsigned int channel_id = 0; channel_id < 6; ++channel_id){
-        motors[channel_id].set_angle(commanded_angles[channel_id], channel_id, pwm);
-    }
+    /* for (char channel_id = 0; channel_id < 6; ++channel_id){ */
+    /*     commanded_angles[channel_id] += sign(current_angles[channel_id] - commanded_angles[channel_id]) * step_angle; */
+    /*     motors[channel_id].set_angle(commanded_angles[channel_id], channel_id, pwm); */
+    /* } */
     nh.spinOnce();
 
     delay(DELAY + start - millis());
