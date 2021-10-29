@@ -20,8 +20,8 @@ class MotionController:
         self.port = rospy.get_param("~port")
         self.ser = serial.Serial(self.port, 9600, timeout=20)
         # one digit after decimal point
-        self.commanded_angles = [20, 30, 90, 90, 90, 120]
-        self.execution_time = 3.0 #seconds, one digit after decimal point
+        self.commanded_angles = [170, 90, 180, 0, 90, 130]
+        self.execution_time = 1.0 #seconds, one digit after decimal point
 
     def move_joints(self): 
         # minimalist "service" provided by arduino: 
