@@ -9,7 +9,8 @@ def decimal_to_list(num: float) -> list:
     num_one_decimal = round(num, 1)
     ret = []
     ret.append(math.floor(num_one_decimal))
-    ret.append(int(10*(num_one_decimal - ret[0])))
+    #extra round to prevent small numertical error in subtraction
+    ret.append(round(10*(num_one_decimal - ret[0])))
     return ret
 
 
@@ -17,9 +18,10 @@ class MotionController:
     def __init__(self): 
         rospy.init_node("motion_controller", anonymous=True)     #anonymous=true ensures unique node name by adding random numbers
         self.port = rospy.get_param("~port")
-        self.ser = serial.Serial(self.port, 9600, timeout=1)
-        self.commanded_angles = [10, 20, 30, 60, 50, 120]
-        self.execution_time = 2.2 #s, one digit after decimal point
+        self.ser = serial.Serial(self.port, 9600, timeout=20)
+        # one digit after decimal point
+        self.commanded_angles = [20, 30, 90, 90, 90, 120]
+        self.execution_time = 3.0 #seconds, one digit after decimal point
 
     def move_joints(self): 
         # minimalist "service" provided by arduino: 
@@ -30,11 +32,15 @@ class MotionController:
                 raw_bytes += (integer).to_bytes(1,"little") 
             self.ser.write(raw_bytes)
 
-        send_int_in_list(self.commanded_angles + decimal_to_list(self.execution_time))
+        commanded_angles_in_list = []
+        for angle in self.commanded_angles: 
+            commanded_angles_in_list.extend(decimal_to_list(angle))
+
+        send_int_in_list(commanded_angles_in_list + decimal_to_list(self.execution_time))
 
         # Response from Arduino: success = 1, fail = 0
-        # res = self.ser.read(1)
-        # print("res:",res)
+        res = self.ser.read(1)
+        print("res:",res)
 
 
 if __name__ == '__main__': 

@@ -14,20 +14,12 @@
 #define SERVO_MIN 120
 #define SERVO_MAX 480
 #define UPDATE_FREQUENCY 100    //hz
+#define ANGULAR_THRESHOLD 0.05   //degrees
 
 inline int sign(double i){
   if (i == 0) return 0; 
   else if (i < 0) return -1; 
   else return 1;
-}
-
-/**
-* @brief: get 1 decimal place double. 
-* @param: num: pointer to the integer part of a received number
-* @return:  number in double after 1 decimal place double. 
-*/
-inline double array_to_double(const byte* num){
-   return num[0] + 0.1 * num[1];  
 }
 
 struct Motor{
