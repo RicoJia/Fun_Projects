@@ -1,6 +1,13 @@
 import rospy
 import serial
 import math
+from control_msgs.msg import FollowJointTrajectoryAction
+from control_msgs.msg import FollowJointTrajectoryFeedback
+from control_msgs.msg import FollowJointTrajectoryResult
+from control_msgs.msg import GripperCommandAction
+from control_msgs.msg import GripperCommandFeedback
+from control_msgs.msg import GripperCommandResult
+import actionlib
 
 def decimal_to_list(num: float) -> list: 
     """
@@ -17,11 +24,73 @@ def decimal_to_list(num: float) -> list:
 class MotionController: 
     def __init__(self): 
         rospy.init_node("motion_controller", anonymous=True)     #anonymous=true ensures unique node name by adding random numbers
-        self.port = rospy.get_param("~port")
-        self.ser = serial.Serial(self.port, 9600, timeout=20)
         # one digit after decimal point
         self.commanded_angles = [170, 90, 180, 0, 90, 130]
         self.execution_time = 1.0 #seconds, one digit after decimal point
+        self.action_server_arm = actionlib.SimpleActionServer('rjje_arm_controller/follow_joint_trajectory', FollowJointTrajectoryAction, execute_cb=self.follow_trajectory, auto_start=False)    #auto_start is false, so we can start at a later time
+        self.action_server_arm.start()
+        rospy.loginfo("Arm action server started")
+        self.action_server_gripper = actionlib.SimpleActionServer('rjje_gripper_controller/gripper_command', GripperCommandAction, execute_cb=self.follow_trajectory, auto_start=False)    #auto_start is false, so we can start at a later time
+        self.action_server_gripper.start()
+
+        # #TODO
+        # # Serial Ports
+        # self.port = rospy.get_param("~port")
+        # self.ser = serial.Serial(self.port, 9600, timeout=20)
+
+    def gripper_command(self,goal): 
+        success = True
+        traj = goal.trajectory
+        num_points = len(traj.points)
+        traj_joint_names = traj.joint_names
+        #TODO
+        print(traj_joint_names)
+        for i in range(1, num_points):
+            if self.action_server_arm.is_preempt_requested():
+                rospy.loginfo("Trajectory Action Preempted on rjje gripper" )
+                self.action_server_arm.set_preempted()
+                success = False
+                break
+            duration = (traj.points[i].time_from_start - traj.points[i-1].time_from_start ).to_sec()
+        #TODO 
+        if success: 
+            msg = 'gripper Trajectory completed'
+            rospy.loginfo(msg)
+            res = FollowJointTrajectoryResult()
+            self.action_server_gripper.set_succeeded(result=res, text=msg)
+
+    def follow_trajectory(self, goal): 
+        """
+        Call back function for Moveit! trajectory following action request. Note that this is a separate thread
+        from the main one.
+        :param goal: the goal trajectory of actuated joints, i.e, phi angles.
+        """
+        # Workflow:
+        #figure out joint names and their positions
+        #start from point 1, since the first point is the current starting point
+        #check for pre-emption
+        #figure out the duration and joint positions of each trajectory segment
+        #realize each segment and time it
+        #check if the action has been preempted
+        success = True
+        traj = goal.trajectory
+        num_points = len(traj.points)
+        traj_joint_names = traj.joint_names
+        #TODO
+        print(traj.points)
+        for i in range(1, num_points):
+            if self.action_server_arm.is_preempt_requested():
+                rospy.loginfo("Trajectory Action Preempted on rjje arm" )
+                self.action_server_arm.set_preempted()
+                success = False
+                break
+            duration = (traj.points[i].time_from_start - traj.points[i-1].time_from_start ).to_sec()
+        #TODO 
+        if success: 
+            msg = 'Trajectory completed'
+            rospy.loginfo(msg)
+            res = FollowJointTrajectoryResult()
+            self.action_server_arm.set_succeeded(result=res, text=msg)
 
     def move_joints(self): 
         # minimalist "service" provided by arduino: 
@@ -45,6 +114,8 @@ class MotionController:
 
 if __name__ == '__main__': 
     mc = MotionController()
-    mc.move_joints()
+    #TODO
+    # mc.move_joints()
+    rospy.spin()
 
 
