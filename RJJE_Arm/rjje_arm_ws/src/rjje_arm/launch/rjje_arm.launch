@@ -8,7 +8,8 @@
     <!-- <node name="motion_controller" pkg="rjje_arm" type="motion_controller.py" output="screen"/> -->
 
     <param name="robot_description" command="cat '$(find rjje_arm)/urdf/rjje_arm.xacro.urdf'" />
+  <!-- If needed, broadcast static tf for robot root -->
 
     <!-- <include file="$(find gazebo_ros)/launch/empty_world.launch"/> -->
-    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" output="screen" args="-param robot_description -urdf -model rjje_arm"/>
+    <!-- <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" output="screen" args="&#45;param robot_description &#45;urdf &#45;model rjje_arm"/> -->
 </launch>
