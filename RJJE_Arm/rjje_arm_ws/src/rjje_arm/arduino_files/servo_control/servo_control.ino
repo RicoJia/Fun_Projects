@@ -89,7 +89,7 @@ void initialize(){
 }
 
 void update_current_angles(){
-    // TO swap for analog step motors
+    // TODO swap for analog step motors
     for (unsigned int i = 0; i < 6; ++i) {
         current_angles[i] += step_angles[i];
     }
@@ -105,8 +105,14 @@ bool can_stop(){
     return stop_count == 6; 
 }
 
-void send_finish_response(){
-    Serial.write(1); 
+// send all current angles in two-decimal places (2 bytes for each value)
+void send_all_angles(){
+    for (unsigned int i = 0; i < 6; ++i) {
+        byte int_part = floor(current_angles[i]);
+        byte two_decimal_part = round(100 * (current_angles[i] - int_part)); 
+        Serial.write(int_part); 
+        Serial.write(two_decimal_part); 
+    }
 }
 
 void loop(){ 
@@ -114,21 +120,16 @@ void loop(){
     unsigned long start = millis();
     if(operating)
     {
-
         // might consider update_step_angles();
         for (char channel_id = 0; channel_id < 6; ++channel_id){
             double angle_to_execute = current_angles[channel_id] + step_angles[channel_id]; 
             motors[channel_id].set_angle(angle_to_execute, channel_id, pwm);
         }
         update_current_angles(); 
-        if (operating && can_stop()){
-            send_finish_response();
+        if(operating && can_stop()){
             operating = false;
-
-            for (unsigned int i = 0; i < 6; ++i) {
-                Serial.println(current_angles[i]); 
-            }
         }
+        send_all_angles();
     }
     unsigned long time_elapsed = millis() - start;
     delay(DELAY - time_elapsed);

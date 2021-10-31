@@ -9,12 +9,12 @@ controller_list:
      - bracket_2_2_link_3
      - bracket_3_2_link_4
      - link_5_link_6
- - name: rjje_gripper_controller
-   action_ns: gripper_command
-   type: GripperCommand
-   default: true
-   parallel: false
-   joints:
+#  - name: rjje_gripper_controller
+#    action_ns: gripper_command
+#    type: GripperCommand
+#    default: true
+#    parallel: false
+#    joints:
      - link_6_left_gripper
 initial:  # Define initial robot poses.
   - group: rjje_arm

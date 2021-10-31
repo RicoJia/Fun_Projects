@@ -233,7 +233,7 @@
 
   <xacro:m_joint type="revolute"
     axis_xyz="0 0 1"
-    origin_xyz="0.0 0.0 0.0" origin_rpy="0.0 0.0 0.0"
+    origin_xyz="0.0 0.0 5.2" origin_rpy="0.0 0.0 0.0"
     parent="link_5" child="link_6"
     limit_e="1000" limit_l="-1.57" limit_u="1.57" limit_v="1.5" />
 
@@ -252,7 +252,7 @@
 
   <xacro:m_joint type="revolute"
     axis_xyz="0 1 0"
-    origin_xyz="0.0 0.0 5.2" origin_rpy="0.0 0.0 0.0"
+    origin_xyz="0.0 0.0 0.0" origin_rpy="0.0 0.0 0.0"
     parent="link_6" child="left_gripper"
     limit_e="1000" limit_l="-0.61" limit_u="0.0" limit_v="1.5" />
 
@@ -274,7 +274,7 @@
     joint_child="left_gripper"
     type="revolute"
     axis_xyz="0 1 0"
-    origin_xyz="0.0 0.0 5.2" origin_rpy="0.0 0.0 0.0"
+    origin_xyz="0.0 0.0 0.0" origin_rpy="0.0 0.0 0.0"
     parent="link_6" child="right_gripper"
     limit_e="1000" limit_l="0.61" limit_u="0.0" limit_v="1.5" 
     multiplier="-1"
