@@ -59,7 +59,7 @@ void setup(){
   back_to_neutral(motors, pwm); 
   delay(2500); 
 }
-
+void (*reset)() = 0; // declare reset function at address 0
 /**
 * @brief: Read received bytes from serial into a double array. Precision is 1
 * @param: dst: pointer to array that stores the output
@@ -73,12 +73,25 @@ void read_bytes_into_double_array(double* dst, size_t num_elements){
     }
 }
 
+bool need_to_reset(){
+    byte header[1];
+    Serial.readBytes(header, 1);
+    Serial.print(header[0], DEC);
+    return (header[0] & RESET)? true : false;
+}
+
 /**
 * @brief: Initialize commanded_angles, execution_time, and step_angles
 *  Python sends joint angles, execution time, and gets a response back
 */
 void initialize(){
     if (Serial.available()){
+        // check if we receive RESET
+        // message contract: 1 byte HEADER| 12 bytes commanded_angles | 2 byte EXECUTION_TIME
+        if (need_to_reset()){
+            Serial.println("resetting");
+            reset();
+        } 
         read_bytes_into_double_array(commanded_angles, 6); 
         read_bytes_into_double_array(&execution_time, 1); 
         for (int i = 0; i < 6; ++i){
@@ -129,8 +142,11 @@ void loop(){
         if(operating && can_stop()){
             operating = false;
         }
-        send_all_angles();
     }
-    unsigned long time_elapsed = millis() - start;
-    delay(DELAY - time_elapsed);
+    //TODO
+    //send_all_angles();
+    unsigned long now = millis();
+    if (start + DELAY > now){
+        delay(start + DELAY - now);
+    }
 }

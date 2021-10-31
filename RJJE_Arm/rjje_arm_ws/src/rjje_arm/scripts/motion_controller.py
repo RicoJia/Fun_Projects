@@ -1,3 +1,8 @@
+"""
+Motion controller that can control a robot arm and a gripper independently, in a soft real-time fashion, ~2ms 
+Internally, the arm and gripper shares the same message to the uC. And their status is updated in a 
+lock-free manner.
+"""
 import rospy
 import serial
 import math
@@ -35,24 +40,34 @@ class MotionController:
     def __init__(self): 
         rospy.init_node("motion_controller", anonymous=True)     #anonymous=true ensures unique node name by adding random numbers
         # one digit after decimal point
-        self.commanded_angles = [170, 90, 180, 0, 90, 130]
+        self.commanded_angles = [90, 90, 90, 90, 90, 120]
         self.execution_time = 1.0 #seconds, one digit after decimal point
+        # in CPython, bool write is atomic.
+        self.arm_to_move = False
+        self.gripper_to_move = True
+        self.ANGULAR_THRESHOLD = 0.05
+
         self.action_server_arm = actionlib.SimpleActionServer('rjje_arm_controller/follow_joint_trajectory', FollowJointTrajectoryAction, execute_cb=self.process_arm_action, auto_start=False)    #auto_start is false, so we can start at a later time
         self.action_server_arm.start()
         rospy.loginfo("Arm action server started")
+
         self.action_server_gripper = actionlib.SimpleActionServer('rjje_gripper_controller/gripper_command', GripperCommandAction, execute_cb=self.process_gripper_action, auto_start=False)    #auto_start is false, so we can start at a later time
         self.action_server_gripper.start()
         rospy.loginfo("Gripper action server started")
+
         self.move_joints_lock = Lock()
-        self.change_current_angles_lock = Lock()
         self.joint_state_pub = rospy.Publisher("/joint_states", JointState, queue_size=10)
         self.joint_state_msg = JointState()
-        self.joint_state_msg.position = [90, 90, 90, 90, 90, 120]
+        self.joint_state_msg.position = self.commanded_angles
+        #TODO: to change to soft-coded way
+        self.joint_state_msg.name = ["link1_bracket_1", "link_2_bracket_2_1", "bracket_2_2_link_3", "bracket_3_2_link_4", "link_5_link_6", "link_6_left_gripper", "link_6_right_gripper"]
+        rospy.loginfo("joint state publisher set up")
 
-        # #TODO
-        # # Serial Ports
+        # Serial Ports
         self.port = rospy.get_param("~port")
         self.ser = serial.Serial(self.port, 9600, timeout=20)
+        self.reset_arduino()
+        rospy.loginfo("Serial port open, now listening to uC")
 
     def __process_action(self, action_server: actionlib.SimpleActionServer, action_server_name: str, goal):
         """
@@ -73,8 +88,6 @@ class MotionController:
         success = True
         traj = goal.trajectory
         num_points = len(traj.points)
-        if len(self.joint_state_msg.name) == 0: 
-            self.joint_state_msg.name = traj.joint_names
         commanded_angles_ls = []
         time_ls = []
         for i in range(1, num_points):
@@ -86,6 +99,9 @@ class MotionController:
             time_ls.append((traj.points[i].time_from_start - traj.points[i-1].time_from_start).to_sec())
             commanded_angles_ls.append(self.__convert_to_rjje_command_angles(traj.points[i].positions))
         return time_ls, commanded_angles_ls
+
+    def __convert_to_joing_msg_angles(self, commanded_angles: list): 
+        return [3.1415 * ((angle-90.0)/180.0) for angle in commanded_angles]
 
     def __convert_to_rjje_command_angles(self, ros_commanded_angles: list): 
         return [180 * (angle/3.1415) + 90 for angle in ros_commanded_angles]
@@ -101,9 +117,34 @@ class MotionController:
         for time, commanded_angles in zip(time_ls, commanded_angles_ls): 
            self.commanded_angles[:5] = list(commanded_angles)
            self.execution_time = time 
+           print("to acquire")
            with self.move_joints_lock: 
+               #TODO
+               print("moving joints")
                self.move_joints()
+        # wait for motion to finish
+        self.arm_to_move = True
+        #TODO
+        print("waiting to move")
+        while (self.arm_to_move): 
+            pass
         send_reponse(self.action_server_arm, "rjje_arm")
+
+    def reset_arduino(self): 
+        self.__send_message_header("RESET")
+
+    def __send_message_header(self, header): 
+        """
+        message contract: 1 byte HEADER| 12 bytes commanded_angles | 2 byte EXECUTION_TIME
+        header: b'11111111' = RESET, b'0' = OKAY
+        """
+        if header == "RESET": 
+            #TODO
+            print("sent reset")
+            byte = (0xff).to_bytes(1, "little")
+        elif header == "OKAY": 
+            byte = (0x00).to_bytes(1, "little")
+        self.ser.write(byte)
 
     def move_joints(self): 
         # minimalist "service" provided by arduino: 
@@ -117,29 +158,36 @@ class MotionController:
         commanded_angles_in_list = []
         for angle in self.commanded_angles: 
             commanded_angles_in_list.extend(decimal_to_list(angle))
-
+        self.__send_message_header("OKAY")
         send_int_in_list(commanded_angles_in_list + decimal_to_list(self.execution_time))
+        #TODO
+        print(f"moved joints: {self.commanded_angles}")
 
-        # Response from Arduino: success = 1, fail = 0
-        angles = []
+
+    def update_servers_and_publish_joint_angles(self): 
+        # read angles from arduino (two_decimal places)
         for i in range(6): 
             int_part = ord(self.ser.read(1))
             two_decimal_part = ord(self.ser.read(1))
-            angles.append(int_part + two_decimal_part * 0.01)
+            self.joint_state_msg.position[i] = int_part + two_decimal_part * 0.01
+            #TODO
+            print("int: ", int_part)
+        # self.__convert_to_joing_msg_angles(self.joint_state_msg.position)
+        self.joint_state_pub.publish(self.joint_state_msg)
 
-        with self.change_current_angles_lock: 
-            self.joint_state_msg.position= angles
-
-        #TODO
-        print(self.joint_state_msg)
-    def publish_joint_angles(self): 
-        with self.change_current_angles_lock: 
-            self.joint_state_pub.publish(self.joint_state_msg)
-
+        if self.arm_to_move: 
+            #now the arm action server must be waiting 
+            if abs(self.joint_state_msg.position[:5] - self.commanded_angles[:5]) < self.ANGULAR_THRESHOLD: 
+                self.arm_to_move = False
+        if self.gripper_to_move: 
+            if abs(self.joint_state_msg.position[5] - self.commanded_angles[5]) < self.ANGULAR_THRESHOLD: 
+                self.gripper_to_move = False
 
 if __name__ == '__main__': 
     mc = MotionController()
-    mc.publish_joint_angles()
-    rospy.spinOnce()
+    r = rospy.Rate(10)
+    while not rospy.is_shutdown():
+        mc.update_servers_and_publish_joint_angles()
+        r.sleep()
 
 

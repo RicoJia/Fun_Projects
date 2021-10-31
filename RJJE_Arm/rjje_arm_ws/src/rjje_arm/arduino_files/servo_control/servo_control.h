@@ -15,6 +15,7 @@
 #define SERVO_MAX 480
 #define UPDATE_FREQUENCY 100    //hz
 #define ANGULAR_THRESHOLD 0.05   //degrees
+#define RESET 0xFF
 
 inline int sign(double i){
   if (i == 0) return 0; 
