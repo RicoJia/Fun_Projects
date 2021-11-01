@@ -76,7 +76,6 @@ void read_bytes_into_double_array(double* dst, size_t num_elements){
 bool need_to_reset(){
     byte header[1];
     Serial.readBytes(header, 1);
-    Serial.print(header[0], DEC);
     return (header[0] & RESET)? true : false;
 }
 
@@ -89,15 +88,17 @@ void initialize(){
         // check if we receive RESET
         // message contract: 1 byte HEADER| 12 bytes commanded_angles | 2 byte EXECUTION_TIME
         if (need_to_reset()){
-            Serial.println("resetting");
             reset();
-        } 
-        read_bytes_into_double_array(commanded_angles, 6); 
-        read_bytes_into_double_array(&execution_time, 1); 
-        for (int i = 0; i < 6; ++i){
-            step_angles[i] = (commanded_angles[i] - current_angles[i])/execution_time/UPDATE_FREQUENCY;
         }
-        operating = true;
+        else{
+            read_bytes_into_double_array(commanded_angles, 6); 
+            read_bytes_into_double_array(&execution_time, 1); 
+            for (int i = 0; i < 6; ++i){
+                step_angles[i] = (commanded_angles[i] - current_angles[i])/execution_time/UPDATE_FREQUENCY;
+            }
+            operating = true;
+
+        }
     }
 }
 
@@ -118,8 +119,9 @@ bool can_stop(){
     return stop_count == 6; 
 }
 
-// send all current angles in two-decimal places (2 bytes for each value)
+// send OKAY header, followed by all current angles in two-decimal places (2 bytes for each value)
 void send_all_angles(){
+    Serial.write(OKAY); 
     for (unsigned int i = 0; i < 6; ++i) {
         byte int_part = floor(current_angles[i]);
         byte two_decimal_part = round(100 * (current_angles[i] - int_part)); 
@@ -144,7 +146,7 @@ void loop(){
         }
     }
     //TODO
-    //send_all_angles();
+    send_all_angles();
     unsigned long now = millis();
     if (start + DELAY > now){
         delay(start + DELAY - now);

@@ -16,6 +16,9 @@ from sensor_msgs.msg import JointState
 import actionlib
 from threading import Lock
 
+RESET = 0xff
+OKAY = 0x0F
+
 def decimal_to_list(num: float) -> list: 
     """
     Round a float to one digit after decimal point, and convert a float to list. E.g., 2.48->[2,5]
@@ -60,12 +63,13 @@ class MotionController:
         self.joint_state_msg = JointState()
         self.joint_state_msg.position = self.commanded_angles
         #TODO: to change to soft-coded way
-        self.joint_state_msg.name = ["link1_bracket_1", "link_2_bracket_2_1", "bracket_2_2_link_3", "bracket_3_2_link_4", "link_5_link_6", "link_6_left_gripper", "link_6_right_gripper"]
+        self.joint_state_msg.name = ["link1_bracket_1", "link_2_bracket_2_1", "bracket_2_2_link_3", "bracket_3_2_link_4", "link_5_link_6", "link_6_left_gripper"]
         rospy.loginfo("joint state publisher set up")
 
         # Serial Ports
         self.port = rospy.get_param("~port")
         self.ser = serial.Serial(self.port, 9600, timeout=20)
+
         self.reset_arduino()
         rospy.loginfo("Serial port open, now listening to uC")
 
@@ -100,7 +104,10 @@ class MotionController:
             commanded_angles_ls.append(self.__convert_to_rjje_command_angles(traj.points[i].positions))
         return time_ls, commanded_angles_ls
 
-    def __convert_to_joing_msg_angles(self, commanded_angles: list): 
+    def reset_arduino(self): 
+        self.__send_message_header(RESET)
+
+    def __convert_to_joint_msg_angles(self, commanded_angles: list): 
         return [3.1415 * ((angle-90.0)/180.0) for angle in commanded_angles]
 
     def __convert_to_rjje_command_angles(self, ros_commanded_angles: list): 
@@ -130,20 +137,12 @@ class MotionController:
             pass
         send_reponse(self.action_server_arm, "rjje_arm")
 
-    def reset_arduino(self): 
-        self.__send_message_header("RESET")
-
     def __send_message_header(self, header): 
         """
         message contract: 1 byte HEADER| 12 bytes commanded_angles | 2 byte EXECUTION_TIME
         header: b'11111111' = RESET, b'0' = OKAY
         """
-        if header == "RESET": 
-            #TODO
-            print("sent reset")
-            byte = (0xff).to_bytes(1, "little")
-        elif header == "OKAY": 
-            byte = (0x00).to_bytes(1, "little")
+        byte = (header).to_bytes(1, "little")
         self.ser.write(byte)
 
     def move_joints(self): 
@@ -158,23 +157,42 @@ class MotionController:
         commanded_angles_in_list = []
         for angle in self.commanded_angles: 
             commanded_angles_in_list.extend(decimal_to_list(angle))
-        self.__send_message_header("OKAY")
+        self.__send_message_header(OKAY)
         send_int_in_list(commanded_angles_in_list + decimal_to_list(self.execution_time))
         #TODO
         print(f"moved joints: {self.commanded_angles}")
 
+    def __read_joint_states_from_arduino(self):
+        """
+        read angles from arduino (two_decimal places)
+        :return True if all values received are valid. Else false
+        """
+        received_angles = [0.0 for i in range(6)]
+        while True: 
+            if ord(self.ser.read(1)) == OKAY: 
+                break
 
-    def update_servers_and_publish_joint_angles(self): 
-        # read angles from arduino (two_decimal places)
-        for i in range(6): 
-            int_part = ord(self.ser.read(1))
-            two_decimal_part = ord(self.ser.read(1))
-            self.joint_state_msg.position[i] = int_part + two_decimal_part * 0.01
+        for i in range(6):
+            int_part_byte = self.ser.read(1)
+            two_decimal_part_byte = self.ser.read(1)
+            if not int_part_byte or not two_decimal_part_byte:
+                return False
+
+            int_part = ord(int_part_byte)
+            two_decimal_part = ord(two_decimal_part_byte)
+            received_angles[i] = int_part + two_decimal_part * 0.01
+        self.joint_state_msg.position = received_angles
+        return True
+
+    def publish_joint_angles(self): 
+        if self.__read_joint_states_from_arduino(): 
+            self.joint_state_msg.position = self.__convert_to_joint_msg_angles(self.joint_state_msg.position)
             #TODO
-            print("int: ", int_part)
-        # self.__convert_to_joing_msg_angles(self.joint_state_msg.position)
-        self.joint_state_pub.publish(self.joint_state_msg)
+            print(self.joint_state_msg.position)
+            self.joint_state_pub.publish(self.joint_state_msg)
 
+    def update_action_servers(self): 
+        #TODO
         if self.arm_to_move: 
             #now the arm action server must be waiting 
             if abs(self.joint_state_msg.position[:5] - self.commanded_angles[:5]) < self.ANGULAR_THRESHOLD: 
@@ -187,7 +205,8 @@ if __name__ == '__main__':
     mc = MotionController()
     r = rospy.Rate(10)
     while not rospy.is_shutdown():
-        mc.update_servers_and_publish_joint_angles()
+        mc.publish_joint_angles()
+        mc.update_action_servers()
         r.sleep()
 
 

@@ -16,6 +16,7 @@
 #define UPDATE_FREQUENCY 100    //hz
 #define ANGULAR_THRESHOLD 0.05   //degrees
 #define RESET 0xFF
+#define OKAY 0x0F    //this is a crappy design, but we can use this since we're just sending two decimal places
 
 inline int sign(double i){
   if (i == 0) return 0; 
