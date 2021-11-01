@@ -25,29 +25,29 @@ inline int sign(double i){
 }
 
 struct Motor{
-  // In robotics a common convention is the right-hand rotation, which defines the positive direction of rotation is counter-clockwise of positive z-axis. 
-  // Below all angles follow the right-hand convention 
-  double min_angle_ = 0;  
-  double max_angle_ = 180;   
-  // In my setup, all motors have the neutral position at 90
-  double neutral_angle_=90;   
-  double last_angle_ = neutral_angle_;
-  double offset_=0;   //offset should is added on commanded_angle
-  // Therefore we need to "flip" the angle about the neutral position if necessary.
-  bool is_claw_ = false;
-  bool flip_rotation_ = false;   
+    // In robotics a common convention is the right-hand rotation, which defines the positive direction of rotation is counter-clockwise of positive z-axis. 
+    // Below all angles follow the right-hand convention 
+    double min_angle_ = 0;  
+    double max_angle_ = 180;   
+    // In my setup, all motors have the neutral position at 90
+    double neutral_angle_=90;   
+    double last_angle_ = neutral_angle_;
+    double offset_=0;   //offset should is added on commanded_angle
+    // Therefore we need to "flip" the angle about the neutral position if necessary.
+    bool is_claw_ = false;
+    bool flip_rotation_ = false;   
 
-  bool set_angle(const double& commanded_angle, const short& channel_id, const Adafruit_PWMServoDriver& pwm){
-      double real_angle = get_real_angle(commanded_angle);
-      if (real_angle != -1){
-        int pulselength = map(real_angle, 0, 180, SERVO_MIN, SERVO_MAX);
-        pwm.setPWM(channel_id, 0, pulselength);
-        return true;
-      }
-      else{
-        return false;
-      }
-  }
+    bool set_angle(const double& commanded_angle, const short& channel_id, const Adafruit_PWMServoDriver& pwm){
+        double real_angle = get_real_angle(commanded_angle);
+        if (real_angle != -1){
+          int pulselength = map(real_angle, 0, 180, SERVO_MIN, SERVO_MAX);
+          pwm.setPWM(channel_id, 0, pulselength);
+          return true;
+        }
+        else{
+          return false;
+        }
+    }
 
   private: 
     /**
@@ -60,7 +60,7 @@ struct Motor{
        if (is_claw_){
            double rotation_angle = commanded_angle/2;
            if (min_angle_ <= rotation_angle && rotation_angle <= max_angle_){
-              return max_angle_-rotation_angle - 10;    //offset is 10, due to mislignment of rudder and finger 
+              return max_angle_-rotation_angle + offset_;    //offset due to mislignment of rudder and finger 
            }
            else return -1; 
        }

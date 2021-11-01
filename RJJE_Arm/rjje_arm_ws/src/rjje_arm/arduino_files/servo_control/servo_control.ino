@@ -55,6 +55,7 @@ void setup(){
   motors[3].flip_rotation_ = true; 
   motors[3].offset_ = 10; 
   motors[5].is_claw_ = true;
+  motors[5].offset = -10;
 
   back_to_neutral(motors, pwm); 
   delay(2500); 

@@ -58,7 +58,7 @@ class MotionController:
         self.action_server_gripper.start()
         rospy.loginfo("Gripper action server started")
 
-        self.move_joints_lock = Lock()
+        self.__move_joints_lock = Lock()
         self.joint_state_pub = rospy.Publisher("/joint_states", JointState, queue_size=10)
         self.joint_state_msg = JointState()
         self.joint_state_msg.position = self.commanded_angles
@@ -125,10 +125,10 @@ class MotionController:
            self.commanded_angles[:5] = list(commanded_angles)
            self.execution_time = time 
            print("to acquire")
-           with self.move_joints_lock: 
+           with self.__move_joints_lock: 
                #TODO
                print("moving joints")
-               self.move_joints()
+               self.__move_joints()
         # wait for motion to finish
         self.arm_to_move = True
         #TODO
@@ -145,7 +145,7 @@ class MotionController:
         byte = (header).to_bytes(1, "little")
         self.ser.write(byte)
 
-    def move_joints(self): 
+    def __move_joints(self): 
         # minimalist "service" provided by arduino: 
         # Python sends joint angles, execution time, and gets a response back
         def send_int_in_list(ls: list): 
