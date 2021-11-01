@@ -4,6 +4,7 @@ Internally, the arm and gripper shares the same message to the uC. And their sta
 lock-free manner.
 """
 import rospy
+import numpy as np
 import serial
 import math
 from control_msgs.msg import FollowJointTrajectoryAction
@@ -63,7 +64,7 @@ class MotionController:
         self.joint_state_msg = JointState()
         self.joint_state_msg.position = self.commanded_angles
         #TODO: to change to soft-coded way
-        self.joint_state_msg.name = ["link1_bracket_1", "link_2_bracket_2_1", "bracket_2_2_link_3", "bracket_3_2_link_4", "link_5_link_6", "link_6_left_gripper"]
+        self.joint_state_msg.name = ["link1_bracket_1", "link_2_bracket_2_1", "bracket_2_2_link_3", "bracket_3_2_link_4", "link_5_link_6", "link_6_left_gripper", "link_6_right_gripper"]
         rospy.loginfo("joint state publisher set up")
 
         # Serial Ports
@@ -129,12 +130,12 @@ class MotionController:
                #TODO
                print("moving joints")
                self.__move_joints()
-        # wait for motion to finish
-        self.arm_to_move = True
-        #TODO
-        print("waiting to move")
-        while (self.arm_to_move): 
-            pass
+               # wait for motion to finish
+               self.arm_to_move = True
+               #TODO
+               print("waiting to move")
+               while (self.arm_to_move): 
+                   pass
         send_reponse(self.action_server_arm, "rjje_arm")
 
     def __send_message_header(self, header): 
@@ -187,6 +188,10 @@ class MotionController:
     def publish_joint_angles(self): 
         if self.__read_joint_states_from_arduino(): 
             self.joint_state_msg.position = self.__convert_to_joint_msg_angles(self.joint_state_msg.position)
+            # TODO: our URDF model's claw isn't accurate, so disabling visualizing the claw for now
+            self.joint_state_msg.position[5] = 0.0
+            self.joint_state_msg.position.append(0.0) 
+            self.joint_state_msg.header.stamp = rospy.Time.now()
             #TODO
             print(self.joint_state_msg.position)
             self.joint_state_pub.publish(self.joint_state_msg)
@@ -195,11 +200,12 @@ class MotionController:
         #TODO
         if self.arm_to_move: 
             #now the arm action server must be waiting 
-            if abs(self.joint_state_msg.position[:5] - self.commanded_angles[:5]) < self.ANGULAR_THRESHOLD: 
+            if np.allclose(np.array(self.joint_state_msg.position[:5]),  np.array(self.commanded_angles[:5]), atol=self.ANGULAR_THRESHOLD):
                 self.arm_to_move = False
-        if self.gripper_to_move: 
-            if abs(self.joint_state_msg.position[5] - self.commanded_angles[5]) < self.ANGULAR_THRESHOLD: 
-                self.gripper_to_move = False
+        #TODO Potential Bug: our URDF model's claw isn't accurate, so disabling visualizing the claw for now
+        # if self.gripper_to_move: 
+        #     if abs(self.joint_state_msg.position[5] - self.commanded_angles[5]) < self.ANGULAR_THRESHOLD: 
+        #         self.gripper_to_move = False
 
 if __name__ == '__main__': 
     mc = MotionController()

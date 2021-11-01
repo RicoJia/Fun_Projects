@@ -7,7 +7,9 @@
 
     <param name="robot_description" command="cat '$(find rjje_arm)/urdf/rjje_arm.xacro.urdf'" />
 
-    <!-- <node name="motion_controller" pkg="rjje_arm" type="motion_controller.py" output="screen"/> -->
+    <!-- <node name="motion_controller" pkg="rjje_arm" type="motion_controller.py" output="screen"> -->
+    <!--     <param name="port" value="/dev/ttyUSB2"/> -->
+    <!-- </node> -->
 
   <!-- If needed, broadcast static tf for robot root -->
 
