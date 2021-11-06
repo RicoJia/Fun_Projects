@@ -60,47 +60,6 @@ void setup(){
   back_to_neutral(motors, pwm); 
   delay(2500); 
 }
-void (*reset)() = 0; // declare reset function at address 0
-/**
-* @brief: Read received bytes from serial into a double array. Precision is 1
-* @param: dst: pointer to array that stores the output
-* @param: num_elements: number of elements in the array
-*/
-void read_bytes_into_double_array(double* dst, size_t num_elements){
-    byte buffer[num_elements*2]; 
-    Serial.readBytes(buffer, num_elements*2); 
-    for (char channel_id = 0; channel_id < num_elements; ++channel_id){
-        dst[channel_id] = buffer[2*channel_id] + 0.1 * buffer[2*channel_id+1];
-    }
-}
-
-bool need_to_reset(){
-    byte header[1];
-    Serial.readBytes(header, 1);
-    return (header[0] & RESET)? true : false;
-}
-
-/**
-* @brief: Initialize commanded_angles, execution_time, and step_angles
-*  Python sends joint angles, execution time, and gets a response back
-*/
-void initialize(){
-    if (Serial.available()){
-        // check if we receive RESET
-        // message contract: 1 byte HEADER| 12 bytes commanded_angles | 2 byte EXECUTION_TIME
-        if (need_to_reset()){
-            reset();
-        }
-        else{
-            read_bytes_into_double_array(commanded_angles, 6); 
-            read_bytes_into_double_array(&execution_time, 1); 
-            for (int i = 0; i < 6; ++i){
-                step_angles[i] = (commanded_angles[i] - current_angles[i])/execution_time/UPDATE_FREQUENCY;
-            }
-            operating = true;
-        }
-    }
-}
 
 void update_current_angles(){
     // TODO swap for analog step motors
@@ -120,18 +79,10 @@ bool can_stop(){
 }
 
 // send OKAY header, followed by all current angles in two-decimal places (2 bytes for each value)
-void send_all_angles(){
-    Serial.write(OKAY); 
-    for (unsigned int i = 0; i < 6; ++i) {
-        byte int_part = floor(current_angles[i]);
-        byte two_decimal_part = round(100 * (current_angles[i] - int_part)); 
-        Serial.write(int_part); 
-        Serial.write(two_decimal_part); 
-    }
+void publish_angles(){
 }
 
 void loop(){ 
-    initialize();
     unsigned long start = millis();
     if(operating)
     {
@@ -146,7 +97,7 @@ void loop(){
         }
     }
     //TODO
-    send_all_angles();
+    publish_angles();
     unsigned long now = millis();
     if (start + DELAY > now){
         delay(start + DELAY - now);
