@@ -2,7 +2,6 @@
 
 ## Setup
 ### Hardware Setup
-
 1. Motor Testing: [Adafruit_PCA9685](https://learn.adafruit.com/16-channel-pwm-servo-driver?view=all)
     - Electrical: 
         - Jack plug for external power 
@@ -71,18 +70,24 @@
         - When assembling STL models into a full 3D model of the robot, special attention should be paid to: 
             1. In general, ROS follows multiple ways to express rrotation with angles. [See here](https://www.ros.org/reps/rep-0103.html). In URDF, it's **Z-Y-X** Euler angle
 
-## Objectives
-- Build Docker and Tools 
-- STL and Collada files 
-    - STL from 3D printing, Collada has physics as well. 
-    - seems like STL can -> DAE files. This can be done on oneshape
-    - How to add mesh to URDF step 5: http://wiki.ros.org/urdf/Tutorials/Building%20a%20Visual%20Robot%20Model%20with%20URDF%20from%20Scratch
-- Put the robot together
-    - Stepper Motors
-    - Mechanical
-    - controlled by computer. 
-- Gazebo 
-- Moveit Pipeline
-5. Directions: 
-    1. Moveit massage robot 
-    2. Pick and Place using moveit & camera 
+## Roadmap
+1. Objectives
+    1. Pick and Place using moveit & camera 
+    2. Arm mounted on mobile platform 
+2. Hardware & Software Setup 
+    - Build Docker and Tools 
+    - STL and Collada files 
+        - STL from 3D printing, Collada has physics as well. 
+        - seems like STL can -> DAE files. This can be done on oneshape
+        - How to add mesh to URDF step 5: http://wiki.ros.org/urdf/Tutorials/Building%20a%20Visual%20Robot%20Model%20with%20URDF%20from%20Scratch
+    - Put the robot together
+        - Stepper Motors
+        - Mechanical
+        - controlled by computer. 
+    - Moveit Pipeline
+3. Arm motion planning (simple case: move arm, then claw)
+    - Smooth motion execution
+        - debug messaging system 
+    - Task contructor
+4. TODO
+    - protobuf - nanopb messaging system b/w arduino & laptop

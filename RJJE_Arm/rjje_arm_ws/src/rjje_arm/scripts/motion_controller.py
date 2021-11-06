@@ -19,6 +19,8 @@ from threading import Lock
 
 RESET = 0xff
 OKAY = 0x0F
+ARM_ACTION_SERVER = "rjje_arm"
+GRIPPER_ACTION_SERVER = "rjje_gripper"
 
 def decimal_to_list(num: float) -> list: 
     """
@@ -71,10 +73,39 @@ class MotionController:
         self.port = rospy.get_param("~port")
         self.ser = serial.Serial(self.port, 9600, timeout=20)
 
-        self.reset_arduino()
+        self.__reset_arduino()
         rospy.loginfo("Serial port open, now listening to uC")
+#############################################################################################
+    def publish_joint_angles(self): 
+        if self.__read_joint_states_from_arduino(): 
+            self.joint_state_msg.position = self.__convert_to_joint_msg_angles(self.joint_state_msg.position)
+            # TODO: our URDF model's claw isn't accurate, so disabling visualizing the claw for now
+            self.joint_state_msg.position[5] = 0.0
+            self.joint_state_msg.position.append(0.0) 
+            self.joint_state_msg.header.stamp = rospy.Time.now()
+            #TODO
+            print(self.joint_state_msg.position)
+            self.joint_state_pub.publish(self.joint_state_msg)
 
-    def __process_action(self, action_server: actionlib.SimpleActionServer, action_server_name: str, goal):
+    def update_action_servers(self): 
+        #TODO
+        if self.arm_to_move: 
+            #now the arm action server must be waiting 
+            if np.allclose(np.array(self.joint_state_msg.position[:5]), np.array(self.commanded_angles[:5]), atol=self.ANGULAR_THRESHOLD):
+                self.arm_to_move = False
+        #TODO Potential Bug: our URDF model's claw isn't accurate, so disabling visualizing the claw for now
+        # if self.gripper_to_move: 
+        #     if abs(self.joint_state_msg.position[5] - self.commanded_angles[5]) < self.ANGULAR_THRESHOLD: 
+        #         self.gripper_to_move = False
+#############################################################################################
+
+    def process_gripper_action(self, goal): 
+        self.__process_action(GRIPPER_ACTION_SERVER, goal)
+
+    def process_arm_action(self, goal): 
+        self.__process_action(ARM_ACTION_SERVER, goal)
+
+    def __process_action(self, action_server_name: str, goal):
         """
         Actual callback for Moveit! trajectory following action request. Note that each action server runs on a separate thread
         from the main one.
@@ -84,12 +115,17 @@ class MotionController:
         :return: (list_of_exection_times, list_of_commanded_angles)
         """
         # Workflow:
-        #figure out joint names and their positions
-        #start from point 1, since the first point is the current starting point
-        #check for pre-emption
-        #figure out the duration and joint positions of each trajectory segment
-        #realize each segment and time it
-        #check if the action has been preempted
+        # Start from point 1, since the first point is the current starting point
+        # Check for pre-emption
+        # Figure out the duration and joint positions of each trajectory segment
+        # Realize each segment and time it
+        # Wait till finish
+        # Send response
+        if action_server_name == ARM_ACTION_SERVER:
+            action_server = self.action_server_arm
+        elif action_server_name == GRIPPER_ACTION_SERVER:
+            action_server = self.action_server_gripper
+
         success = True
         traj = goal.trajectory
         num_points = len(traj.points)
@@ -101,11 +137,24 @@ class MotionController:
                 self.action_server_arm.set_preempted()
                 success = False
                 break
-            time_ls.append((traj.points[i].time_from_start - traj.points[i-1].time_from_start).to_sec())
-            commanded_angles_ls.append(self.__convert_to_rjje_command_angles(traj.points[i].positions))
-        return time_ls, commanded_angles_ls
+            else: 
+                if action_server_name == ARM_ACTION_SERVER: 
+                    self.commanded_angles[:5] = self.__convert_to_rjje_command_angles(traj.points[i].positions) 
+                elif action_server_name == GRIPPER_ACTION_SERVER: 
+                    self.commanded_angles[5] = self.__convert_to_rjje_command_angles(traj.points[i].positions) 
 
-    def reset_arduino(self): 
+                #TODO: if move claw before finishing moving arm, will cause problem
+                self.execution_time = (traj.points[i].time_from_start - traj.points[i-1].time_from_start).to_sec()
+                with self.__move_joints_lock: 
+                    print(f"{action_server_name} is moving joints: {self.commanded_angles}, will accomplish in {self.execution_time}") 
+                    self.__move_joints() 
+                    # wait for motion to finish 
+                    self.arm_to_move = True 
+                    while (self.arm_to_move): 
+                        pass
+                send_reponse(action_server, action_server_name)
+
+    def __reset_arduino(self): 
         self.__send_message_header(RESET)
 
     def __convert_to_joint_msg_angles(self, commanded_angles: list): 
@@ -113,30 +162,6 @@ class MotionController:
 
     def __convert_to_rjje_command_angles(self, ros_commanded_angles: list): 
         return [180 * (angle/3.1415) + 90 for angle in ros_commanded_angles]
-
-    def process_gripper_action(self, goal): 
-        time_ls, commanded_angles_ls = self.__process_action(self.action_server_gripper, "rjje_gripper", goal)
-        #TODO
-        print(time_ls, commanded_angles_ls)
-        send_reponse(self.action_server_arm, "rjje_gripper")
-
-    def process_arm_action(self, goal): 
-        time_ls, commanded_angles_ls = self.__process_action(self.action_server_arm,  "rjje_arm", goal)
-        for time, commanded_angles in zip(time_ls, commanded_angles_ls): 
-           self.commanded_angles[:5] = list(commanded_angles)
-           self.execution_time = time 
-           print("to acquire")
-           with self.__move_joints_lock: 
-               #TODO
-               print("moving joints")
-               self.__move_joints()
-               # wait for motion to finish
-               self.arm_to_move = True
-               #TODO
-               print("waiting to move")
-               while (self.arm_to_move): 
-                   pass
-        send_reponse(self.action_server_arm, "rjje_arm")
 
     def __send_message_header(self, header): 
         """
@@ -161,7 +186,7 @@ class MotionController:
         self.__send_message_header(OKAY)
         send_int_in_list(commanded_angles_in_list + decimal_to_list(self.execution_time))
         #TODO
-        print(f"moved joints: {self.commanded_angles}")
+        print(f"Sent new joint msg to arduino: {self.commanded_angles}")
 
     def __read_joint_states_from_arduino(self):
         """
@@ -176,6 +201,7 @@ class MotionController:
         for i in range(6):
             int_part_byte = self.ser.read(1)
             two_decimal_part_byte = self.ser.read(1)
+            print(f"{int_part_byte}.{two_decimal_part_byte}")
             if not int_part_byte or not two_decimal_part_byte:
                 return False
 
@@ -185,27 +211,6 @@ class MotionController:
         self.joint_state_msg.position = received_angles
         return True
 
-    def publish_joint_angles(self): 
-        if self.__read_joint_states_from_arduino(): 
-            self.joint_state_msg.position = self.__convert_to_joint_msg_angles(self.joint_state_msg.position)
-            # TODO: our URDF model's claw isn't accurate, so disabling visualizing the claw for now
-            self.joint_state_msg.position[5] = 0.0
-            self.joint_state_msg.position.append(0.0) 
-            self.joint_state_msg.header.stamp = rospy.Time.now()
-            #TODO
-            print(self.joint_state_msg.position)
-            self.joint_state_pub.publish(self.joint_state_msg)
-
-    def update_action_servers(self): 
-        #TODO
-        if self.arm_to_move: 
-            #now the arm action server must be waiting 
-            if np.allclose(np.array(self.joint_state_msg.position[:5]),  np.array(self.commanded_angles[:5]), atol=self.ANGULAR_THRESHOLD):
-                self.arm_to_move = False
-        #TODO Potential Bug: our URDF model's claw isn't accurate, so disabling visualizing the claw for now
-        # if self.gripper_to_move: 
-        #     if abs(self.joint_state_msg.position[5] - self.commanded_angles[5]) < self.ANGULAR_THRESHOLD: 
-        #         self.gripper_to_move = False
 
 if __name__ == '__main__': 
     mc = MotionController()
