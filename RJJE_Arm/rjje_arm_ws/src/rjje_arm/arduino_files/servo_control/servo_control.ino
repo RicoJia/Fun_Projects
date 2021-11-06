@@ -98,7 +98,6 @@ void initialize(){
                 step_angles[i] = (commanded_angles[i] - current_angles[i])/execution_time/UPDATE_FREQUENCY;
             }
             operating = true;
-
         }
     }
 }
