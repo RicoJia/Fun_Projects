@@ -1,12 +1,12 @@
 import rospy
 import numpy as np
-from rjje_arm.msg import ArmControl
+from rjje_arm.msg import MotionControl
 
 
 rospy.init_node("test_pub", anonymous=True)     #anonymous=true ensures unique node name by adding random numbers
-pub = rospy.Publisher("rjje_arm/arm_control", ArmControl, queue_size=10)
+pub = rospy.Publisher("rjje_arm/arm_control", MotionControl, queue_size=10)
 r = rospy.Rate(1)
-msg = ArmControl()
+msg = MotionControl()
 while not rospy.is_shutdown():
     # msg.commanded_angles = [100, 120, 130, 40, 50]
     msg.task_id = 9
