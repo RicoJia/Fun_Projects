@@ -6,20 +6,38 @@
   BSD license, all text above must be included in any redistribution
 */
 #include <ros.h>  // must before message declaration
-#include <rjje_arm/MotionControl.h>
+#include <rjje_arm/ArmControl.h>
+#include <rjje_arm/GripperControl.h>
+#include <rjje_arm/JointFeedback.h>
 #include "servo_control.h"
 
 static const int DELAY = 1000/UPDATE_FREQUENCY;
 
 // Declarations
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40); 
+ros::NodeHandle nh;
+rjje_arm::JointFeedback joint_msg;
+ros::Publisher joint_msg_pub("/robot_joint", &joint_msg); 
+void sub_cb(const rjje_arm::ArmControl& msg){
+    for (unsigned char i = 0; i < 6; ++i) {
+        commanded_angles[i] = msg.commanded_angles[i]; 
+        // TODO step angle
+    }
+}
+void gripper_sub_cb(const rjje_arm::GripperControl& msg){
+    commanded_angles[5] = msg.commanded_angle; 
+    // TODO step angle
+}
+
 static Motor motors[6]; 
 static double commanded_angles[6] = {90, 90, 90, 90, 90, 120};
 static double current_angles[6] = {90, 90, 90, 90, 90, 120};
-static double step_angles[24] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; 
+static double step_angles[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; 
 static double execution_time;
 static bool operating = false;
 
-Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40); 
+ros::Subscriber<rjje_arm::ArmControl> sub("rjje_arm/arm_control", sub_cb);
+ros::Subscriber<rjje_arm::GripperControl> gripper_sub("rjje_arm/gripper_control", gripper_sub_cb);
 
 void setup(){  
   Serial.begin(9600); //comment out ros node stuff if using this
@@ -36,19 +54,6 @@ void setup(){
       motor 4: [0, 180] 
       motor 5[0, 130]
     */
-  motors[0].min_angle_ = 0;
-  motors[0].max_angle_ = 180;
-  motors[1].min_angle_ = 0;
-  motors[1].max_angle_ = 180;
-  motors[2].min_angle_ = 0;
-  motors[3].max_angle_ = 180;
-  motors[3].min_angle_ = 0;
-  motors[3].max_angle_ = 180;
-  motors[4].min_angle_ = 0;
-  motors[4].max_angle_ = 180;
-  motors[5].min_angle_ = 0;
-  motors[5].max_angle_ = 90;   // single finger can rotate 90 degrees max. So in total two fingers can be 180 degrees apart
-
   motors[1].offset_ = 5; 
   motors[2].flip_rotation_ = true; 
   motors[2].offset_ = 5; 
@@ -57,29 +62,28 @@ void setup(){
   motors[5].is_claw_ = true;
   motors[5].offset_ = -10;
 
-  back_to_neutral(motors, pwm); 
+  nh.initNode(); 
+  nh.advertise(joint_msg_pub);
+
+  back_to_neutral(motors, pwm, commanded_angles); 
   delay(2500); 
 }
 
 void update_current_angles(){
     // TODO swap for analog step motors
-    for (unsigned int i = 0; i < 6; ++i) {
+    for (unsigned char i = 0; i < 6; ++i) {
         current_angles[i] += step_angles[i];
     }
 }
 
 bool can_stop(){
     char stop_count = 0; 
-    for (unsigned int i = 0; i < 6; ++i) {
+    for (unsigned char i = 0; i < 6; ++i) {
         if (abs(commanded_angles[i] - current_angles[i]) < ANGULAR_THRESHOLD){
           ++stop_count;
         }
     }
     return stop_count == 6; 
-}
-
-// send OKAY header, followed by all current angles in two-decimal places (2 bytes for each value)
-void publish_angles(){
 }
 
 void loop(){ 
@@ -97,7 +101,7 @@ void loop(){
         }
     }
     //TODO
-    publish_angles();
+    joint_msg_pub.publish(&joint_msg); 
     unsigned long now = millis();
     if (start + DELAY > now){
         delay(start + DELAY - now);

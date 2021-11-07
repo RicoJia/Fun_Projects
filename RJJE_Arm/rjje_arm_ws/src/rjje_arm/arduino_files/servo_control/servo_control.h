@@ -27,12 +27,10 @@ inline int sign(double i){
 struct Motor{
     // In robotics a common convention is the right-hand rotation, which defines the positive direction of rotation is counter-clockwise of positive z-axis. 
     // Below all angles follow the right-hand convention 
-    double min_angle_ = 0;  
-    double max_angle_ = 180;   
+
     // In my setup, all motors have the neutral position at 90
-    double neutral_angle_=90;   
-    double last_angle_ = neutral_angle_;
-    double offset_=0;   //offset should is added on commanded_angle
+    double last_angle_ = 90;
+    char offset_=0;   //offset should is added on commanded_angle
     // Therefore we need to "flip" the angle about the neutral position if necessary.
     bool is_claw_ = false;
     bool flip_rotation_ = false;   
@@ -59,15 +57,16 @@ struct Motor{
     double get_real_angle (double commanded_angle){
        if (is_claw_){
            double rotation_angle = commanded_angle/2;
-           if (min_angle_ <= rotation_angle && rotation_angle <= max_angle_){
-              return max_angle_-rotation_angle + offset_;    //offset due to mislignment of rudder and finger 
+           //we're hard coding this because we're running out of memory
+           if (0 <= rotation_angle && rotation_angle <= 90){
+              return 90-rotation_angle + offset_;    //offset due to mislignment of rudder and finger 
            }
            else return -1; 
        }
        else{
          commanded_angle += offset_; 
          double real_angle = (flip_rotation_) ? 180 - commanded_angle : commanded_angle;
-         if (min_angle_ <= real_angle && real_angle <= max_angle_){
+         if (0 <= real_angle && real_angle <= 180){
            real_angle = last_angle_ + 0.5*(real_angle - last_angle_) ; 
            last_angle_ = real_angle;
            return real_angle; 
@@ -79,8 +78,13 @@ struct Motor{
     }
 }; 
 
-inline void back_to_neutral(Motor* const motors, const Adafruit_PWMServoDriver& pwm){
-    double commanded_angles[6] = {90, 90, 90, 90, 90, 120};
+inline void back_to_neutral(Motor* const motors, const Adafruit_PWMServoDriver& pwm, double* commanded_angles){
+    commanded_angles[0] = 90; 
+    commanded_angles[1] = 90; 
+    commanded_angles[2] = 90; 
+    commanded_angles[3] = 90; 
+    commanded_angles[4] = 90; 
+    commanded_angles[5] = 120; 
     for (unsigned int channel_id = 0; channel_id < 6; ++channel_id){
         motors[channel_id].set_angle(commanded_angles[channel_id], channel_id, pwm);
     }
