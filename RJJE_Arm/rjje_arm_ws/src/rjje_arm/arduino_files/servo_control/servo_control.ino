@@ -14,6 +14,14 @@
 static const int DELAY = 1000/UPDATE_FREQUENCY;
 
 // Declarations
+
+static Motor motors[6]; 
+static float commanded_angles[6] = {90, 90, 90, 90, 90, 120};
+static float current_angles[6] = {90, 90, 90, 90, 90, 120};
+static float step_angles[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; 
+static float execution_time;
+static bool operating = false;
+
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40); 
 ros::NodeHandle nh;
 rjje_arm::JointFeedback joint_msg;
@@ -21,21 +29,13 @@ ros::Publisher joint_msg_pub("/robot_joint", &joint_msg);
 void sub_cb(const rjje_arm::ArmControl& msg){
     for (unsigned char i = 0; i < 6; ++i) {
         commanded_angles[i] = msg.commanded_angles[i]; 
-        // TODO step angle
+        step_angles[i] = (commanded_angles[i] - current_angles[i])/execution_time/UPDATE_FREQUENCY;
     }
 }
 void gripper_sub_cb(const rjje_arm::GripperControl& msg){
     commanded_angles[5] = msg.commanded_angle; 
-    // TODO step angle
+    step_angles[5] = (commanded_angles[5] - current_angles[5])/execution_time/UPDATE_FREQUENCY;
 }
-
-static Motor motors[6]; 
-static double commanded_angles[6] = {90, 90, 90, 90, 90, 120};
-static double current_angles[6] = {90, 90, 90, 90, 90, 120};
-static double step_angles[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; 
-static double execution_time;
-static bool operating = false;
-
 ros::Subscriber<rjje_arm::ArmControl> sub("rjje_arm/arm_control", sub_cb);
 ros::Subscriber<rjje_arm::GripperControl> gripper_sub("rjje_arm/gripper_control", gripper_sub_cb);
 
@@ -64,6 +64,8 @@ void setup(){
 
   nh.initNode(); 
   nh.advertise(joint_msg_pub);
+  joint_msg.commanded_angles_length = 6; 
+  joint_msg.commanded_angles = &current_angles[0];
 
   back_to_neutral(motors, pwm, commanded_angles); 
   delay(2500); 
@@ -92,7 +94,7 @@ void loop(){
     {
         // might consider update_step_angles();
         for (char channel_id = 0; channel_id < 6; ++channel_id){
-            double angle_to_execute = current_angles[channel_id] + step_angles[channel_id]; 
+            float angle_to_execute = current_angles[channel_id] + step_angles[channel_id]; 
             motors[channel_id].set_angle(angle_to_execute, channel_id, pwm);
         }
         update_current_angles(); 
@@ -100,8 +102,11 @@ void loop(){
             operating = false;
         }
     }
-    //TODO
+
+
     joint_msg_pub.publish(&joint_msg); 
+    nh.loginfo("hehe");
+    nh.spinOnce();
     unsigned long now = millis();
     if (start + DELAY > now){
         delay(start + DELAY - now);
