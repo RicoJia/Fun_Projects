@@ -27,8 +27,13 @@ rjje_arm::JointFeedback joint_msg;
 ros::Publisher joint_msg_pub("/robot_joint", &joint_msg); 
 
 void sub_cb(const rjje_arm::ArmControl& msg){
-    for (unsigned char i = 0; i < 6; ++i) {
-        commanded_angles[i] = msg.commanded_angles[i]; 
+    commanded_angles[0] = msg.c0;  
+    commanded_angles[1] = msg.c1;  
+    commanded_angles[2] = msg.c2;  
+    commanded_angles[3] = msg.c3;  
+    commanded_angles[4] = msg.c4;  
+    commanded_angles[5] = msg.c5;  
+    for (unsigned char i = 0; i < 5; ++i) {
         step_angles[i] = (commanded_angles[i] - current_angles[i])/msg.execution_time/UPDATE_FREQUENCY;
     }
     operating = true; 
@@ -99,15 +104,15 @@ void loop(){
     unsigned long start = millis();
     if(operating)
     {
-        /* // might consider update_step_angles(); */
-        /* for (char channel_id = 0; channel_id < 6; ++channel_id){ */
-        /*     float angle_to_execute = current_angles[channel_id] + step_angles[channel_id];  */
-        /*     motors[channel_id].set_angle(angle_to_execute, channel_id, pwm); */
-        /* } */
-        /* update_current_angles();  */
-        /* if(operating && can_stop()){ */
-        /*     operating = false; */
-        /* } */
+        // might consider update_step_angles();
+        for (char channel_id = 0; channel_id < 6; ++channel_id){
+            float angle_to_execute = current_angles[channel_id] + step_angles[channel_id]; 
+            motors[channel_id].set_angle(angle_to_execute, channel_id, pwm);
+        }
+        update_current_angles(); 
+        if(operating && can_stop()){
+            operating = false;
+        }
     }
 
 
