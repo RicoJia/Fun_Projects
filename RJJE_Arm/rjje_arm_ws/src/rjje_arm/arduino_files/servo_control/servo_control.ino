@@ -106,15 +106,20 @@ void loop(){
     unsigned long start = millis();
     if(operating)
     {
-        // prevent overshoot
-        update_step_angles(); 
-        for (char channel_id = 0; channel_id < 6; ++channel_id){
-            float angle_to_execute = current_angles[channel_id] + step_angles[channel_id]; 
-            /* motors[channel_id].set_angle(angle_to_execute, channel_id, pwm); */
+        if (!pwm_board_connected()){
+          nh.loginfo("pwm board not connected!"); 
         }
-        update_current_angles(); 
-        if(operating && can_stop()){
-            operating = false;
+        else{
+          // prevent overshoot
+          update_step_angles(); 
+          for (char channel_id = 0; channel_id < 6; ++channel_id){
+              float angle_to_execute = current_angles[channel_id] + step_angles[channel_id]; 
+              motors[channel_id].set_angle(angle_to_execute, channel_id, pwm);
+          }
+          update_current_angles(); 
+          if(operating && can_stop()){
+              operating = false;
+          }
         }
     }
 

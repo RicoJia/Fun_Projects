@@ -25,6 +25,12 @@ inline int sign(float i){
   else return 1;
 }
 
+bool pwm_board_connected(){
+    Wire.beginTransmission(PWM_BOARD_ADDR); 
+    byte error = Wire.endTransmission(); 
+    return (error==0); 
+}
+
 struct Motor{
     // In robotics a common convention is the right-hand rotation, which defines the positive direction of rotation is counter-clockwise of positive z-axis. 
     // Below all angles follow the right-hand convention 
