@@ -4,7 +4,7 @@ from rjje_arm.msg import MotionControl
 
 
 rospy.init_node("test_pub", anonymous=True)     #anonymous=true ensures unique node name by adding random numbers
-pub = rospy.Publisher("rjje_arm/arm_control", MotionControl, queue_size=10)
+pub = rospy.Publisher("rjje_arm/motion_control", MotionControl, queue_size=10)
 r = rospy.Rate(1)
 msg = MotionControl()
 while not rospy.is_shutdown():

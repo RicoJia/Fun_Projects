@@ -5,7 +5,6 @@ lock-free manner.
 """
 import rospy
 import numpy as np
-import serial
 import math
 from control_msgs.msg import FollowJointTrajectoryAction
 from control_msgs.msg import FollowJointTrajectoryFeedback
@@ -16,22 +15,12 @@ from control_msgs.msg import GripperCommandResult
 from sensor_msgs.msg import JointState
 import actionlib
 from threading import Lock
+from rjje_arm.msg import MotionControl
+from rjje_arm.msg import JointFeedback
+import threading
 
-RESET = 0xff
-OKAY = 0x0F
 ARM_ACTION_SERVER = "rjje_arm"
 GRIPPER_ACTION_SERVER = "rjje_gripper"
-
-def decimal_to_list(num: float) -> list: 
-    """
-    Round a float to one digit after decimal point, and convert a float to list. E.g., 2.48->[2,5]
-    """
-    num_one_decimal = round(num, 1)
-    ret = []
-    ret.append(math.floor(num_one_decimal))
-    #extra round to prevent small numertical error in subtraction
-    ret.append(round(10*(num_one_decimal - ret[0])))
-    return ret
 
 def send_reponse(action_server: actionlib.SimpleActionServer, action_server_name: str):
     """
@@ -46,58 +35,61 @@ class MotionController:
     def __init__(self): 
         rospy.init_node("motion_controller", anonymous=True)     #anonymous=true ensures unique node name by adding random numbers
         # one digit after decimal point
-        self.commanded_angles = [90, 90, 90, 90, 90, 120]
+        self.commanded_angles = [90, 90, 90, 90, 90, 90]
         self.execution_time = 1.0 #seconds, one digit after decimal point
         # in CPython, bool write is atomic.
-        self.arm_to_move = False
-        self.gripper_to_move = True
-        self.ANGULAR_THRESHOLD = 0.05
+        self.arm_move_event = threading.Event()
+        # self.gripper_to_move = True
+        self.ANGULAR_THRESHOLD = 1.0
 
-        self.action_server_arm = actionlib.SimpleActionServer('rjje_arm_controller/follow_joint_trajectory', FollowJointTrajectoryAction, execute_cb=self.process_arm_action, auto_start=False)    #auto_start is false, so we can start at a later time
+        self.action_server_arm = actionlib.SimpleActionServer('/rjje_arm_controller/follow_joint_trajectory', FollowJointTrajectoryAction, execute_cb=self.process_arm_action, auto_start=False)    #auto_start is false, so we can start at a later time
         self.action_server_arm.start()
         rospy.loginfo("Arm action server started")
 
-        self.action_server_gripper = actionlib.SimpleActionServer('rjje_gripper_controller/gripper_command', GripperCommandAction, execute_cb=self.process_gripper_action, auto_start=False)    #auto_start is false, so we can start at a later time
+        self.action_server_gripper = actionlib.SimpleActionServer('/rjje_gripper_controller/gripper_command', GripperCommandAction, execute_cb=self.process_gripper_action, auto_start=False)    #auto_start is false, so we can start at a later time
         self.action_server_gripper.start()
         rospy.loginfo("Gripper action server started")
 
         self.__move_joints_lock = Lock()
+        self.__joint_state_lock = Lock()
         self.joint_state_pub = rospy.Publisher("/joint_states", JointState, queue_size=10)
         self.joint_state_msg = JointState()
-        self.joint_state_msg.position = self.commanded_angles
+        self.joint_state_msg.position = self.__convert_to_joint_msg_angles(self.commanded_angles)
+        # TODO: our URDF model's claw isn't accurate, so disabling visualizing the claw for now
+        self.joint_state_msg.position[5] = 0.0
+
         #TODO: to change to soft-coded way
-        self.joint_state_msg.name = ["link1_bracket_1", "link_2_bracket_2_1", "bracket_2_2_link_3", "bracket_3_2_link_4", "link_5_link_6", "link_6_left_gripper", "link_6_right_gripper"]
+        self.joint_state_msg.name = ["link1_bracket_1", "link_2_bracket_2_1", "bracket_2_2_link_3", "bracket_3_2_link_4", "link_5_link_6", "link_6_left_gripper"]
         rospy.loginfo("joint state publisher set up")
 
-        # Serial Ports
-        self.port = rospy.get_param("~port")
-        self.ser = serial.Serial(self.port, 9600, timeout=20)
+        self.motion_control_pub = rospy.Publisher("/rjje_arm/motion_control", MotionControl, queue_size=10)
+        self.motion_control_msg = MotionControl()
+        self.joint_feedback_sub = rospy.Subscriber("/rjje_arm/joint_feedback", JointFeedback, self.joint_feedback_cb)
+        rospy.loginfo("Interface for arduino topics is setup")
 
-        self.__reset_arduino()
-        rospy.loginfo("Serial port open, now listening to uC")
 #############################################################################################
-    def publish_joint_angles(self): 
-        if self.__read_joint_states_from_arduino(): 
-            self.joint_state_msg.position = self.__convert_to_joint_msg_angles(self.joint_state_msg.position)
-            # TODO: our URDF model's claw isn't accurate, so disabling visualizing the claw for now
-            self.joint_state_msg.position[5] = 0.0
-            self.joint_state_msg.position.append(0.0) 
-            self.joint_state_msg.header.stamp = rospy.Time.now()
-            #TODO
-            print(self.joint_state_msg.position)
-            self.joint_state_pub.publish(self.joint_state_msg)
-
     def update_action_servers(self): 
-        #TODO
-        if self.arm_to_move: 
+        # TODO
+        with self.__joint_state_lock: 
+            print(f"update action server: {self.joint_state_msg.position} | {self.__convert_to_joint_msg_angles(self.commanded_angles)}")
             #now the arm action server must be waiting 
-            if np.allclose(np.array(self.joint_state_msg.position[:5]), np.array(self.commanded_angles[:5]), atol=self.ANGULAR_THRESHOLD):
-                self.arm_to_move = False
-        #TODO Potential Bug: our URDF model's claw isn't accurate, so disabling visualizing the claw for now
+            if np.allclose(np.array(self.joint_state_msg.position[:5]), np.array(self.__convert_to_joint_msg_angles(self.commanded_angles[:5])), atol=self.ANGULAR_THRESHOLD):
+                self.arm_move_event.set()
+        # TODO Potential Bug: our URDF model's claw isn't accurate, so disabling visualizing the claw for now
         # if self.gripper_to_move: 
         #     if abs(self.joint_state_msg.position[5] - self.commanded_angles[5]) < self.ANGULAR_THRESHOLD: 
         #         self.gripper_to_move = False
 #############################################################################################
+    def publish_joint_state_msg(self): 
+        with self.__joint_state_lock:
+            self.joint_state_msg.header.stamp = rospy.Time.now()
+            self.joint_state_pub.publish(self.joint_state_msg)
+
+    def joint_feedback_cb(self, msg): 
+        with self.__joint_state_lock:
+            self.joint_state_msg.position = self.__convert_to_joint_msg_angles(msg.joint_angles)
+            # TODO: our URDF model's claw isn't accurate, so disabling visualizing the claw for now
+            self.joint_state_msg.position[5] = 0.0
 
     def process_gripper_action(self, goal): 
         self.__process_action(GRIPPER_ACTION_SERVER, goal)
@@ -149,13 +141,8 @@ class MotionController:
                     print(f"{action_server_name} is moving joints: {self.commanded_angles}, will accomplish in {self.execution_time}") 
                     self.__move_joints() 
                     # wait for motion to finish 
-                    self.arm_to_move = True 
-                    while (self.arm_to_move): 
-                        pass
+                self.arm_move_event.wait(10)    #10s as timeout
                 send_reponse(action_server, action_server_name)
-
-    def __reset_arduino(self): 
-        self.__send_message_header(RESET)
 
     def __convert_to_joint_msg_angles(self, commanded_angles: list): 
         return [3.1415 * ((angle-90.0)/180.0) for angle in commanded_angles]
@@ -163,60 +150,25 @@ class MotionController:
     def __convert_to_rjje_command_angles(self, ros_commanded_angles: list): 
         return [180 * (angle/3.1415) + 90 for angle in ros_commanded_angles]
 
-    def __send_message_header(self, header): 
-        """
-        message contract: 1 byte HEADER| 12 bytes commanded_angles | 2 byte EXECUTION_TIME
-        header: b'11111111' = RESET, b'0' = OKAY
-        """
-        byte = (header).to_bytes(1, "little")
-        self.ser.write(byte)
 
     def __move_joints(self): 
-        # minimalist "service" provided by arduino: 
-        # Python sends joint angles, execution time, and gets a response back
-        def send_int_in_list(ls: list): 
-            raw_bytes = b''
-            for integer in ls: 
-                raw_bytes += (integer).to_bytes(1,"little") 
-            self.ser.write(raw_bytes)
-
-        commanded_angles_in_list = []
-        for angle in self.commanded_angles: 
-            commanded_angles_in_list.extend(decimal_to_list(angle))
-        self.__send_message_header(OKAY)
-        send_int_in_list(commanded_angles_in_list + decimal_to_list(self.execution_time))
-        #TODO
+        self.motion_control_msg.task_id = (self.motion_control_msg.task_id + 1)%10
+        self.motion_control_msg.c0 = self.commanded_angles[0]
+        self.motion_control_msg.c1 = self.commanded_angles[1]
+        self.motion_control_msg.c2 = self.commanded_angles[2]
+        self.motion_control_msg.c3 = self.commanded_angles[3]
+        self.motion_control_msg.c4 = self.commanded_angles[4]
+        self.motion_control_msg.c5 = self.commanded_angles[5]
+        self.motion_control_msg.execution_time = self.execution_time
+        self.motion_control_pub.publish(self.motion_control_msg)
         print(f"Sent new joint msg to arduino: {self.commanded_angles}")
-
-    def __read_joint_states_from_arduino(self):
-        """
-        read angles from arduino (two_decimal places)
-        :return True if all values received are valid. Else false
-        """
-        received_angles = [0.0 for i in range(6)]
-        while True: 
-            if ord(self.ser.read(1)) == OKAY: 
-                break
-
-        for i in range(6):
-            int_part_byte = self.ser.read(1)
-            two_decimal_part_byte = self.ser.read(1)
-            print(f"{int_part_byte}.{two_decimal_part_byte}")
-            if not int_part_byte or not two_decimal_part_byte:
-                return False
-
-            int_part = ord(int_part_byte)
-            two_decimal_part = ord(two_decimal_part_byte)
-            received_angles[i] = int_part + two_decimal_part * 0.01
-        self.joint_state_msg.position = received_angles
-        return True
 
 
 if __name__ == '__main__': 
     mc = MotionController()
     r = rospy.Rate(10)
     while not rospy.is_shutdown():
-        mc.publish_joint_angles()
+        mc.publish_joint_state_msg()
         mc.update_action_servers()
         r.sleep()
 

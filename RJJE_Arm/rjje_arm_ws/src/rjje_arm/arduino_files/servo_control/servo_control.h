@@ -84,14 +84,14 @@ inline void back_to_neutral(Motor* const motors, const Adafruit_PWMServoDriver& 
     commanded_angles[2] = 90; 
     commanded_angles[3] = 90; 
     commanded_angles[4] = 90; 
-    commanded_angles[5] = 120; 
+    commanded_angles[5] = 90; 
     for (unsigned int channel_id = 0; channel_id < 6; ++channel_id){
         motors[channel_id].set_angle(commanded_angles[channel_id], channel_id, pwm);
     }
 }
 
 void test_arm(float* const commanded_angles, Motor* const motors, const float& step_angle, const Adafruit_PWMServoDriver& pwm){
-    static float degrees[6] = {90, 90, 90, 30, 90, 120};
+    static float degrees[6] = {90, 90, 90, 30, 90, 90};
     for (unsigned int channel_id = 0; channel_id < 6; ++channel_id){
         commanded_angles[channel_id] += sign(degrees[channel_id] - commanded_angles[channel_id]) * step_angle;
         motors[channel_id].set_angle(commanded_angles[channel_id], channel_id, pwm);

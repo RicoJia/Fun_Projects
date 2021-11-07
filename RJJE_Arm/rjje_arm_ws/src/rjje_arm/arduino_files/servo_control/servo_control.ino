@@ -15,8 +15,8 @@ static const int DELAY = 1000/UPDATE_FREQUENCY;
 // Declarations
 
 static Motor motors[6]; 
-static float commanded_angles[6] = {90, 90, 90, 90, 90, 120};
-static float current_angles[6] = {90, 90, 90, 90, 90, 120};
+static float commanded_angles[6] = {90, 90, 90, 90, 90, 90};
+static float current_angles[6] = {90, 90, 90, 90, 90, 90};
 static float step_angles[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; 
 static byte arm_task_id = 0;
 static bool operating = false;
@@ -24,7 +24,7 @@ static bool operating = false;
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40); 
 ros::NodeHandle nh;
 rjje_arm::JointFeedback joint_msg;
-ros::Publisher joint_msg_pub("/robot_joint", &joint_msg); 
+ros::Publisher joint_msg_pub("/rjje_arm/joint_feedback", &joint_msg); 
 
 void sub_cb(const rjje_arm::MotionControl& msg){
     if (msg.task_id != arm_task_id){
@@ -42,7 +42,7 @@ void sub_cb(const rjje_arm::MotionControl& msg){
     }
 }
 
-ros::Subscriber<rjje_arm::MotionControl> arm_sub("/rjje_arm/arm_control", sub_cb);
+ros::Subscriber<rjje_arm::MotionControl> arm_sub("/rjje_arm/motion_control", sub_cb);
 
 void setup(){  
   Serial.begin(9600); //comment out ros node stuff if using this
@@ -70,8 +70,8 @@ void setup(){
   nh.initNode(); 
   nh.advertise(joint_msg_pub);
   nh.subscribe(arm_sub);
-  joint_msg.commanded_angles_length = 6; 
-  joint_msg.commanded_angles = &current_angles[0];
+  joint_msg.joint_angles_length = 6; 
+  joint_msg.joint_angles = &current_angles[0];
 
   back_to_neutral(motors, pwm, commanded_angles); 
   delay(2500); 
