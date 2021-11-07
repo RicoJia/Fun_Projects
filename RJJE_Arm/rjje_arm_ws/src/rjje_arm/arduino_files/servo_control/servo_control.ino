@@ -21,7 +21,7 @@ static float step_angles[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 static byte arm_task_id = 0;
 static bool operating = false;
 
-Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40); 
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(PWM_BOARD_ADDR); 
 ros::NodeHandle nh;
 rjje_arm::JointFeedback joint_msg;
 ros::Publisher joint_msg_pub("/rjje_arm/joint_feedback", &joint_msg); 
@@ -110,7 +110,7 @@ void loop(){
         update_step_angles(); 
         for (char channel_id = 0; channel_id < 6; ++channel_id){
             float angle_to_execute = current_angles[channel_id] + step_angles[channel_id]; 
-            //motors[channel_id].set_angle(angle_to_execute, channel_id, pwm);
+            /* motors[channel_id].set_angle(angle_to_execute, channel_id, pwm); */
         }
         update_current_angles(); 
         if(operating && can_stop()){
@@ -119,9 +119,7 @@ void loop(){
     }
 
 
-    //TODO
     joint_msg_pub.publish(&joint_msg); 
-    /* nh.loginfo("hz"); */
     nh.spinOnce();
     unsigned long now = millis();
     if (start + DELAY > now){
