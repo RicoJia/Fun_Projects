@@ -91,3 +91,21 @@
     - Task contructor
 4. TODO
     - protobuf - nanopb messaging system b/w arduino & laptop
+
+## Log
+1. going back to ros:
+    - publisher: use the joint msg? - fill up first, see if can publish correctly
+    - subscriber
+        - can only see two values? no spinOnce
+        - can't distinguish task. Add task id
+    - CPU: too high? event check
+    - moveit visualization error? conversion?
+        - checked conversion, all right
+        - checked commanded angles, seems wrong
+        - checked traj points, seems like the traj points are not right. (Moveit Traj's position might be in a different order. Check traj.joint_name)
+    - NIT
+        - separate out the 5 joints (update self.commanded_angle[:5], from start to end)
+        - To transition to a succeeded state, the goal must be in a preempting or active state, it is currently in state: 3 (setting response too many times?)
+        - time (Not an issue, just time scaling needs to be really small)
+        - servo connection check (see what address to check)
+
