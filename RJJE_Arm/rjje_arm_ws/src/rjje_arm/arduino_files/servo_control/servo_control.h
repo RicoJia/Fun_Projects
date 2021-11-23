@@ -76,7 +76,6 @@ struct Motor{
          commanded_angle += offset_; 
          float real_angle = (flip_rotation_) ? 180 - commanded_angle : commanded_angle;
          if (0 <= real_angle && real_angle <= 180){
-           real_angle = last_angle_ + 0.5*(real_angle - last_angle_) ; 
            last_angle_ = real_angle;
            return real_angle; 
          }
