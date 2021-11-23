@@ -118,6 +118,7 @@
     - sleep, record joint angles, wakeup
     - arduino: calibrate angles. If not accurate, the visualization will be off.
         - the calculated angle and the raw value mapping
+        - real_angle -> commanded angles (offset, etc.)
         - repeat on every motor
     - arduino: sleep/wakeup upon command
     - replay
