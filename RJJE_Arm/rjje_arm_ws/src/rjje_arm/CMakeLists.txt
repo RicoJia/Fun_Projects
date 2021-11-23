@@ -17,10 +17,11 @@ add_message_files(
 )
 
 # # Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   MotionControl.srv
-# )
+add_service_files(
+  FILES
+  # MotionControl.srv
+  ModeSwitch.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -70,6 +71,6 @@ include_directories(
 # ${catkin_INCLUDE_DIRS}
 )
 
-catkin_install_python(PROGRAMS scripts/motion_controller.py scripts/test_pub.py
+catkin_install_python(PROGRAMS scripts/motion_controller.py scripts/test_scripts/test_pub.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

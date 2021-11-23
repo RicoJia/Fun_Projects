@@ -5,6 +5,10 @@
   Author: Rico Ruotong Jia, 2021
   BSD license, all text above must be included in any redistribution
 */
+
+// Modes of operations: 
+// 1. Teaching mode: /rjje_arm/motion_control is [270, 270,270, 270,270, 270]. To turn it off, [360, 360,360, 360,360, 360]
+
 #include <ros.h>  // must before message declaration
 #include <rjje_arm/MotionControl.h>
 #include <rjje_arm/JointFeedback.h>
@@ -20,25 +24,48 @@ static float current_angles[6] = {90, 90, 90, 90, 90, 90};
 static float step_angles[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0}; 
 static byte arm_task_id = 0;
 static bool operating = false;
+static bool teaching_mode = false;
+static const char servo_inputs[6] = {A0, A1, A2, A3, A6, A7};
 
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(PWM_BOARD_ADDR); 
 ros::NodeHandle nh;
 rjje_arm::JointFeedback joint_msg;
 ros::Publisher joint_msg_pub("/rjje_arm/joint_feedback", &joint_msg); 
 
+bool switch_to_teaching_mode(const rjje_arm::MotionControl& msg){
+    return (msg.c5 == TEACHING_MODE_VAL); 
+}
+
+bool switch_to_regular_mode(const rjje_arm::MotionControl& msg){
+    return (msg.c5 == REGULAR_MODE_VAL); 
+}
+
 void sub_cb(const rjje_arm::MotionControl& msg){
     if (msg.task_id != arm_task_id){
         arm_task_id = msg.task_id;
-        commanded_angles[0] = msg.c0;  
-        commanded_angles[1] = msg.c1;  
-        commanded_angles[2] = msg.c2;  
-        commanded_angles[3] = msg.c3;  
-        commanded_angles[4] = msg.c4;  
-        commanded_angles[5] = msg.c5;  
-        for (unsigned char i = 0; i < 5; ++i) {
-            step_angles[i] = (commanded_angles[i] - current_angles[i])/msg.execution_time/UPDATE_FREQUENCY;
+        if (!teaching_mode){
+            if (switch_to_teaching_mode(msg)){
+                teaching_mode = true; 
+                operating = true;
+                return; 
+            }
+            commanded_angles[0] = msg.c0;  
+            commanded_angles[1] = msg.c1;  
+            commanded_angles[2] = msg.c2;  
+            commanded_angles[3] = msg.c3;  
+            commanded_angles[4] = msg.c4;  
+            commanded_angles[5] = msg.c5;  
+            for (unsigned char i = 0; i < 5; ++i) {
+                step_angles[i] = (commanded_angles[i] - current_angles[i])/msg.execution_time/UPDATE_FREQUENCY;
+            }
+            operating = true; 
         }
-        operating = true; 
+        else{
+            if (switch_to_regular_mode(msg)){
+                teaching_mode = false;
+                operating = false;
+            }
+        }
     }
 }
 
@@ -74,13 +101,24 @@ void setup(){
   joint_msg.joint_angles = &current_angles[0];
 
   back_to_neutral(motors, pwm, commanded_angles); 
+  for (char i = 0; i < 6; ++i) {
+      pinMode(servo_inputs[i], INPUT_PULLUP); 
+  }
+
   delay(2500); 
 }
 
-void update_current_angles(){
-    // TODO swap for analog step motors
+void update_current_angles(bool read_from_servo_inputs){
+    
     for (unsigned char i = 0; i < 6; ++i) {
-        current_angles[i] += step_angles[i];
+        if (read_from_servo_inputs){
+            int raw_value = analogRead(servo_inputs[i]);
+            // TODO calibrate
+            /* current_angles =  */
+        }
+        else{
+            current_angles[i] += step_angles[i];
+        }
     }
 }
 
@@ -110,15 +148,22 @@ void loop(){
           nh.loginfo("pwm board not connected!"); 
         }
         else{
-          // prevent overshoot
-          update_step_angles(); 
-          for (char channel_id = 0; channel_id < 6; ++channel_id){
-              float angle_to_execute = current_angles[channel_id] + step_angles[channel_id]; 
-              motors[channel_id].set_angle(angle_to_execute, channel_id, pwm);
+          if (teaching_mode){
+              //TODO
+              update_current_angles(true);
           }
-          update_current_angles(); 
-          if(operating && can_stop()){
-              operating = false;
+          else{
+              // prevent overshoot
+              update_step_angles(); 
+              for (char channel_id = 0; channel_id < 6; ++channel_id){
+                  float angle_to_execute = current_angles[channel_id] + step_angles[channel_id]; 
+                  motors[channel_id].set_angle(angle_to_execute, channel_id, pwm);
+              }
+              update_current_angles(false); 
+              if(operating && can_stop()){
+                  operating = false;
+              }
+
           }
         }
     }

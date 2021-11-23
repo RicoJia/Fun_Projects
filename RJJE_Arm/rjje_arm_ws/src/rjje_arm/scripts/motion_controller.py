@@ -2,10 +2,14 @@
 Motion controller that can control a robot arm and a gripper independently, in a soft real-time fashion, ~2ms 
 Internally, the arm and gripper shares the same message to the uC. And their status is updated in a lock-free manner.
 On arduino, all motors go from (0, 180) following the right-hand convention, with the neutral position = 90. 
+- Modes of Operations: 
+    1. Teaching mode: /rjje_arm/motion_control is [x,x,x,x,x, 361]. To turn it off, [x,x,x,x,x, 362]. In teaching mode, joint values are recorded.
 """
 import rospy
 import numpy as np
 import math
+import threading
+
 from control_msgs.msg import FollowJointTrajectoryAction
 from control_msgs.msg import FollowJointTrajectoryFeedback
 from control_msgs.msg import FollowJointTrajectoryResult
@@ -17,10 +21,14 @@ import actionlib
 from threading import Lock
 from rjje_arm.msg import MotionControl
 from rjje_arm.msg import JointFeedback
-import threading
+from rjje_arm.srv import ModeSwitch, ModeSwitchResponse
 
 ARM_ACTION_SERVER = "rjje_arm"
 GRIPPER_ACTION_SERVER = "rjje_gripper"
+MODE_SWITCH_SERVICE = "rjje_mode_switch"
+
+TEACHING_MODE_VAL = 361
+REGULAR_MODE_SEQ = 362
 
 def send_reponse(action_server: actionlib.SimpleActionServer, action_server_name: str, status):
     """
@@ -36,7 +44,6 @@ def send_reponse(action_server: actionlib.SimpleActionServer, action_server_name
         action_server.set_succeeded(result=res, text=msg)
     elif status == "PREEMPTED":
         action_server.set_preempted()
-
 
 class MotionController: 
     def __init__(self): 
@@ -76,6 +83,11 @@ class MotionController:
         self.joint_feedback_sub = rospy.Subscriber("/rjje_arm/joint_feedback", JointFeedback, self.joint_feedback_cb)
         rospy.loginfo("Interface for arduino topics is setup")
 
+        self.mode_switch_server = rospy.Service("/rjje_arm/rjje_mode_switch", ModeSwitch, self.mode_switch_cb)
+        rospy.loginfo("Mode Switch has been enabled")
+        self.teaching_mode = False
+        self.joint_recording = []
+
 #############################################################################################
     def update_action_servers(self): 
         with self.__joint_state_lock: 
@@ -86,13 +98,36 @@ class MotionController:
         # if self.gripper_to_move: 
         #     if abs(self.joint_state_msg.position[5] - self.commanded_angles[5]) < self.ANGULAR_THRESHOLD: 
         #         self.gripper_to_move = False
+
+    def mode_switch_cb(self, req): 
+        """
+        Send a sequence to arduino based on the ros service input for mode switching. Then clear joint recordings. 
+        """
+        rospy.loginfo(f"Teaching mode: {'on' if req.teaching_mode_on else 'off'}")
+        self.teaching_mode = req.teaching_mode_on
+        with self.__move_joints_lock:
+            self.commanded_angles[5] = TEACHING_MODE_VAL if self.teaching_mode else REGULAR_MODE_VAL
+            self.__move_joints()
+
+        if self.teaching_mode: 
+            self.joint_recording.clear()
+        return ModeSwitchResponse()
+
 #############################################################################################
+    def update_joint_recording(self): 
+        #TODO
+        print("updating joint recordings")
+        self.joint_recording.append(self.joint_state_msg.position)
+
     def publish_joint_state_msg(self): 
         with self.__joint_state_lock:
             self.joint_state_msg.header.stamp = rospy.Time.now()
             self.joint_state_pub.publish(self.joint_state_msg)
 
     def joint_feedback_cb(self, msg): 
+        """
+        Callback function upon receiving a joint feedback msg from the arduino. 
+        """
         with self.__joint_state_lock:
             self.joint_state_msg.position = self.__convert_to_joint_msg_angles(msg.joint_angles)
             # TODO: our URDF model's gripper isn't accurate, so disable the gripper for now
@@ -127,7 +162,6 @@ class MotionController:
 
         traj = goal.trajectory
         num_points = len(traj.points)
-        commanded_angles_ls = []
         time_ls = []
         self.__build_traj_joint_lookup(traj)
         for i in range(1, num_points):
@@ -137,12 +171,12 @@ class MotionController:
                 send_reponse(action_server, action_server_name, "PREEMPTED")
                 break
             else: 
-                #TODO: if we add gripper service in, we need to change the commanded angle a bit
-                self.__get_commanded_angles_from_traj(traj.points[i])
-
-                #TODO: if move gripper before finishing moving arm, will cause problem
-                self.execution_time = (traj.points[i].time_from_start - traj.points[i-1].time_from_start).to_sec()
+                    #TODO: if we add gripper service in, we need to change the commanded angle a bit
                 with self.__move_joints_lock: 
+                    self.__get_commanded_angles_from_traj(traj.points[i])
+
+                    #TODO: if move gripper before finishing moving arm, will cause problem
+                    self.execution_time = (traj.points[i].time_from_start - traj.points[i-1].time_from_start).to_sec()
                     rospy.loginfo(f"{action_server_name} is moving joints: {self.commanded_angles}, will accomplish in {self.execution_time}") 
                     self.__move_joints() 
                     # wait for motion to finish 
@@ -189,8 +223,12 @@ if __name__ == '__main__':
     mc = MotionController()
     r = rospy.Rate(10)
     while not rospy.is_shutdown():
+        if not mc.teaching_mode: 
+            mc.update_action_servers()
+        else:
+            mc.update_joint_recording() # should be recording inputs from the arduino right now.
         mc.publish_joint_state_msg()
-        mc.update_action_servers()
+
         r.sleep()
 
 

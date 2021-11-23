@@ -75,22 +75,26 @@
     1. Pick and Place using moveit & camera 
     2. Arm mounted on mobile platform 
 2. Hardware & Software Setup 
-    - Build Docker and Tools 
-    - STL and Collada files 
+    - Build Docker and Tools  (D)
+    - STL and Collada files  (D)
         - STL from 3D printing, Collada has physics as well. 
         - seems like STL can -> DAE files. This can be done on oneshape
         - How to add mesh to URDF step 5: http://wiki.ros.org/urdf/Tutorials/Building%20a%20Visual%20Robot%20Model%20with%20URDF%20from%20Scratch
-    - Put the robot together
+    - Put the robot together (D)
         - Stepper Motors
         - Mechanical
         - controlled by computer. 
-    - Moveit Pipeline
+    - Moveit Pipeline (D)
 3. Arm motion planning (simple case: move arm, then claw)
-    - Smooth motion execution
+    - Smooth motion execution (D)
         - debug messaging system 
+    - Teaching mode
     - Task contructor
 4. TODO
     - protobuf - nanopb messaging system b/w arduino & laptop
+    - STM 32. 
+        1. Run ros on it. with an added topic for teaching mode
+        2. Add
 
 ## Log
 1. going back to ros:
@@ -109,3 +113,14 @@
         - time (Not an issue, just time scaling needs to be really small)
         - servo connection check (see what address to check)
 
+2. Teaching mode
+    - Turn on teaching mode: 360 360 ... Turn off (ros service)
+    - sleep, record joint angles, wakeup
+    - arduino: calibrate angles. If not accurate, the visualization will be off.
+        - the calculated angle and the raw value mapping
+        - repeat on every motor
+    - arduino: sleep/wakeup upon command
+    - replay
+      
+
+3. Future 

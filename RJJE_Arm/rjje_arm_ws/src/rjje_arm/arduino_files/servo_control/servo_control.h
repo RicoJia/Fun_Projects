@@ -12,10 +12,14 @@
 
 #define PWM_BOARD_ADDR 0x40
 #define SERVO_FREQ 50
-#define SERVO_MIN 120
-#define SERVO_MAX 480
+// #define SERVO_MIN 120  // for MG96
+// #define SERVO_MAX 480    
+#define SERVO_MIN 124   // For Analog Feedback servos
+#define SERVO_MAX 348       
 #define UPDATE_FREQUENCY 100    //hz
 #define ANGULAR_THRESHOLD 0.5   //degrees
+#define TEACHING_MODE_VAL 361
+#define REGULAR_MODE_VAL 362
 
 inline int sign(float i){
   if (i == 0) return 0; 
