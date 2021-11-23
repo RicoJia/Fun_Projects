@@ -63,12 +63,15 @@
         - Working near the range limits
         - Motors are cheap so that parts don't work properly. **In my case, some motors did work better than others. I think that's because the good ones have better correspondence to the internal PID control loop**
 
+    - Analog Servos' feedback can have around 1 degree of error. Which can introduce jittering in replay
+
 2. 3D CAD Modelling
     1. STL file example - https://create.arduino.cc/projecthub/danny-van-den-heuvel/6dof-robotic-arm-50eab6
     2. Modelling 
         - First, obtain the STL files of major parts created by Rico Jia. Note that these STL files were created using Onshape, and some not-important details are omitted. 
         - When assembling STL models into a full 3D model of the robot, special attention should be paid to: 
             1. In general, ROS follows multiple ways to express rrotation with angles. [See here](https://www.ros.org/reps/rep-0103.html). In URDF, it's **Z-Y-X** Euler angle
+
 
 ## Roadmap
 1. Objectives
@@ -123,8 +126,13 @@
     - arduino: sleep/wakeup upon command
         1. test service 
             - wrong check sum of msg. Double in python? nope. Anything to do with Arduino CB? yep. Switch to working?
-        2. Add the function & get real angle
+        2. Add the function & get real angle (looks pretty good!)
     - replay
+        1. setup 6 motors, wires (D)
+        2. read from all 6 of them (D)
+        3. add replay logic
+            - replay the right commanded angles
+            - move_joints
       
 
 3. Future 
