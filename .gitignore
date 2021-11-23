@@ -10,3 +10,4 @@ devel
 install
 rosserial
 libraries
+*.so
