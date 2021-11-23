@@ -87,9 +87,9 @@ void setup(){
       motor 5[0, 130]
     */
   motors[1].offset_ = 5; 
-  motors[2].flip_rotation_ = true; 
+  motors[2].flip_rotation_ = !motors[2].flip_rotation_; 
   motors[2].offset_ = 5; 
-  motors[3].flip_rotation_ = true; 
+  motors[3].flip_rotation_ = !motors[3].flip_rotation_; 
   motors[3].offset_ = 10; 
   motors[5].is_claw_ = true;
   motors[5].offset_ = -10;

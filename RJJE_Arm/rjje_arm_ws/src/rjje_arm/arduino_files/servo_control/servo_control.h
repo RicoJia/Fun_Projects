@@ -20,6 +20,8 @@
 #define ANGULAR_THRESHOLD 0.5   //degrees
 #define TEACHING_MODE_VAL 361
 #define REGULAR_MODE_VAL 362
+#define INTERCEPT_ANALOG -46.3003
+#define SLOPE_ANALOG 0.4580
 
 inline int sign(float i){
   if (i == 0) return 0; 
@@ -42,7 +44,7 @@ struct Motor{
     char offset_=0;   //offset should is added on commanded_angle
     // Therefore we need to "flip" the angle about the neutral position if necessary.
     bool is_claw_ = false;
-    bool flip_rotation_ = false;   
+    bool flip_rotation_ = true;     //false for MG96
 
     bool set_angle(const float& commanded_angle, const short& channel_id, const Adafruit_PWMServoDriver& pwm){
         float real_angle = get_real_angle(commanded_angle);
