@@ -121,6 +121,9 @@
         - real_angle -> commanded angles (offset, etc.)
         - repeat on every motor
     - arduino: sleep/wakeup upon command
+        1. test service 
+            - wrong check sum of msg. Double in python? nope. Anything to do with Arduino CB? yep. Switch to working?
+        2. Add the function & get real angle
     - replay
       
 

@@ -18,8 +18,8 @@
 #define SERVO_MAX 348       
 #define UPDATE_FREQUENCY 100    //hz
 #define ANGULAR_THRESHOLD 0.5   //degrees
-#define TEACHING_MODE_VAL 361
-#define REGULAR_MODE_VAL 362
+#define TEACHING_MODE_VAL 361.0
+#define REGULAR_MODE_VAL 362.0
 #define INTERCEPT_ANALOG -46.3003
 #define SLOPE_ANALOG 0.4580
 
@@ -55,6 +55,16 @@ struct Motor{
         }
         else{
           return false;
+        }
+    }
+    
+    float convert_to_commanded_angle(const int& raw_value){
+        float real_angle = SLOPE_ANALOG * raw_value + INTERCEPT_ANALOG; 
+        if (is_claw_){
+            return (90 - (real_angle - offset_)) * 2; 
+        }
+        else{
+            return (flip_rotation_) ? (180 - real_angle - offset_) : (real_angle - offset_); 
         }
     }
 

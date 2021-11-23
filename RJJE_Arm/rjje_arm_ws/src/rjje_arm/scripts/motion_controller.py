@@ -27,8 +27,13 @@ ARM_ACTION_SERVER = "rjje_arm"
 GRIPPER_ACTION_SERVER = "rjje_gripper"
 MODE_SWITCH_SERVICE = "rjje_mode_switch"
 
-TEACHING_MODE_VAL = 361
-REGULAR_MODE_SEQ = 362
+TEACHING_MODE_VAL = 361.0
+REGULAR_MODE_VAL = 362.0
+
+TEACHING_MODE = 0
+REGULAR_MODE = 1
+REPLAY_MODE = 2
+
 
 def send_reponse(action_server: actionlib.SimpleActionServer, action_server_name: str, status):
     """
@@ -85,7 +90,7 @@ class MotionController:
 
         self.mode_switch_server = rospy.Service("/rjje_arm/rjje_mode_switch", ModeSwitch, self.mode_switch_cb)
         rospy.loginfo("Mode Switch has been enabled")
-        self.teaching_mode = False
+        self.mode = REGULAR_MODE
         self.joint_recording = []
 
 #############################################################################################
@@ -101,22 +106,26 @@ class MotionController:
 
     def mode_switch_cb(self, req): 
         """
-        Send a sequence to arduino based on the ros service input for mode switching. Then clear joint recordings. 
+        Send a sequence to arduino based on the ros service input for mode switching -> clear joint recordings -> send response back
         """
-        rospy.loginfo(f"Teaching mode: {'on' if req.teaching_mode_on else 'off'}")
-        self.teaching_mode = req.teaching_mode_on
+        self.mode = req.mode
+        # ask arduino to stop recording
         with self.__move_joints_lock:
-            self.commanded_angles[5] = TEACHING_MODE_VAL if self.teaching_mode else REGULAR_MODE_VAL
+            self.commanded_angles[5] = TEACHING_MODE_VAL if self.mode == TEACHING_MODE else REGULAR_MODE_VAL
             self.__move_joints()
 
-        if self.teaching_mode: 
+        if self.mode == TEACHING_MODE: 
+            print("Recording joint recordings")
             self.joint_recording.clear()
+        elif self.mode == REGULAR_MODE: 
+            print("Switched to regular mode")
+        elif self.mode == REPLAY_MODE: 
+            print("Switched to replay mode")
+
         return ModeSwitchResponse()
 
 #############################################################################################
-    def update_joint_recording(self): 
-        #TODO
-        print("updating joint recordings")
+    def record_joint_recording(self): 
         self.joint_recording.append(self.joint_state_msg.position)
 
     def publish_joint_state_msg(self): 
@@ -223,10 +232,13 @@ if __name__ == '__main__':
     mc = MotionController()
     r = rospy.Rate(10)
     while not rospy.is_shutdown():
-        if not mc.teaching_mode: 
+        if mc.mode == REGULAR_MODE: 
             mc.update_action_servers()
-        else:
-            mc.update_joint_recording() # should be recording inputs from the arduino right now.
+        elif mc.mode == TEACHING_MODE:
+            mc.record_joint_recording() # should be recording inputs from the arduino right now.
+        elif mc.mode == REPLAY_MODE: 
+            #TODO
+            pass
         mc.publish_joint_state_msg()
 
         r.sleep()

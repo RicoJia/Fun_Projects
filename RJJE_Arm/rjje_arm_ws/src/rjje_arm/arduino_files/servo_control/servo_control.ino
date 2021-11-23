@@ -4,10 +4,12 @@
   then issue control of 6 Servo Motors
   Author: Rico Ruotong Jia, 2021
   BSD license, all text above must be included in any redistribution
-*/
 
-// Modes of operations: 
-// 1. Teaching mode: /rjje_arm/motion_control is [270, 270,270, 270,270, 270]. To turn it off, [360, 360,360, 360,360, 360]
+  Modes of operations:
+      1. Teaching mode: /rjje_arm/motion_control is [270, 270,270, 270,270, 270]. To turn it off, [360, 360,360, 360,360, 360]
+  Notes: 
+      1. MG996R has a different rotation orientation than FB5116M. So the default flip_rotation_ flag is different. Their pwm range is also slightly different.
+*/
 
 #include <ros.h>  // must before message declaration
 #include <rjje_arm/MotionControl.h>
@@ -37,18 +39,23 @@ bool switch_to_teaching_mode(const rjje_arm::MotionControl& msg){
 }
 
 bool switch_to_regular_mode(const rjje_arm::MotionControl& msg){
-    return (msg.c5 == REGULAR_MODE_VAL); 
+    return (msg.c5 == REGULAR_MODE_VAL);
 }
 
 void sub_cb(const rjje_arm::MotionControl& msg){
     if (msg.task_id != arm_task_id){
         arm_task_id = msg.task_id;
-        if (!teaching_mode){
-            if (switch_to_teaching_mode(msg)){
-                teaching_mode = true; 
-                operating = true;
-                return; 
-            }
+        if (switch_to_teaching_mode(msg)){
+            pwm.sleep();
+            teaching_mode = true;
+            operating = true;
+          }
+        else if (switch_to_regular_mode(msg)){
+            pwm.wakeup();
+            teaching_mode = false;
+            operating = false;
+        }
+        else {
             commanded_angles[0] = msg.c0;  
             commanded_angles[1] = msg.c1;  
             commanded_angles[2] = msg.c2;  
@@ -60,61 +67,55 @@ void sub_cb(const rjje_arm::MotionControl& msg){
             }
             operating = true; 
         }
-        else{
-            if (switch_to_regular_mode(msg)){
-                teaching_mode = false;
-                operating = false;
-            }
-        }
     }
 }
 
 ros::Subscriber<rjje_arm::MotionControl> arm_sub("/rjje_arm/motion_control", sub_cb);
 
 void setup(){  
-  Serial.begin(9600); //comment out ros node stuff if using this
-  pwm.begin();
-  pwm.setOscillatorFrequency(27000000);
-  pwm.setPWMFreq(SERVO_FREQ);  // Analog servos run at ~50 Hz updates
-  delay(20); 
+    Serial.begin(9600); //comment out ros node stuff if using this
+    pwm.begin();
+    pwm.setOscillatorFrequency(27000000);
+    pwm.setPWMFreq(SERVO_FREQ);  // Analog servos run at ~50 Hz updates
+    delay(20); 
 
-  /* Angle Limits: 
-      motor 0: [5, 170]
-      motor 1: [5, 170] 
-      motor 2: [35, 170] 
-      motor 3: [10, 140] 
-      motor 4: [0, 180] 
-      motor 5[0, 130]
-    */
-  motors[1].offset_ = 5; 
-  motors[2].flip_rotation_ = !motors[2].flip_rotation_; 
-  motors[2].offset_ = 5; 
-  motors[3].flip_rotation_ = !motors[3].flip_rotation_; 
-  motors[3].offset_ = 10; 
-  motors[5].is_claw_ = true;
-  motors[5].offset_ = -10;
+    /* Angle Limits: 
+        motor 0: [5, 170]
+        motor 1: [5, 170] 
+        motor 2: [35, 170] 
+        motor 3: [10, 140] 
+        motor 4: [0, 180] 
+        motor 5[0, 130]
+      */
+    motors[1].offset_ = 5; 
+    motors[2].flip_rotation_ = !motors[2].flip_rotation_; 
+    motors[2].offset_ = 5; 
+    motors[3].flip_rotation_ = !motors[3].flip_rotation_; 
+    motors[3].offset_ = 10; 
+    motors[5].is_claw_ = true;
+    motors[5].offset_ = -10;
 
-  nh.initNode(); 
-  nh.advertise(joint_msg_pub);
-  nh.subscribe(arm_sub);
-  joint_msg.joint_angles_length = 6; 
-  joint_msg.joint_angles = &current_angles[0];
+    nh.initNode(); 
+    nh.advertise(joint_msg_pub);
+    nh.subscribe(arm_sub);
+    joint_msg.joint_angles_length = 6; 
+    joint_msg.joint_angles = &current_angles[0];
 
-  back_to_neutral(motors, pwm, commanded_angles); 
-  for (char i = 0; i < 6; ++i) {
-      pinMode(servo_inputs[i], INPUT_PULLUP); 
-  }
+    back_to_neutral(motors, pwm, commanded_angles); 
+    for (char i = 0; i < 6; ++i) {
+        pinMode(servo_inputs[i], INPUT_PULLUP); 
+    }
 
-  delay(2500); 
+    delay(2500); 
 }
 
+// if not in teaching mode, we record angles from commanded_angles.
 void update_current_angles(bool read_from_servo_inputs){
     
     for (unsigned char i = 0; i < 6; ++i) {
         if (read_from_servo_inputs){
             int raw_value = analogRead(servo_inputs[i]);
-            // TODO calibrate
-            /* current_angles =  */
+            current_angles[i] = motors[i].convert_to_commanded_angle(raw_value); 
         }
         else{
             current_angles[i] += step_angles[i];
@@ -149,7 +150,6 @@ void loop(){
         }
         else{
           if (teaching_mode){
-              //TODO
               update_current_angles(true);
           }
           else{
@@ -163,7 +163,6 @@ void loop(){
               if(operating && can_stop()){
                   operating = false;
               }
-
           }
         }
     }

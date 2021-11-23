@@ -1,2 +1,2 @@
-bool teaching_mode_on 
+char mode
 --- 
