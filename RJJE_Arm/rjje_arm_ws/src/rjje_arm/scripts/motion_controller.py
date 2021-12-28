@@ -34,7 +34,11 @@ TEACHING_MODE = 0
 REGULAR_MODE = 1
 REPLAY_MODE = 2
 
-ROS_RATE = 10.0
+ros_rate = 5.0
+REGULAR_ROS_RATE = 15.0
+TEACHING_ROS_RATE = 10.0
+REPLAY_ROS_RATE_DIVIDER = 2
+REPLAY_ROS_RATE = TEACHING_ROS_RATE/REPLAY_ROS_RATE_DIVIDER
 
 def send_reponse(action_server: actionlib.SimpleActionServer, action_server_name: str, status):
     """
@@ -118,12 +122,16 @@ class MotionController:
 
         if self.mode == TEACHING_MODE: 
             print("Recording joint recordings")
+            ros_rate = TEACHING_ROS_RATE
             self.__reset_joint_recorder()
         elif self.mode == REGULAR_MODE: 
             print("Switched to regular mode")
+            ros_rate = REGULAR_ROS_RATE
             self.__reset_joint_recorder()
         elif self.mode == REPLAY_MODE: 
+            ros_rate = REPLAY_ROS_RATE
             print("Switched to replay mode")
+            self.__filter_joint_recordings()
 
         return ModeSwitchResponse()
 
@@ -139,8 +147,7 @@ class MotionController:
                 self.commanded_angles = self.__convert_to_rjje_command_angles(current_record)
                 # TODO: Disabling claw atm
                 self.commanded_angles[5] = 0.0
-                self.execution_time = 1.0/ROS_RATE
-                rospy.loginfo(f"replay: {self.commanded_angles}") 
+                self.execution_time = 1.0/ros_rate
                 self.__move_joints()
 
 #############################################################################################
@@ -167,6 +174,18 @@ class MotionController:
 
     def process_arm_action(self, goal): 
         self.__process_action(ARM_ACTION_SERVER, goal)
+
+    def __filter_joint_recordings(self): 
+        """
+        Apply average filter to joint_recordings
+        """
+        new_joint_recordings = []
+        i = 0
+        while i < len(self.joint_recording): 
+            i_new = i+REPLAY_ROS_RATE_DIVIDER
+            new_joint_recordings.append(np.average(self.joint_recording[i:i_new], axis=0))
+            i = i_new
+        self.joint_recording = new_joint_recordings
 
     def __process_action(self, action_server_name: str, goal):
         """
@@ -253,7 +272,7 @@ class MotionController:
 
 if __name__ == '__main__': 
     mc = MotionController()
-    r = rospy.Rate(int(ROS_RATE))
+    r = rospy.Rate(int(ros_rate))
     while not rospy.is_shutdown():
         if mc.mode == REGULAR_MODE: 
             mc.update_action_servers()

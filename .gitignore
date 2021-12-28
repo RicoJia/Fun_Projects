@@ -11,3 +11,5 @@ install
 rosserial
 libraries
 *.so
+*.pyc
+__pycache__
