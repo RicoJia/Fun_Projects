@@ -1,49 +1,49 @@
 import cv2
-from calibration import calibrate
+from calibration import Calibrator
 # https://stackoverflow.com/questions/604749/how-do-i-access-my-webcam-in-python
-# check a webcam vlc v4l2:///dev/video2
+# check a webcam ffplay /dev/video2
 
-cv2.namedWindow("calibration")
-vc = cv2.VideoCapture(0)
+class VideoFSM(object):
+    """Finite State Machine for calibrating a camera"""
+    def __init__(self):
+        self.__window_name = "calibration"
+        cv2.namedWindow(self.__window_name)
+        self.vc = cv2.VideoCapture(0)
+        if self.vc.isOpened():  # try to get the first frame
+            self.rval, self.frame = self.vc.read()
+        else:
+            self.rval = False
+        print("started videofsm")
+    
+    def can_get_next_frame(self): 
+        return self.rval
+    
+    def get_frame(self):
+        """
+        :returns: frame
+        """
+        self.rval, self.frame = self.vc.read()
+        return self.frame
 
-if vc.isOpened():  # try to get the first frame
-    rval, frame = vc.read()
-else:
-    rval = False
+    def get_window_name(self):
+        return self.__window_name
 
-# Defining the dimensions of checkerboard TODO
-CHECKERBOARD = (7, 4)   #Convention: (x, y)
-# Teling the cv2 that we want to stop once max_iter, or convergence metrics reaches some small value. 
-criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
-# store vectors of 2D points for each checkerboard image
-imgpoints = []
-frames = []
-paused = False
+    def show_frame_and_get_key(self):
+        cv2.imshow("calibration", self.frame)
+        return cv2.waitKey(20)
 
-# if a chessboard is detected and we hit enter, then video pauses and calibrate 
-# To save the parameters, hit y; to do another calibration session, hit n. 
-while rval:
-    if not paused: 
-        rval, frame = vc.read()
-        gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-        # Find the chess board corners
-        # If desired number of corners are found in the image then ret = true
-        ret, corners = cv2.findChessboardCorners(gray, CHECKERBOARD, cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_FAST_CHECK + cv2.CALIB_CB_NORMALIZE_IMAGE)
-        if ret == True: 
-            print("hehe")
-            corners2 = cv2.cornerSubPix(gray, corners, (11,11),(-1,-1), criteria)
-            # refining pixel coordinates for given 2d points.
-            imgpoints.append(corners2)
-            frame = cv2.drawChessboardCorners(frame, CHECKERBOARD, corners2, ret)
+    def __del__(self):
+        cv2.destroyWindow(self.__window_name)
 
-    cv2.imshow("calibration", frame)
-    key = cv2.waitKey(20)
-    if key == 13: 
-        frames.append(gray)
-    # elif key == 27:  # exit on ESC
-    #     break
+videofsm = VideoFSM()
+calibrator= Calibrator()
+
+while videofsm.can_get_next_frame():
+    frame = videofsm.get_frame()
+    calibrator.detect_and_draw_chessboard_on_frame(frame)
+    key = videofsm.show_frame_and_get_key()
+    if calibrator.calibrate(key): 
+        break
 
 
-cv2.destroyWindow("calibration")
 
-# calibration(frames)
