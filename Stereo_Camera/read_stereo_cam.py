@@ -1,5 +1,6 @@
 import cv2
 from calibration import Calibrator
+import argparse
 # https://stackoverflow.com/questions/604749/how-do-i-access-my-webcam-in-python
 # check a webcam ffplay /dev/video2
 
@@ -37,13 +38,19 @@ class VideoFSM(object):
 
 videofsm = VideoFSM()
 calibrator= Calibrator()
+parser = argparse.ArgumentParser()
+parser.add_argument("-l", required=False, help="load parameters from saved files in ~/rico_cache", action="store_true")
+args = parser.parse_args()
 
-while videofsm.can_get_next_frame():
-    frame = videofsm.get_frame()
-    calibrator.detect_and_draw_chessboard_on_frame(frame)
-    key = videofsm.show_frame_and_get_key()
-    if calibrator.calibrate(key): 
-        break
+if args.l: 
+    calibrator.load_params_from_pickle()
+else: 
+    while videofsm.can_get_next_frame():
+        frame = videofsm.get_frame()
+        calibrator.detect_and_draw_chessboard_on_frame(frame)
+        key = videofsm.show_frame_and_get_key()
+        if calibrator.calibrate(key): 
+            break
 
 
 

@@ -4,12 +4,18 @@ import numpy as np
 import os
 import glob
 
+import calendar
+import time
+import pickle
+from os import listdir
+
 CHECKERBOARD = (7, 4)   #Convention: (x, y)
 ENTER = 13
 ESC = 27
 SQUARE_SIDE=0.25    #in meters
-IMAGE_NUM = 20
+IMAGE_NUM = 1
 MARGIN_OFFSET = (1.2, 3.2)  #in checker squares
+CACHE_DIR="rico_cache/"
 
 class Calibrator(object):
     def __init__(self):
@@ -91,6 +97,13 @@ class Calibrator(object):
 
         #TODO: to move 
         ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(self.objp_all, self.imgp_all, self.gray.shape[::-1], None, None)
+        params = {}
+        params["ret"] = ret
+        params["tvecs"]=tvecs
+        params["rvecs"]= rvecs
+        params["dist"]= dist
+        params["mtx"]= mtx
+
         logging.info("Successfully calibrated a camera")
         print("Camera matrix :")
         print(mtx)
@@ -101,7 +114,27 @@ class Calibrator(object):
         print("tvecs : ")
         print(tvecs)
         if self.valid_img_num == IMAGE_NUM: 
+            self.__save_params_to_file(params)
             return True
         else: 
             logging.info(f"{IMAGE_NUM - self.valid_img_num} valid images are needed")
             return False
+
+    def __save_params_to_file(self, params): 
+        tm = calendar.timegm(time.gmtime()) 
+        file_name = f"calibrate_{tm}.prm"
+        with open(CACHE_DIR + file_name, "wb") as dfile:
+            pickle.dump(params, dfile)
+
+    def load_params_from_pickle(self):
+        ls = listdir(CACHE_DIR)
+        print(ls)
+        if not listdir: 
+            logging.warning(f"no calibration params are found in {CACHE_DIR}")
+        else: 
+            target_file_name = os.path.join(CACHE_DIR, max(ls))
+            with open(target_file_name, "rb") as target_file: 
+                self.loaded_params = pickle.load(target_file)
+                print(self.loaded_params)
+
+        
