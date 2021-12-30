@@ -53,4 +53,11 @@ else:
             break
 
 
+# check result
+while videofsm.can_get_next_frame():
+    frame = videofsm.get_frame()
+    calibrator.detect_and_draw_chessboard_on_frame(frame)
+    key = videofsm.show_frame_and_get_key()
+    if calibrator.check_result(key):
+        break
 
