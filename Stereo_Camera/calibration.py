@@ -150,15 +150,16 @@ class Calibrator(object):
                 self.params = pickle.load(target_file)
                 print(self.params)
 
-    def check_result(self, key):
+    def check_result(self, key) -> bool:
         """
         Use the latest frame with chessboard and the saved intrinsics 
         Compute the extrinsics, and reproject obj points back onto the frame. So do not move the camera, you should see the same points projected back to the same positions
+        return done_checking
         """
         def show_frame(): 
             cv2.imshow("calibration", self.frame)
             key = cv2.waitKey(20)
-            return key == ESC
+            return key != ENTER
 
         if key == ESC: 
             logging.info("Esc detected, no result checking is conducted")
@@ -167,17 +168,14 @@ class Calibrator(object):
             success, rotation_vector, translation_vector = cv2.solvePnP(self.objp, self.imgpoints, self.params["mtx"], self.params["dist"], flags=0)
             if success: 
                 reprojected_img_pts, jacobian = cv2.projectPoints(self.objp, rotation_vector, translation_vector, self.params["mtx"], self.params["dist"])
-                print(reprojected_img_pts)
                 for pt in reprojected_img_pts: 
                     cv2.circle(self.frame, (int(pt[0, 0]), int(pt[0, 1])), 3, (0, 255, 255), -1)
-                while True: 
-                    show_frame()
-                    time.sleep(0.1)
-
+                logging.info("showing check result - press ENTER to unfreeze")
+                while show_frame():
+                    time.sleep(0.01)
             else: 
                 logging.info("Pnp not solved sucessfully")
-            logging.info("Result checked")
-            return True
+            return False
         else: 
             return False
 
