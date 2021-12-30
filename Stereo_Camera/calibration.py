@@ -98,35 +98,25 @@ class Calibrator(object):
         self.objp_all.append(self.objp)
         self.imgp_all.append(self.imgpoints)
 
-        # #TODO: add offset
-        # print("objp: ")
-        # print(objp)
-        # print("imgpoints: ")
-        # print(self.imgpoints)
-
-        # #TODO
-        # new_frame = frame = cv2.putText(self.frame, f"(f{objp[0]})", (self.imgpoints[0, 0, 0], self.imgpoints[0, 0, 1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
-        # cv2.imshow("preview", new_frame)
-
-        #TODO: to move 
-        ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(self.objp_all, self.imgp_all, self.gray.shape[::-1], None, None)
-        self.imgpoints = np.array([])
-        self.params["ret"] = ret
-        self.params["tvecs"]=tvecs
-        self.params["rvecs"]= rvecs
-        self.params["dist"]= dist
-        self.params["mtx"]= mtx
-
-        logging.info("Successfully calibrated a camera")
-        print("Camera matrix :")
-        print(mtx)
-        print("dist : ")
-        print(dist)
-        print("rvecs : ")
-        print(rvecs)
-        print("tvecs : ")
-        print(tvecs)
         if self.valid_img_num == IMAGE_NUM: 
+            #TODO: to move 
+            ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(self.objp_all, self.imgp_all, self.gray.shape[::-1], None, None)
+            self.imgpoints = np.array([])
+            self.params["ret"] = ret
+            self.params["tvecs"]=tvecs
+            self.params["rvecs"]= rvecs
+            self.params["dist"]= dist
+            self.params["mtx"]= mtx
+
+            logging.info("Successfully calibrated a camera")
+            print("Camera matrix :")
+            print(mtx)
+            print("dist : ")
+            print(dist)
+            print("rvecs : ")
+            print(rvecs)
+            print("tvecs : ")
+            print(tvecs)
             self.__save_params_to_file(self.params)
             return True
         else: 
@@ -170,6 +160,9 @@ class Calibrator(object):
                 reprojected_img_pts, jacobian = cv2.projectPoints(self.objp, rotation_vector, translation_vector, self.params["mtx"], self.params["dist"])
                 for pt in reprojected_img_pts: 
                     cv2.circle(self.frame, (int(pt[0, 0]), int(pt[0, 1])), 3, (0, 255, 255), -1)
+                # undistort the image
+                new_camera_mtx=np.array([])
+                self.frame = cv2.undistort(self.frame, self.params["mtx"], self.params["dist"], None, new_camera_mtx)
                 logging.info("showing check result - press ENTER to unfreeze")
                 while show_frame():
                     time.sleep(0.01)
