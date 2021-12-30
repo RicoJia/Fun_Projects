@@ -13,4 +13,5 @@ libraries
 *.so
 *.pyc
 __pycache__/*
-rico_cache/*
+rico_cache
+core
