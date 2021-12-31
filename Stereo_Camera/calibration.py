@@ -15,12 +15,12 @@ CHECKERBOARD = (7, 4)   #Convention: (x, y)
 ENTER = 13
 ESC = 27
 SQUARE_SIDE=0.25    #in meters
-IMAGE_NUM = 10
+IMAGE_NUM = 6
 MARGIN_OFFSET = (1.2, 3.2)  #in checker squares
 CACHE_DIR="rico_cache/"
 
 class Calibrator(object):
-    def __init__(self):
+    def __init__(self, camera_name="", is_fish_eye=False):
         # Teling the cv2 that we want to stop once max_iter, or convergence metrics reaches some small value. 
         self.criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
         # store vectors of 2D points for each checkerboard image
@@ -29,6 +29,8 @@ class Calibrator(object):
         self.imgp_all = []
         self.params={}
         self.valid_img_num = 0
+        self.camera_name = camera_name
+        self.is_fish_eye = is_fish_eye
         self.__generate_objp()
         print("======================") 
         usage_msg = "[USAGE]: \nIf a chessboard is detected and we hit enter and a valid image is saved for calibration. \nWe need at least {IMAGE_NUM} valid images. \nTo save the parameters, hit y; to do another calibration session, hit n. "
@@ -36,7 +38,7 @@ class Calibrator(object):
         print("Convention: x-axis has more squares than y-axis")
         print(usage_msg) 
         print("======================") 
-        logging.info("Calibrator Started") 
+        logging.info(f"Calibrator: {self.camera_name} Started") 
 
     def __generate_objp(self):
         # Defining the world coordinates for 3D points. NOTE: z is 0 because we assume z axis is pointing out of the plane
@@ -99,8 +101,25 @@ class Calibrator(object):
         self.imgp_all.append(self.imgpoints)
 
         if self.valid_img_num == IMAGE_NUM: 
-            #TODO: to move 
-            ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(self.objp_all, self.imgp_all, self.gray.shape[::-1], None, None)
+            if self.is_fish_eye: 
+                mtx = np.zeros((3, 3))
+                dist = np.zeros((4, 1))
+                rvecs = [np.zeros((1, 1, 3), dtype=np.float64) for i in range(IMAGE_NUM)]
+                tvecs = [np.zeros((1, 1, 3), dtype=np.float64) for i in range(IMAGE_NUM)]
+                ret, mtx, dist, rvecs, tvecs = cv2.fisheye.calibrate(
+                    self.objp_all,
+                    self.imgp_all,
+                    self.gray.shape[::-1],
+                    mtx,
+                    dist,
+                    rvecs,
+                    tvecs,
+                    cv2.fisheye.CALIB_RECOMPUTE_EXTRINSIC+cv2.fisheye.CALIB_FIX_SKEW,
+                    self.criteria
+                )
+            else: 
+                ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(self.objp_all, self.imgp_all, self.gray.shape[::-1], None, None)
+
             self.imgpoints = np.array([])
             self.params["ret"] = ret
             self.params["tvecs"]=tvecs
@@ -125,20 +144,39 @@ class Calibrator(object):
 
     def __save_params_to_file(self, params): 
         tm = calendar.timegm(time.gmtime()) 
-        file_name = f"calibrate_{tm}.prm"
+        file_name = f"{self.camera_name}_calibrate_{tm}.prm"
         with open(CACHE_DIR + file_name, "wb") as dfile:
             pickle.dump(params, dfile)
 
+#========================Run Time #========================
     def load_params_from_pickle(self):
+        """
+        Load the last written file in pickle
+        """
         ls = listdir(CACHE_DIR)
+        ls = list(filter(lambda x: self.camera_name in x, ls))
         print(ls)
-        if not listdir: 
-            logging.warning(f"no calibration params are found in {CACHE_DIR}")
+        if not ls: 
+            logging.warning(f"no calibration params are found under {self.camera_name} in {CACHE_DIR}")
         else: 
             target_file_name = os.path.join(CACHE_DIR, max(ls))
             with open(target_file_name, "rb") as target_file: 
                 self.params = pickle.load(target_file)
                 print(self.params)
+            logging.info(f"{self.camera_name}: loaded params sucessfully")
+
+    def undistort_frame(self, frame): 
+        """
+        return frame
+        """
+        self.gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+        new_camera_mtx=np.array([])
+        if self.is_fish_eye: 
+            new_camera_mtx = cv2.fisheye.estimateNewCameraMatrixForUndistortRectify(self.params["mtx"], self.params["dist"], self.gray.shape[::-1], None)
+            map1, map2 = cv2.fisheye.initUndistortRectifyMap(self.params["mtx"], self.params["dist"], np.eye(3), new_camera_mtx, self.gray.shape[::-1], cv2.CV_16SC2)
+            return cv2.remap(frame, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+        else: 
+            return cv2.undistort(frame, self.params["mtx"], self.params["dist"], None, new_camera_mtx)
 
     def check_result(self, key) -> bool:
         """
@@ -147,12 +185,12 @@ class Calibrator(object):
         return done_checking
         """
         def show_frame(): 
-            cv2.imshow("calibration", self.frame)
+            cv2.imshow(f"Result Checking - {self.camera_name}", self.frame)
             key = cv2.waitKey(20)
             return key != ENTER
 
         if key == ESC: 
-            logging.info("Esc detected, no result checking is conducted")
+            logging.info("f{self.camera_name}: Esc detected, no result checking is conducted")
             return True
         elif key ==ENTER and self.params and self.imgpoints.size!= 0: 
             success, rotation_vector, translation_vector = cv2.solvePnP(self.objp, self.imgpoints, self.params["mtx"], self.params["dist"], flags=0)
@@ -161,9 +199,8 @@ class Calibrator(object):
                 for pt in reprojected_img_pts: 
                     cv2.circle(self.frame, (int(pt[0, 0]), int(pt[0, 1])), 3, (0, 255, 255), -1)
                 # undistort the image
-                new_camera_mtx=np.array([])
-                self.frame = cv2.undistort(self.frame, self.params["mtx"], self.params["dist"], None, new_camera_mtx)
-                logging.info("showing check result - press ENTER to unfreeze")
+                self.frame = self.undistort_frame(self.frame)
+                logging.info(f"{self.camera_name}: showing check result - press ENTER to unfreeze")
                 while show_frame():
                     time.sleep(0.01)
             else: 
