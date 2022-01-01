@@ -17,7 +17,7 @@ ESC = 27
 SQUARE_SIDE=0.25    #in meters
 IMAGE_NUM = 10
 MARGIN_OFFSET = (1.2, 3.2)  #in checker squares
-CACHE_DIR="rico_cache/"
+PARAM_DIR="camera_calibration_params/"
 
 class Calibrator(object):
     def __init__(self, camera_name="", is_fish_eye=False):
@@ -60,7 +60,6 @@ class Calibrator(object):
             frame = cv2.drawChessboardCorners(frame, CHECKERBOARD, corners2, ret)
             # refining pixel coordinates for given 2d points.
             self.__get_img_pts(corners2)
-            #TODO
             self.frame = frame
         return ret
 
@@ -145,7 +144,7 @@ class Calibrator(object):
     def __save_params_to_file(self, params): 
         tm = calendar.timegm(time.gmtime()) 
         file_name = f"{self.camera_name}_calibrate_{tm}.prm"
-        with open(CACHE_DIR + file_name, "wb") as dfile:
+        with open(PARAM_DIR + file_name, "wb") as dfile:
             pickle.dump(params, dfile)
 
 #========================Run Time #========================
@@ -153,13 +152,13 @@ class Calibrator(object):
         """
         Load the last written file in pickle
         """
-        ls = listdir(CACHE_DIR)
+        ls = listdir(PARAM_DIR)
         ls = list(filter(lambda x: self.camera_name in x, ls))
         print(ls)
         if not ls: 
-            logging.warning(f"no calibration params are found under {self.camera_name} in {CACHE_DIR}")
+            logging.warning(f"no calibration params are found under {self.camera_name} in {PARAM_DIR}")
         else: 
-            target_file_name = os.path.join(CACHE_DIR, max(ls))
+            target_file_name = os.path.join(PARAM_DIR, max(ls))
             with open(target_file_name, "rb") as target_file: 
                 self.params = pickle.load(target_file)
                 print(self.params)
