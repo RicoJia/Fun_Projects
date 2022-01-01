@@ -53,7 +53,6 @@ args = parser.parse_args()
 if args.l: 
     left_calibrator.load_params_from_pickle()
     right_calibrator.load_params_from_pickle()
-
 else: 
     while stereo_videofsm.can_get_next_frame():
         frames = stereo_videofsm.get_frames()
@@ -75,7 +74,7 @@ else:
 #         break
 
 # show depth image 
-print("showing undistored frame")
+print("showing undistorted frame")
 while stereo_videofsm.can_get_next_frame():
     frames = stereo_videofsm.get_frames()
     frames[LEFT] = left_calibrator.undistort_frame(frames[LEFT])

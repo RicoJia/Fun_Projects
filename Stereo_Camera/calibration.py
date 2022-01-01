@@ -15,7 +15,7 @@ CHECKERBOARD = (7, 4)   #Convention: (x, y)
 ENTER = 13
 ESC = 27
 SQUARE_SIDE=0.25    #in meters
-IMAGE_NUM = 6
+IMAGE_NUM = 10
 MARGIN_OFFSET = (1.2, 3.2)  #in checker squares
 CACHE_DIR="rico_cache/"
 
