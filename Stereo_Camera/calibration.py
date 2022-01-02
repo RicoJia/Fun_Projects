@@ -21,6 +21,17 @@ PARAM_DIR="camera_calibration_params/"
 LEFT=0
 RIGHT=1
 
+def print_dict(dic):
+    """
+
+    :dic: TODO
+    :returns: TODO
+
+    """
+    for key, value in dic.items(): 
+        print(key, ": ")
+        print(value)
+
 class Calibrator(object):
     def __init__(self, camera_name="", is_fish_eye=False):
         # Teling the cv2 that we want to stop once max_iter, or convergence metrics reaches some small value. 
@@ -55,7 +66,7 @@ class Calibrator(object):
         return 1 if chessboard is detected. Else 0.
         """
         self.gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-        self.gray_image_size = self.gray.shape[::-1]
+        self.gray_image_size = self.gray.shape
         # Find the chess board corners
         # If desired number of corners are found in the image then ret = true
         ret, corners = cv2.findChessboardCorners(self.gray, CHECKERBOARD, cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_FAST_CHECK + cv2.CALIB_CB_NORMALIZE_IMAGE)
@@ -113,7 +124,7 @@ class Calibrator(object):
                     ret, mtx, dist, rvecs, tvecs = cv2.fisheye.calibrate(
                         self.objp_all,
                         self.imgp_all,
-                        self.gray.shape[::-1],
+                        self.gray.shape,
                         mtx,
                         dist,
                         rvecs,
@@ -122,7 +133,7 @@ class Calibrator(object):
                         self.criteria
                     )
                 else: 
-                    ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(self.objp_all, self.imgp_all, self.gray.shape[::-1], None, None)
+                    ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(self.objp_all, self.imgp_all, self.gray.shape, None, None)
 
                 self.imgpoints = np.array([])
                 self.params["ret"] = ret
@@ -132,14 +143,12 @@ class Calibrator(object):
                 self.params["mtx"]= mtx
 
                 logging.info("Successfully calibrated a camera")
+                print("ret: ")
+                print(ret)
                 print("Camera matrix :")
                 print(mtx)
                 print("dist : ")
                 print(dist)
-                print("rvecs : ")
-                print(rvecs)
-                print("tvecs : ")
-                print(tvecs)
                 self.__save_params_to_file(self.params)
             self.valid_img_num = 0
             return True
@@ -166,7 +175,7 @@ class Calibrator(object):
             target_file_name = os.path.join(PARAM_DIR, max(ls))
             with open(target_file_name, "rb") as target_file: 
                 self.params = pickle.load(target_file)
-                print(self.params)
+                print_dict(self.params)
             logging.info(f"{self.camera_name}: loaded params sucessfully")
 
     def undistort_frame(self, frame): 
@@ -176,8 +185,8 @@ class Calibrator(object):
         self.gray_image_size = frame.shape[:2]
         new_camera_mtx=np.array([])
         if self.is_fish_eye: 
-            new_camera_mtx = cv2.fisheye.estimateNewCameraMatrixForUndistortRectify(self.params["mtx"], self.params["dist"], self.gray_image_size[::-1], None)
-            map1, map2 = cv2.fisheye.initUndistortRectifyMap(self.params["mtx"], self.params["dist"], np.eye(3), new_camera_mtx, self.gray_image_size[::-1], cv2.CV_16SC2)
+            new_camera_mtx = cv2.fisheye.estimateNewCameraMatrixForUndistortRectify(self.params["mtx"], self.params["dist"], self.gray_image_size, None)
+            map1, map2 = cv2.fisheye.initUndistortRectifyMap(self.params["mtx"], self.params["dist"], np.eye(3), new_camera_mtx, self.gray_image_size, cv2.CV_16SC2)
             return cv2.remap(frame, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
         else: 
             return cv2.undistort(frame, self.params["mtx"], self.params["dist"], None, new_camera_mtx)
@@ -222,14 +231,17 @@ class Calibrator(object):
         return self.calibrate(key, just_prepare_img_pts=True)
 
     def get_data_for_stereo_calibration(self):
-        return {"all_object_points": self.objp_all, "all_img_points": self.imgp_all, "mtx": self.params["mtx"], "dist": self.params["dist"], "img_size": self.gray.shape[::-1]}
-
-
+        return {"all_object_points": self.objp_all, "all_img_points": self.imgp_all, "mtx": self.params["mtx"], "dist": self.params["dist"], "img_size": self.gray.shape}
 
 
 class StereoCalibrator(object): 
     """
-    Object that takes in extrinsics and intrinsics from left and right cameras, and stores stereo information. During runtime, it will takes in undistorted images from two cameras, then rectify them.
+    Object that takes in: 
+        1. extrinsics and intrinsics from left and right cameras
+        2. stores stereo information. 
+    During runtime, it will: 
+        1. Take in undistorted images from two cameras
+        2. Rectify them.
     """
     def __init__(self, window_name, left_camera_params, right_camera_params):
         self.window_name = window_name
@@ -249,7 +261,7 @@ class StereoCalibrator(object):
             target_file_name = os.path.join(PARAM_DIR, max(ls))
             with open(target_file_name, "rb") as target_file: 
                 self.stereo_camera_params = pickle.load(target_file)
-                print(self.stereo_camera_params)
+                print_dict(self.stereo_camera_params)
             logging.info(f"{self.window_name}: loaded params sucessfully")
 
     def __save_params_to_file(self, params, name_header): 
@@ -260,6 +272,9 @@ class StereoCalibrator(object):
     
     def calibrate(self,  left_camera_data, right_camera_data):
         """
+        Stereo Calibration contains: 
+            1. finding out R, T (SE(3) Transform cam1 -> cam2)
+            2. 
         left_camera_data, right_camera_data are dict with these fields
         {["all_object_points"]: , ["all_img_points"]: , ["mtx"]:, ["dist"]: , ["img_size"]}
         """
@@ -281,31 +296,30 @@ class StereoCalibrator(object):
         self.stereo_camera_params["T"] = T
         self.stereo_camera_params["E"] = E
         self.stereo_camera_params["F"] = F
-        #TODO
-        # self.stereo_camera_params["img_size"] = left_camera_data["img_size"]
-        self.stereo_camera_params["img_size"] = left_camera_data["img_size"][::-1]
+        self.stereo_camera_params["img_size"] = left_camera_data["img_size"]
 
-        left_params = self.single_camera_params_ls[LEFT]
-        right_params = self.single_camera_params_ls[RIGHT]
-        R1, R2, P1, P2, Q, roi_left, roi_right = cv2.stereoRectify(
-                left_params["mtx"], left_params["dist"], 
-                right_params["mtx"], right_params["dist"], 
-                self.stereo_camera_params["img_size"], 
-                self.stereo_camera_params["R"], self.stereo_camera_params["T"], 
-                flags=cv2.CALIB_ZERO_DISPARITY, alpha=0.9
-        )
-        self.stereo_camera_params["R1"] = R1
-        self.stereo_camera_params["R2"] = R2
-        self.stereo_camera_params["P1"] = P1
-        self.stereo_camera_params["P2"] = P2
-        self.stereo_camera_params["Q"] = Q
-        self.stereo_camera_params["roi_left"] = roi_left
-        self.stereo_camera_params["roi_right"] = roi_right
-        self.__save_params_to_file(self.stereo_camera_params, self.window_name)
+        #TODO
+        # left_params = self.single_camera_params_ls[LEFT]
+        # right_params = self.single_camera_params_ls[RIGHT]
+        # R1, R2, P1, P2, Q, roi_left, roi_right = cv2.stereoRectify(
+        #         left_params["mtx"], left_params["dist"], 
+        #         right_params["mtx"], right_params["dist"], 
+        #         self.stereo_camera_params["img_size"], 
+        #         self.stereo_camera_params["R"], self.stereo_camera_params["T"], 
+        #         flags=cv2.CALIB_ZERO_DISPARITY, alpha=0.9
+        # )
+        # self.stereo_camera_params["R1"] = R1
+        # self.stereo_camera_params["R2"] = R2
+        # self.stereo_camera_params["P1"] = P1
+        # self.stereo_camera_params["P2"] = P2
+        # self.stereo_camera_params["Q"] = Q
+        # self.stereo_camera_params["roi_left"] = roi_left
+        # self.stereo_camera_params["roi_right"] = roi_right
+        # self.__save_params_to_file(self.stereo_camera_params, self.window_name)
 
         #TODO
         print("stereo params: ")
-        print(self.stereo_camera_params)
+        print_dict(self.stereo_camera_params)
 
     # ====================== Run time ======================
     def rectify(self, left_undistorted_frame, right_undistorted_frame):

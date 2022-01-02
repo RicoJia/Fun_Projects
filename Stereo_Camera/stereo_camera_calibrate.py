@@ -43,8 +43,9 @@ class StereoVideoFSM(object):
 
 stereo_videofsm = StereoVideoFSM()
 window_names = stereo_videofsm.get_window_names()
-left_calibrator = Calibrator(camera_name=window_names[LEFT], is_fish_eye=True)
-right_calibrator = Calibrator(camera_name=window_names[RIGHT], is_fish_eye= True)
+#TODO
+left_calibrator = Calibrator(camera_name=window_names[LEFT], is_fish_eye=False)
+right_calibrator = Calibrator(camera_name=window_names[RIGHT], is_fish_eye= False)
 parser = argparse.ArgumentParser()
 parser.add_argument("-l", required=False, help="load single camera parameters from saved files in ~/rico_cache", action="store_true")
 parser.add_argument("-s", required=False, help="load stereo camera parameters from saved files in ~/rico_cache", action="store_true")
@@ -81,7 +82,7 @@ else:
 #     frames[RIGHT] = right_calibrator.undistort_frame(frames[RIGHT])
 #     key = stereo_videofsm.show_frames_and_get_key()
 
-# stereo calibration
+# # stereo calibration
 stereo_calibrator = StereoCalibrator(window_name="stereo_calibrator", left_camera_params=left_calibrator.params, right_camera_params=right_calibrator.params)
 if not args.s: 
     while stereo_videofsm.can_get_next_frame():
