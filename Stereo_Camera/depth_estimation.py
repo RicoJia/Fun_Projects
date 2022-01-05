@@ -13,34 +13,49 @@ class DepthEstimator(object):
     def __init__(self):
         self.window_name = "Disparity Map"
 
+        # for disparity img
+        self.window_size = 15
+        self.min_disp = 0
+        # In the current implementation, this parameter must be divisible by 16.
+        # num_disp = 112-min_disp
+        self.num_disp = 32
+        self.block_size = 16
+        self.disp12MaxDiff = 24
+        self.uniquenessRatio = 23
+        self.speckleWindowSize = 90
+        self.speckleRange = 22
+
+    def update(self, val=0):
+        self.window_size = int(cv2.getTrackbarPos('window_size', 'disparity'))
+        self.uniquenessRatio = int(cv2.getTrackbarPos('uniquenessRatio', 'disparity'))
+        self.speckleWindowSize = int(cv2.getTrackbarPos('speckleWindowSize', 'disparity'))
+        self.speckleRange = int(cv2.getTrackbarPos('speckleRange', 'disparity'))
+        self.disp12MaxDiff = int(cv2.getTrackbarPos('disp12MaxDiff', 'disparity'))
+
     def get_disparity(self, left_frame, right_frame):
         """
         Generate a disparity map
         """
 
-        window_size = 3
-        min_disp = 16
-        # In the current implementation, this parameter must be divisible by 16.
-        # num_disp = 112-min_disp
-        num_disp = 32
-        stereo = cv2.StereoSGBM_create(minDisparity = min_disp,
-            numDisparities = num_disp,
+        stereo = cv2.StereoSGBM_create(
+            minDisparity = self.min_disp,
+            numDisparities = self.num_disp,
             # Matched block size. It must be an odd number >=1 . Normally, it should be somewhere in the 3..11 range.
-            blockSize = 16,
-            P1 = 8*3*window_size**2,
-            P2 = 32*3*window_size**2,
-            disp12MaxDiff = 1,
+            blockSize = self.block_size,
+            P1 = 8*1*self.window_size**2,
+            P2 = 32*1*self.window_size**2,
+            disp12MaxDiff = self.disp12MaxDiff,
             # Margin in percentage by which the best (minimum) computed cost function value should "win" the second best value to consider the found match correct.
             # Normally, a value within the 5-15 range is good enough
-            uniquenessRatio = 10,
+            uniquenessRatio = self.uniquenessRatio,
             # Maximum size of smooth disparity regions to consider their noise speckles and invalidate.
             # Set it to 0 to disable speckle filtering. Otherwise, set it somewhere in the 50-200 range.
-            speckleWindowSize = 100,
+            speckleWindowSize = self.speckleRange,
             # Maximum disparity variation within each connected component.
             # If you do speckle filtering, set the parameter to a positive value, it will be implicitly multiplied by 16.
             # Normally, 1 or 2 is good enough.
             # speckleRange = 32
-            speckleRange = 2
+            speckleRange = self.speckleRange
         )
                 
         # stereo = cv2.StereoBM_create(numDisparities=32, blockSize=31)
@@ -74,6 +89,14 @@ if __name__ == "__main__":
     right_calibrator = Calibrator(camera_name=window_names[RIGHT], is_fish_eye= False)
     stereo_calibrator = StereoCalibrator(window_name="stereo_calibrator", left_camera_params=left_calibrator.params, right_camera_params=right_calibrator.params)
     depth_estimator = DepthEstimator()
+
+    # #Track bar
+    cv2.namedWindow('disparity')
+    cv2.createTrackbar('speckleRange', 'disparity', depth_estimator.speckleRange, 50, depth_estimator.update)
+    cv2.createTrackbar('window_size', 'disparity', depth_estimator.window_size, 21, depth_estimator.update)
+    cv2.createTrackbar('speckleWindowSize', 'disparity', depth_estimator.speckleWindowSize, 200, depth_estimator.update)
+    cv2.createTrackbar('uniquenessRatio', 'disparity', depth_estimator.uniquenessRatio, 50, depth_estimator.update)
+    cv2.createTrackbar('disp12MaxDiff', 'disparity', depth_estimator.disp12MaxDiff, 250, depth_estimator.update)
 
     # load params
     left_calibrator.load_params_from_pickle()
