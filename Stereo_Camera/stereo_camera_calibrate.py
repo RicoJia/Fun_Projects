@@ -41,65 +41,65 @@ class StereoVideoFSM(object):
         for window_name in self.__window_names: 
             cv2.destroyWindow(window_name)
 
-stereo_videofsm = StereoVideoFSM()
-window_names = stereo_videofsm.get_window_names()
-#TODO
-left_calibrator = Calibrator(camera_name=window_names[LEFT], is_fish_eye=False)
-right_calibrator = Calibrator(camera_name=window_names[RIGHT], is_fish_eye= False)
-parser = argparse.ArgumentParser()
-parser.add_argument("-l", required=False, help="load single camera parameters from saved files in ~/rico_cache", action="store_true")
-parser.add_argument("-s", required=False, help="load stereo camera parameters from saved files in ~/rico_cache", action="store_true")
-args = parser.parse_args()
+if __name__ == "__main__": 
+    stereo_videofsm = StereoVideoFSM()
+    window_names = stereo_videofsm.get_window_names()
+    #TODO
+    left_calibrator = Calibrator(camera_name=window_names[LEFT], is_fish_eye=False)
+    right_calibrator = Calibrator(camera_name=window_names[RIGHT], is_fish_eye= False)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-l", required=False, help="load single camera parameters from saved files in ~/rico_cache", action="store_true")
+    parser.add_argument("-s", required=False, help="load stereo camera parameters from saved files in ~/rico_cache", action="store_true")
+    args = parser.parse_args()
 
-# Single Camera calibration
-if args.l: 
-    left_calibrator.load_params_from_pickle()
-    right_calibrator.load_params_from_pickle()
-else: 
-    while stereo_videofsm.can_get_next_frame():
-        frames = stereo_videofsm.get_frames()
-        left_calibrator.detect_and_draw_chessboard_on_frame(frames[LEFT])
-        right_calibrator.detect_and_draw_chessboard_on_frame(frames[RIGHT])
-        key = stereo_videofsm.show_frames_and_get_key()
-        left_calibrator.calibrate(key)
-        if right_calibrator.calibrate(key): 
-            break
+    # Single Camera calibration
+    if args.l: 
+        left_calibrator.load_params_from_pickle()
+        right_calibrator.load_params_from_pickle()
+    else: 
+        while stereo_videofsm.can_get_next_frame():
+            frames = stereo_videofsm.get_frames()
+            left_calibrator.detect_and_draw_chessboard_on_frame(frames[LEFT])
+            right_calibrator.detect_and_draw_chessboard_on_frame(frames[RIGHT])
+            key = stereo_videofsm.show_frames_and_get_key()
+            left_calibrator.calibrate(key)
+            if right_calibrator.calibrate(key): 
+                break
 
-# # Check result
-# while stereo_videofsm.can_get_next_frame():
-#     frames = stereo_videofsm.get_frames()
-#     left_calibrator.detect_and_draw_chessboard_on_frame(frames[0])
-#     right_calibrator.detect_and_draw_chessboard_on_frame(frames[1])
-#     key = stereo_videofsm.show_frames_and_get_key()
-#     left_calibrator.check_result(key)
-#     if right_calibrator.check_result(key): 
-#         break
+    # # Check result
+    # while stereo_videofsm.can_get_next_frame():
+    #     frames = stereo_videofsm.get_frames()
+    #     left_calibrator.detect_and_draw_chessboard_on_frame(frames[0])
+    #     right_calibrator.detect_and_draw_chessboard_on_frame(frames[1])
+    #     key = stereo_videofsm.show_frames_and_get_key()
+    #     left_calibrator.check_result(key)
+    #     if right_calibrator.check_result(key): 
+    #         break
 
-# print("showing undistorted frame")
-# while stereo_videofsm.can_get_next_frame():
-#     frames = stereo_videofsm.get_frames()
-#     frames[LEFT] = left_calibrator.undistort_frame(frames[LEFT])
-#     frames[RIGHT] = right_calibrator.undistort_frame(frames[RIGHT])
-#     key = stereo_videofsm.show_frames_and_get_key()
+    # print("showing undistorted frame")
+    # while stereo_videofsm.can_get_next_frame():
+    #     frames = stereo_videofsm.get_frames()
+    #     frames[LEFT] = left_calibrator.undistort_frame(frames[LEFT])
+    #     frames[RIGHT] = right_calibrator.undistort_frame(frames[RIGHT])
+    #     key = stereo_videofsm.show_frames_and_get_key()
 
-# # stereo calibration
-stereo_calibrator = StereoCalibrator(window_name="stereo_calibrator", left_camera_params=left_calibrator.params, right_camera_params=right_calibrator.params)
-if not args.s: 
-    while stereo_videofsm.can_get_next_frame():
-        frames = stereo_videofsm.get_frames()
-        frames[LEFT] = left_calibrator.undistort_frame(frames[LEFT])
-        frames[RIGHT] = right_calibrator.undistort_frame(frames[RIGHT])
-        left_calibrator.detect_and_draw_chessboard_on_frame(frames[LEFT])
-        right_calibrator.detect_and_draw_chessboard_on_frame(frames[RIGHT])
-        key = stereo_videofsm.show_frames_and_get_key()
-        left_calibrator.prepare_data_for_stereo_calibration(key)
-        if right_calibrator.prepare_data_for_stereo_calibration(key):
-            break
+    # # stereo calibration
+    stereo_calibrator = StereoCalibrator(window_name="stereo_calibrator", left_camera_params=left_calibrator.params, right_camera_params=right_calibrator.params)
+    if not args.s: 
+        while stereo_videofsm.can_get_next_frame():
+            frames = stereo_videofsm.get_frames()
+            frames[LEFT] = left_calibrator.undistort_frame(frames[LEFT])
+            frames[RIGHT] = right_calibrator.undistort_frame(frames[RIGHT])
+            left_calibrator.detect_and_draw_chessboard_on_frame(frames[LEFT])
+            right_calibrator.detect_and_draw_chessboard_on_frame(frames[RIGHT])
+            key = stereo_videofsm.show_frames_and_get_key()
+            left_calibrator.prepare_data_for_stereo_calibration(key)
+            if right_calibrator.prepare_data_for_stereo_calibration(key):
+                break
 
-    left_camera_data = left_calibrator.get_data_for_stereo_calibration()
-    right_camera_data = right_calibrator.get_data_for_stereo_calibration()
-    stereo_calibrator.calibrate(left_camera_data, right_camera_data)
-else: 
-    stereo_calibrator.load_params()
+        left_camera_data = left_calibrator.get_data_for_stereo_calibration()
+        right_camera_data = right_calibrator.get_data_for_stereo_calibration()
+        stereo_calibrator.calibrate(left_camera_data, right_camera_data)
+    else: 
+        stereo_calibrator.load_params()
 
-# rectification
