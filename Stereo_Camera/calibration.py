@@ -299,25 +299,6 @@ class StereoCalibrator(object):
         self.stereo_camera_params["img_size"] = left_camera_data["img_size"]
 
         #TODO
-        # left_params = self.single_camera_params_ls[LEFT]
-        # right_params = self.single_camera_params_ls[RIGHT]
-        # R1, R2, P1, P2, Q, roi_left, roi_right = cv2.stereoRectify(
-        #         left_params["mtx"], left_params["dist"], 
-        #         right_params["mtx"], right_params["dist"], 
-        #         self.stereo_camera_params["img_size"], 
-        #         self.stereo_camera_params["R"], self.stereo_camera_params["T"], 
-        #         flags=cv2.CALIB_ZERO_DISPARITY, alpha=0.9
-        # )
-        # self.stereo_camera_params["R1"] = R1
-        # self.stereo_camera_params["R2"] = R2
-        # self.stereo_camera_params["P1"] = P1
-        # self.stereo_camera_params["P2"] = P2
-        # self.stereo_camera_params["Q"] = Q
-        # self.stereo_camera_params["roi_left"] = roi_left
-        # self.stereo_camera_params["roi_right"] = roi_right
-        # self.__save_params_to_file(self.stereo_camera_params, self.window_name)
-
-        #TODO
         print("stereo params: ")
         print_dict(self.stereo_camera_params)
 
