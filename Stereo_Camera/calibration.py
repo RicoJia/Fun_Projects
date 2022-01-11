@@ -321,9 +321,3 @@ class StereoCalibrator(object):
         print("stereo params: ")
         print_dict(self.stereo_camera_params)
 
-    # ====================== Run time ======================
-    def rectify(self, left_undistorted_frame, right_undistorted_frame):
-        if not self.single_camera_params_ls: 
-            logging.warning("no valid single_camera_params_ls were found")
-        else: 
-            pass
