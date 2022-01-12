@@ -17,16 +17,16 @@ class DepthEstimator(object):
         self.Q = Q
 
         # for disparity img
-        self.window_size = 15
-        self.min_disp = 0
+        self.window_size = 10
+        self.min_disp = 1
         # In the current implementation, this parameter must be divisible by 16.
         # num_disp = 112-min_disp
         self.num_disp = 32
         self.block_size = 16
         self.disp12MaxDiff = 24
-        self.uniquenessRatio = 23
-        self.speckleWindowSize = 90
-        self.speckleRange = 22
+        self.uniquenessRatio = 6
+        self.speckleWindowSize = 66
+        self.speckleRange = 25
         self.re_reprojected_window_name = "re_reprojected image"
 
         fig = plt.figure(figsize=(12, 12))
@@ -42,7 +42,7 @@ class DepthEstimator(object):
         self.min_disp = int(cv2.getTrackbarPos('min_disp', 'disparity'))
         # In the current implementation, this parameter must be divisible by 16.
         # num_disp = 112-min_disp
-        self.num_disp = int(cv2.getTrackbarPos('num_disp', 'disparity')) * 16
+        self.num_disp = (int(cv2.getTrackbarPos('num_disp', 'disparity')) + 1)* 16
         self.block_size = int(cv2.getTrackbarPos('block_size', 'disparity')) * 16
 
     def get_disparity(self, left_frame, right_frame):
@@ -68,7 +68,8 @@ class DepthEstimator(object):
             # If you do speckle filtering, set the parameter to a positive value, it will be implicitly multiplied by 16.
             # Normally, 1 or 2 is good enough.
             # speckleRange = 32
-            speckleRange = self.speckleRange
+            speckleRange = self.speckleRange, 
+            mode=cv2.STEREO_SGBM_MODE_HH
         )
                 
         # stereo = cv2.StereoBM_create(numDisparities=32, blockSize=31)
@@ -76,8 +77,7 @@ class DepthEstimator(object):
         gray_r = cv2.cvtColor(right_frame,cv2.COLOR_BGR2GRAY)
         disparity = stereo.compute(gray_l, gray_r)
         
-        self.normalized_disparity = np.zeros(disparity.shape)
-        np.uint8(cv2.normalize(disparity, self.normalized_disparity, alpha=255, beta=0, norm_type=cv2.NORM_MINMAX))
+        self.normalized_disparity = np.uint8(cv2.normalize(disparity, None, alpha=255, beta=0, norm_type=cv2.NORM_MINMAX))
 
         return disparity
 
@@ -91,18 +91,19 @@ class DepthEstimator(object):
         return f * self.baseline/ disparity_val
 
     def display_depth_on_disparity_img(self, point_pos, disparity_img): 
+        """
+        Display the mid point's depth
+        """
         # display the mid point's depth 
         cln, row = point_pos.shape[:2]
         mid_xyz = point_pos[int(row/2), int(cln/2), :]
         cv2.circle(self.normalized_disparity, (int(row/2), int(cln/2)), 3, (0, 255, 255), -1)
         cv2.imshow(self.window_name, self.normalized_disparity)
+        # Note: opencv implementation multiplies the whole thing with 16 for accuracy. Need to tune this down.
+        disparity_img = disparity_img.astype(np.float32)/16.0
 
-        #TODO
         print("pt 3d: ", self.get_depth(disparity_img[int(row/2), int(cln/2)]))
         print(f"disp: {disparity_img[int(row/2), int(cln/2)]}, f:{self.Q[2,3]}, baseline: {self.baseline}")
-        # print("pt 3d: ", mid_xyz)
-        # print("disp val: ", self.normalized_disparity[int(row/2), int(cln/2)])
-
 
     def exit(self, key):
         """
@@ -136,8 +137,8 @@ if __name__ == "__main__":
     cv2.createTrackbar('uniquenessRatio', 'disparity', depth_estimator.uniquenessRatio, 50, depth_estimator.update)
     cv2.createTrackbar('disp12MaxDiff', 'disparity', depth_estimator.disp12MaxDiff, 250, depth_estimator.update)
     cv2.createTrackbar('min_disp', 'disparity', depth_estimator.min_disp, 250, depth_estimator.update)
-    cv2.createTrackbar('num_disp', 'disparity', depth_estimator.num_disp, 10, depth_estimator.update)
-    cv2.createTrackbar('block_size', 'disparity', depth_estimator.block_size, 10, depth_estimator.update)
+    cv2.createTrackbar('num_disp', 'disparity', int(depth_estimator.num_disp/32), 10, depth_estimator.update)
+    cv2.createTrackbar('block_size', 'disparity', int(depth_estimator.block_size/32), 10, depth_estimator.update)
     while stereo_videofsm.can_get_next_frame():
         frames = stereo_videofsm.get_frames()
 
