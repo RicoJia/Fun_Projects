@@ -18,11 +18,17 @@ The major steps include: calibrating each lens as a single camera, calibrate two
 Before stereo calibration, first we need to calibrate each lens. There are different types of camera models, such as for a fish eye camera (with large FOV), a good model is the [MEI](https://www.robots.ox.ac.uk/~cmei/articles/single_viewpoint_calib_mei_07.pdf), currently adopted by [OpenCV](https://docs.opencv.org/3.4/dd/d12/tutorial_omnidir_calib_main.html). In this article, we are going to use the traditional pinhole camera model. 
 
 #### Pinhole Model 
-The common pinhole model is set up as below. $f$ is focal length, 
+The common pinhole model is set up as below. $f$ is focal length. The image will be projected onto the plane behind the lens, in an angle $\phi$
       <p align="center">
       <img src="https://user-images.githubusercontent.com/39393023/121839683-3d499c00-cca0-11eb-8faf-22485a5248e1.png" height="200" width="Field of View"/>
-      <figcaption align="center">caption</figcaption>
+      <figcaption align="center">Pinhole Model. Credit: Udacity</figcaption>
       </p>
+
+In the above depiction, note that the projection of an object through pinhole is upside down. For convenience, in 3D we shift the image plane **before** the pinhole, and we set up the camera frame at the pinhole. This way, camera frame coordinates on the image plane can be easily calculated from the 3D world frame coordinates using the similar triangle method, without flipping them upside down. 
+    <p align="center">
+    <img src="https://docs.opencv.org/4.x/pinhole_camera_model.png" height="300" width="width"/>
+    </p>
+
 
 
 #### Sketch
@@ -42,10 +48,6 @@ math
 ========================================================================
 ### Mono Camera Calibration
 1. calibrateCamera: no skew param in intrinsics. [Good explanation](https://docs.opencv.org/4.x/d9/d0c/group__calib3d.html). **The goal of calibration is to know the 6 extrinsics and 5 intrinsics, and skew params** [从零开始学习「张氏相机标定法」](https://mp.weixin.qq.com/s/48jMBVVEqQp3IR6NpUy2QA)
-    - Model: **We don't want to invert the image, so we put the image in front of the cam**
-        <p align="center">
-        <img src="https://docs.opencv.org/4.x/pinhole_camera_model.png" height="300" width="width"/>
-        </p>
 
     - three frames: world frame, camera frame (at the shutter), and image frame. 
         - world frame -> camera frame
