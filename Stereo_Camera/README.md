@@ -18,7 +18,7 @@ The major steps include: calibrating each lens as a single camera, calibrate two
 Before stereo calibration, first we need to calibrate each lens. There are different types of camera models, such as for a fish eye camera (with large FOV), a good model is the [MEI](https://www.robots.ox.ac.uk/~cmei/articles/single_viewpoint_calib_mei_07.pdf), currently adopted by [OpenCV](https://docs.opencv.org/3.4/dd/d12/tutorial_omnidir_calib_main.html). In this article, we are going to use the traditional pinhole camera model. 
 
 #### Pinhole Model 
-The common pinhole model is set up as below. $f$ is focal length. The image will be projected onto the plane behind the lens, in an angle $\phi$
+The common pinhole model is set up as below. $f$ is focal length. The image will be projected onto the plane behind the lens, in an angle $`\phi`$
       <p align="center">
       <img src="https://user-images.githubusercontent.com/39393023/121839683-3d499c00-cca0-11eb-8faf-22485a5248e1.png" height="200" width="Field of View"/>
       <figcaption align="center">Pinhole Model. Credit: Udacity</figcaption>
