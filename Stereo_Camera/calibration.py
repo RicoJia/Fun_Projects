@@ -23,10 +23,8 @@ RIGHT=1
 
 def print_dict(dic):
     """
-
     :dic: TODO
     :returns: TODO
-
     """
     for key, value in dic.items(): 
         print(key, ": ")

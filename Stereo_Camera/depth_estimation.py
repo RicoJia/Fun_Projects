@@ -9,6 +9,7 @@ import time
 import calendar
 import argparse
 import os
+import open3d as o3d
 
 LEFT=0
 RIGHT=1
@@ -98,7 +99,21 @@ class DepthEstimator(object):
         cv2.circle(self.normalized_disparity, (int(row/2), int(cln/2)), 3, (0, 255, 255), -1)
         print("pt 3d: ", mid_xyz)
         cv2.imshow(self.window_name, self.normalized_disparity)
-        return disparity_img
+        return disparity_img, points_3d
+    
+    def visualize_3d_point_cloud(self, points_3d):
+        """
+        Visualize the 3d point cloud in open3D
+        """
+        # Pass xyz to Open3D.o3d.geometry.PointCloud and visualize
+        pcd = o3d.geometry.PointCloud()
+        points_3d = points_3d.reshape(-1, 3)
+        points_3d = points_3d[(~np.isinf(points_3d).any(axis=1))]
+        #TODO
+        print(points_3d)
+        pcd.points = o3d.utility.Vector3dVector(points_3d)
+        mesh_frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.6, origin=[0,0,0])
+        o3d.visualization.draw_geometries([pcd, mesh_frame])
 
     def exit(self, key):
         """
@@ -190,5 +205,6 @@ if __name__ == "__main__":
 
     frames_list = depth_estimator.load_frames()
     for frames in frames_list: 
-        depth_estimator.get_and_show_depth_image(frames)
-        cv2.waitKey(1000)
+        _, points_3d = depth_estimator.get_and_show_depth_image(frames)
+        cv2.waitKey(0)
+        depth_estimator.visualize_3d_point_cloud(points_3d)
