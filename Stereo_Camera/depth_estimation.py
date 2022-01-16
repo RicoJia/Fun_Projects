@@ -5,17 +5,21 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import time
+import calendar
+import argparse
+import os
 
 LEFT=0
 RIGHT=1
 ESC = 27
+ENTER = 13
 
 class DepthEstimator(object): 
     def __init__(self, T, Q):
         self.window_name = "Disparity Map"
         self.baseline = abs(T[0])
         self.Q = Q
-
         # for disparity img
         self.window_size = 10
         self.min_disp = 1
@@ -28,9 +32,13 @@ class DepthEstimator(object):
         self.speckleWindowSize = 66
         self.speckleRange = 25
         self.re_reprojected_window_name = "re_reprojected image"
-
         fig = plt.figure(figsize=(12, 12))
         self.ax = fig.gca(projection='3d')
+        self.launch_trackbar()
+
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        self.frame_store_dir = os.path.join(current_dir, "images_stereo")
+
 
     def update(self, val=0):
         self.window_size = int(cv2.getTrackbarPos('window_size', 'disparity'))
@@ -38,18 +46,18 @@ class DepthEstimator(object):
         self.speckleWindowSize = int(cv2.getTrackbarPos('speckleWindowSize', 'disparity'))
         self.speckleRange = int(cv2.getTrackbarPos('speckleRange', 'disparity'))
         self.disp12MaxDiff = int(cv2.getTrackbarPos('disp12MaxDiff', 'disparity'))
-
         self.min_disp = int(cv2.getTrackbarPos('min_disp', 'disparity'))
         # In the current implementation, this parameter must be divisible by 16.
         # num_disp = 112-min_disp
         self.num_disp = (int(cv2.getTrackbarPos('num_disp', 'disparity')) + 1)* 16
         self.block_size = int(cv2.getTrackbarPos('block_size', 'disparity')) * 16
 
-    def get_disparity(self, left_frame, right_frame):
+    def get_and_show_depth_image(self, frames):
         """
-        Generate a disparity map
+        Generate a disparity map, and display the mid point's depth
+        :param frames - frames[LEFT], frames[RIGHT]
         """
-
+        left_frame, right_frame = frames[LEFT], frames[RIGHT]
         stereo = cv2.StereoSGBM_create(
             minDisparity = self.min_disp,
             numDisparities = self.num_disp,
@@ -75,35 +83,22 @@ class DepthEstimator(object):
         # stereo = cv2.StereoBM_create(numDisparities=32, blockSize=31)
         gray_l = cv2.cvtColor(left_frame,cv2.COLOR_BGR2GRAY)
         gray_r = cv2.cvtColor(right_frame,cv2.COLOR_BGR2GRAY)
-        disparity = stereo.compute(gray_l, gray_r)
+        disparity_img = stereo.compute(gray_l, gray_r)
         
-        self.normalized_disparity = np.uint8(cv2.normalize(disparity, None, alpha=255, beta=0, norm_type=cv2.NORM_MINMAX))
+        self.normalized_disparity = np.uint8(cv2.normalize(disparity_img, None, alpha=255, beta=0, norm_type=cv2.NORM_MINMAX))
 
-        return disparity
-
-    def get_3d_points(self, disparity):
-        #reporject image will keep the same size, but will have inf if they are not available
-        points_3d = cv2.reprojectImageTo3D(disparity, self.Q)
-        return points_3d
-
-    def get_depth(self, disparity_val): 
-        f = self.Q[2, 3]
-        return f * self.baseline/ disparity_val
-
-    def display_depth_on_disparity_img(self, point_pos, disparity_img): 
-        """
-        Display the mid point's depth
-        """
-        # display the mid point's depth 
-        cln, row = point_pos.shape[:2]
-        mid_xyz = point_pos[int(row/2), int(cln/2), :]
-        cv2.circle(self.normalized_disparity, (int(row/2), int(cln/2)), 3, (0, 255, 255), -1)
-        cv2.imshow(self.window_name, self.normalized_disparity)
         # Note: opencv implementation multiplies the whole thing with 16 for accuracy. Need to tune this down.
         disparity_img = disparity_img.astype(np.float32)/16.0
 
-        print("pt 3d: ", self.get_depth(disparity_img[int(row/2), int(cln/2)]))
-        print(f"disp: {disparity_img[int(row/2), int(cln/2)]}, f:{self.Q[2,3]}, baseline: {self.baseline}")
+        #reporject image will keep the same size, but will have inf if they are not available
+        points_3d = cv2.reprojectImageTo3D(disparity_img, self.Q)
+        # display the mid point's depth 
+        cln, row = points_3d.shape[:2]
+        mid_xyz = points_3d[int(row/2), int(cln/2), :]
+        cv2.circle(self.normalized_disparity, (int(row/2), int(cln/2)), 3, (0, 255, 255), -1)
+        print("pt 3d: ", mid_xyz)
+        cv2.imshow(self.window_name, self.normalized_disparity)
+        return disparity_img
 
     def exit(self, key):
         """
@@ -114,9 +109,60 @@ class DepthEstimator(object):
             return True
         else: 
             return False
+    
+    def save_frames_if_necessary(self, key, frames): 
+        """
+        If ENTER is hit, left and right frames will be saved under ~/images_stereo
+        File Names will be: left_frame_TIMESTAMP.png
+        """
+        if key == ENTER: 
+            if not os.path.isdir(self.frame_store_dir): 
+                os.mkdir(self.frame_store_dir)
+            tm = calendar.timegm(time.gmtime()) 
+            cv2.imwrite(f"{self.frame_store_dir}/left_frame_{tm}.png", frames[LEFT])
+            cv2.imwrite(f"{self.frame_store_dir}/right_frame_{tm}.png", frames[RIGHT])
+            logging.info("Left and right frames have been saved.")
+
+    def load_frames(self): 
+        ls = os.listdir(self.frame_store_dir)
+        left_frame_names = list(filter(lambda x: "left" in x, ls))
+        right_frame_names = list(filter(lambda x: "right" in x, ls))
+        frames_list = []
+        for left_name, right_name in zip(left_frame_names, right_frame_names): 
+            left_frame = cv2.imread(os.path.join(self.frame_store_dir, left_name))
+            right_frame = cv2.imread(os.path.join(self.frame_store_dir, right_name))
+            frames = [left_frame, right_frame]
+            frames_list.append(frames)
+        logging.info(f"{len(frames_list)} sets of left and right stereo images have been loaded")
+        return frames_list
+
+
+    def launch_trackbar(self):
+        """
+        Launch track bar for tuning
+        """
+        # #Track bar
+        cv2.namedWindow('disparity')
+        cv2.createTrackbar('speckleRange', 'disparity', self.speckleRange, 50, self.update)
+        cv2.createTrackbar('window_size', 'disparity', self.window_size, 21, self.update)
+        cv2.createTrackbar('speckleWindowSize', 'disparity', self.speckleWindowSize, 200, self.update)
+        cv2.createTrackbar('uniquenessRatio', 'disparity', self.uniquenessRatio, 50, self.update)
+        cv2.createTrackbar('disp12MaxDiff', 'disparity', self.disp12MaxDiff, 250, self.update)
+        cv2.createTrackbar('min_disp', 'disparity', self.min_disp, 250, self.update)
+        cv2.createTrackbar('num_disp', 'disparity', int(self.num_disp/32), 10, self.update)
+        cv2.createTrackbar('block_size', 'disparity', int(self.block_size/32), 10, self.update)
+
+
+class Parser(object):
+    """abstraction for arg_parser"""
+    def __init__(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument("-r", required=False, help="save stereo images. Regular mode is to load images from $(pwd)/images_stereo", action="store_true")
+        self.args = parser.parse_args()
         
 
 if __name__ == "__main__": 
+    p = Parser()
     stereo_videofsm = StereoVideoFSM()
     window_names = stereo_videofsm.get_window_names()
     left_calibrator = Calibrator(camera_name=window_names[LEFT], is_fish_eye=False)
@@ -129,25 +175,20 @@ if __name__ == "__main__":
     stereo_calibrator.load_params()
 
     depth_estimator = DepthEstimator(T = stereo_calibrator.stereo_camera_params["T"], Q = stereo_calibrator.stereo_camera_params["Q"])
-    # #Track bar
-    cv2.namedWindow('disparity')
-    cv2.createTrackbar('speckleRange', 'disparity', depth_estimator.speckleRange, 50, depth_estimator.update)
-    cv2.createTrackbar('window_size', 'disparity', depth_estimator.window_size, 21, depth_estimator.update)
-    cv2.createTrackbar('speckleWindowSize', 'disparity', depth_estimator.speckleWindowSize, 200, depth_estimator.update)
-    cv2.createTrackbar('uniquenessRatio', 'disparity', depth_estimator.uniquenessRatio, 50, depth_estimator.update)
-    cv2.createTrackbar('disp12MaxDiff', 'disparity', depth_estimator.disp12MaxDiff, 250, depth_estimator.update)
-    cv2.createTrackbar('min_disp', 'disparity', depth_estimator.min_disp, 250, depth_estimator.update)
-    cv2.createTrackbar('num_disp', 'disparity', int(depth_estimator.num_disp/32), 10, depth_estimator.update)
-    cv2.createTrackbar('block_size', 'disparity', int(depth_estimator.block_size/32), 10, depth_estimator.update)
-    while stereo_videofsm.can_get_next_frame():
-        frames = stereo_videofsm.get_frames()
+    
+    if p.args.r: 
+        print("You can record multiple pictures by hitting Enter. Hit Esc to quit")
+        while stereo_videofsm.can_get_next_frame():
+            frames = stereo_videofsm.get_frames()
+            frames[LEFT] = left_calibrator.undistort_frame(frames[LEFT])
+            frames[RIGHT] = right_calibrator.undistort_frame(frames[RIGHT])
+            depth_estimator.get_and_show_depth_image(frames)
+            key = stereo_videofsm.show_frames_and_get_key()
+            depth_estimator.save_frames_if_necessary(key, frames)
+            if depth_estimator.exit(key): 
+                break
 
-        frames[LEFT] = left_calibrator.undistort_frame(frames[LEFT])
-        frames[RIGHT] = right_calibrator.undistort_frame(frames[RIGHT])
-        disparity = depth_estimator.get_disparity(frames[LEFT], frames[RIGHT])
-        # Rectification was done in left -> right
-        point_pos = depth_estimator.get_3d_points(disparity)
-        depth_estimator.display_depth_on_disparity_img(point_pos, disparity)
-        key = stereo_videofsm.show_frames_and_get_key()
-        if depth_estimator.exit(key): 
-            break
+    frames_list = depth_estimator.load_frames()
+    for frames in frames_list: 
+        depth_estimator.get_and_show_depth_image(frames)
+        cv2.waitKey(1000)

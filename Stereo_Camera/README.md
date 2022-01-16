@@ -14,7 +14,6 @@ The major steps include: calibrating each lens as a single camera, calibrate two
     </p>
 
 ### Single Camera Calibration 
-#### Principle 
 Before stereo calibration, first we need to calibrate each lens. There are different types of camera models, such as for a fish eye camera (with large FOV), a good model is the [MEI](https://www.robots.ox.ac.uk/~cmei/articles/single_viewpoint_calib_mei_07.pdf), currently adopted by [OpenCV](https://docs.opencv.org/3.4/dd/d12/tutorial_omnidir_calib_main.html). In this article, we are going to use the traditional pinhole camera model. 
 
 #### Pinhole Model 
@@ -26,22 +25,60 @@ The common pinhole model is set up as below. $f$ is focal length. The image will
 
 In the above depiction, note that the projection of an object through pinhole is upside down. For convenience, in 3D we shift the image plane **before** the pinhole, and we set up the camera frame at the pinhole. This way, camera frame coordinates on the image plane can be easily calculated from the 3D world frame coordinates using the similar triangle method, without flipping them upside down. 
     <p align="center">
-    <img src="https://docs.opencv.org/4.x/pinhole_camera_model.png" height="300" width="width"/>
+    <img src="https://docs.opencv.org/4.x/pinhole_camera_model.png" height="200" width="width"/>
+    <figcaption align="center">3D Pinhole Model. Credit: OpenCV</figcaption>
     </p>
 
-$$\begin{matrix}
-1 & 2 & 3\\
-a^2 & b^2 & c
-\end{matrix}$$
+Here we usually represent coordinates using homogenous coordinates, which allows us to represent depth ```z``` very easily in matrix form. This is important because the same point on the image plane can be the projection of points of different depth.    
 
-#### Sketch
-pinhole
+1. The model of a simple pinhole camera can be written as:  ```world frame -> camera frame -> pixel coordinates```. 
+    - ```world frame -> camera frame```. These are known as **extrinsic parameters**. R is the rotation matrix ```world->camera```, t is the translation ```world->camera```.  
+        <p align="center">
+        <img src="https://user-images.githubusercontent.com/39393023/147513029-9abe06fc-9025-4007-9d7c-fa55e26ed607.png" height="100" width="width"/>
+        </p>
+    - ```camera frame -> pixel coordinates```, where ```c_x, c_y``` are offset between the pixel frame and the camera frame. ```f_x, f_y``` are the focal lengths in x, y direcitions，**in pixels/meter**. ```Z_c``` is the depth of the object in the camera frame. This equation can be achived through similar triangle.  
+        <p align="center">
+        <img src="https://user-images.githubusercontent.com/39393023/147513027-0ae6d242-98fd-4abf-afba-b200c982d48d.png" height="80" width="width"/>
+        </p>
 
-Zhengyou 
+        - To write in homogenous coordinates, we have: (```s=Zc```) 
+            <p align="center">
+            <img src="https://user-images.githubusercontent.com/39393023/147513030-e122029f-5a06-4484-863e-a159bb799edb.png" height="100" width="width"/>
+            </p>
+        - In [the OpenCV implementation](https://docs.opencv.org/4.x/d9/d0c/group__calib3d.html), distortion is added on top of ```X_c, Y_c``` **before** calculating [u, v]. Here for simplicity we skip that.  
+    - All together, this is also called a homography (单应), which describes the relationship between the world frame and pixel coordinates. 
+        $$ 
+        s *\begin{bmatrix} u\\ v\\ 1 \end{bmatrix}
+        = 
+        \begin{bmatrix} f_x & 0 & c_x\\ 0& f_y& c_y\\ 0& 0& 1\end{bmatrix}
+        \begin{bmatrix}r_1& r_2& r_3& t\end{bmatrix}
+        \begin{bmatrix}X_w\\ Y_w\\ Z_w\\ 1\end{bmatrix}
+        $$
 
-math 
-2. What the function does 
-[]
+### Calibration
+A widely used calibration method was [proposed by Zhengyou Zhang in 1998 when he was at Microsoft](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/tr98-71.pdf). This method compared to its predecessors, require simpler apparatus: just one checkerboard is enough. Although later, visual fiducial tags such as aprilTags and ArUco were invented and could provide better accuracy, for now, let's stick to the checkerboard. 
+
+Now, in order to estimate the intrinsics and extrinsics, we need to find some points in the world frame (a.k.a object points), and their coordinates in the pixel frame (a.k.a imag points).   
+
+1. **If we simplify the above model by assuming zw = 0**, then one can write it with a homography matrix, $H$, which describes the relationship between the same scene on two planes. Here ```s = Z_c```.
+    $$
+    \begin{bmatrix}u\\v\\1\end{bmatrix} 
+    = \frac{1}{s}
+    \begin{bmatrix}h_{11}&h_{12}&h_{13}\\ h_{21}&h_{22}&h_{23}\\ h_{31}&h_{32}&h_{33}\end{bmatrix}
+    \begin{bmatrix}X_w\\ Y_w\\ 1\end{bmatrix}
+    $$
+    - Because we are working with homogenous coordinates, 1 out of ```H```'s 9 degrees of freedom is the scale, which yields the same result no matter how we change it. Therefore, ```H``` has 8 dof. 
+    - Therefore, each pair of (object points, image points) will yield 2 equations, which means we need at least 4 such pairs to solve for all 8 equations:   
+        $$
+        \frac{h_{11}X_w + h_{12}Y_w + h_{13}}{h_{31}X_w+h_{32}Y_w+h_{33}} = u
+        $$
+        $$
+        \frac{h_{21}X_w+h_{22}Y_w+h_{23}}{h_{31}X_w+h_{32}Y_w+h_{33}} = v
+        $$
+
+
+#### Sketch[]
+2. 
 3. Code: Take another look
 
 
@@ -49,31 +86,12 @@ math
 ========================================================================
 ## Calibration 
 ========================================================================
-### Mono Camera Calibration
-1. calibrateCamera: no skew param in intrinsics. [Good explanation](https://docs.opencv.org/4.x/d9/d0c/group__calib3d.html). **The goal of calibration is to know the 6 extrinsics and 5 intrinsics, and skew params** [从零开始学习「张氏相机标定法」](https://mp.weixin.qq.com/s/48jMBVVEqQp3IR6NpUy2QA)
 
-    - three frames: world frame, camera frame (at the shutter), and image frame. 
-        - world frame -> camera frame
-            <p align="center">
-            <img src="https://user-images.githubusercontent.com/39393023/147513029-9abe06fc-9025-4007-9d7c-fa55e26ed607.png" height="100" width="width"/>
-            </p>
 
-        - camera_frame -> image_frame: intrinsics. So if we know world frame, we know its image coord. But we can't go the other way
-            <p align="center">
-            <img src="https://user-images.githubusercontent.com/39393023/147513030-e122029f-5a06-4484-863e-a159bb799edb.png" height="100" width="width"/>
-            </p>
-
-            <p align="center">
-            <img src="https://user-images.githubusercontent.com/39393023/147513027-0ae6d242-98fd-4abf-afba-b200c982d48d.png" height="100" width="width"/>
-            </p>
 
 2. Calibration Derivation Version . 
-    1. Homography of one picture (单应) is the ```world -> (u,v)```. Note we assume zw = 0 as zc (z in the triangle) is calculated. 
-        <p align="center">
-        <img src="https://user-images.githubusercontent.com/39393023/147690862-fb9f5d49-0cb8-4d4f-b4c3-5b172cc35af4.JPEG" height="300" width="width"/>
-        </p>
-
-    2. Homography has 8 free variables, because it's homogenous coordinates, we can have everything times k, and they're still valid! So we can put a constraint (e.g., h33 = 1, or |H| = 1) , and can be solved with at least 4 pairs.
+    2. Homography has 8 free variables, 
+        - because it's homogenous coordinates, we can have everything times k, and they're still valid! So we can put a constraint (e.g., h33 = 1, or |H| = 1) , and can be solved with at least 4 pairs.
         <p align="center">
         <img src="https://user-images.githubusercontent.com/39393023/147690865-99983dec-f257-4c8f-a219-aaed6b80e0b6.JPEG" height="400" width="width"/>
         </p>
