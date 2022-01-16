@@ -167,7 +167,6 @@ class DepthEstimator(object):
         cv2.createTrackbar('num_disp', 'disparity', int(self.num_disp/32), 10, self.update)
         cv2.createTrackbar('block_size', 'disparity', int(self.block_size/32), 10, self.update)
 
-
 class Parser(object):
     """abstraction for arg_parser"""
     def __init__(self):
@@ -175,7 +174,6 @@ class Parser(object):
         parser.add_argument("-r", required=False, help="save stereo images. Regular mode is to load images from $(pwd)/images_stereo", action="store_true")
         self.args = parser.parse_args()
         
-
 if __name__ == "__main__": 
     p = Parser()
     stereo_videofsm = StereoVideoFSM()
