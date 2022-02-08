@@ -35,9 +35,13 @@
 
 4. Get depth image and point clouds
     1. Depth image
+        - Infrastructure: Make Record image, load image. (A nice general infrastructure to have!)
     2. Estimate depth
         - get depth at certain points. print them on screen
             - why point cloud gives the (cln, row) instead of (row, cln)?
-        - Make Record image, load image. 
-        - run the 3D projected points. 
-        - visualize them? 
+    3. Visualize the 3D projected points. 
+        - Need to associate point RGB with point cloud 
+        - Visualize
+
+
+    

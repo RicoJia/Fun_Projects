@@ -133,6 +133,10 @@
         3. add replay logic
             - replay the right commanded angles
             - move_joints
-      
 
-3. Future 
+3. Roadmap 
+    1. Visualize point cloud
+        - include 3D point cloud as a submodule
+        - Publish as sensor_msgs::PointCloud2, visualize in Rviz
+    2. Implement Feature detection on cam: need a fused image as well.
+

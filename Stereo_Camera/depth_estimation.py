@@ -91,7 +91,7 @@ class DepthEstimator(object):
         # Note: opencv implementation multiplies the whole thing with 16 for accuracy. Need to tune this down.
         disparity_img = disparity_img.astype(np.float32)/16.0
 
-        #reporject image will keep the same size, but will have inf if they are not available
+        #reporjected image will keep the same size, but will have inf if they are not available
         points_3d = cv2.reprojectImageTo3D(disparity_img, self.Q)
         # display the mid point's depth 
         cln, row = points_3d.shape[:2]
@@ -99,6 +99,7 @@ class DepthEstimator(object):
         cv2.circle(self.normalized_disparity, (int(row/2), int(cln/2)), 3, (0, 255, 255), -1)
         print("pt 3d: ", mid_xyz)
         cv2.imshow(self.window_name, self.normalized_disparity)
+        cv2.waitKey(0)
         return disparity_img, points_3d
     
     def visualize_3d_point_cloud(self, points_3d):

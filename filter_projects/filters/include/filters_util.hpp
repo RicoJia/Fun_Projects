@@ -6,7 +6,6 @@
 #include <random>
 #include <chrono>
 
-
 namespace Filter{
   namespace Util{
     //generate a vector of uniformly distributed random numbers. Each number falls in the range defined by elements with the same indices in upper_lims and lower lims. 
