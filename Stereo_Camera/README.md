@@ -167,7 +167,7 @@ Now, in order to estimate the intrinsics and extrinsics, we need to find some po
 4. With $M$ solved, we can write out extrinsics $r_1, r_2, t$ as defined above. Also, we can complete the rotation matrix with $r_3 = r_1 \times r_2$. 
 
 
-## Notes for Actual Implementation 
+## Actual Implementation 
 For beginners, OpenCV has encapsulated the entire calibration process really well. The actual implementation using OpenCV is pretty straightfoward. So, I highly recommend reading [their documentation](https://docs.opencv.org/3.4/dc/dbb/tutorial_py_calibration.html) before advancing to the rest of this section. 
 
 In this section, I will present some notes and gotchas that I found useful for using OpenCV's API.
@@ -221,5 +221,29 @@ In this section, I will present some notes and gotchas that I found useful for u
     
 
 
+## Stereo Calibration 
+In this article, we are going to calibrate a pair of stereo cameras and generate a good homography between the two cameras. If you haven't done so, please check out my previous article on calibration for a single camera. From here, we assume that we have achieved a good set of extrinsics and intrinsics of the right and left cameras: ```mtx``` (camera intrinsics) and ```dist``` (distorsion)
 
+1. Load parameters for left and right cameras:
+
+2. The code I use is this (reference: [Temuge Batpurev's Blog](https://temugeb.github.io/opencv/python/2021/02/02/stereo-camera-calibration-and-triangulation.html))
+    ```python
+    # change this if this is not good
+    stereocalibration_criteria = (cv2.TERM_CRITERIA_MAX_ITER + cv2.TERM_CRITERIA_EPS, 100, 0.001)
+    RMSE,CM_left, dist_left, CM_right, dist_right, R, T, E, F = cv2.stereoCalibrate(
+            obj_points, 
+            img_points_left, img_points_right, 
+            mtx_left, dist_left, 
+            mtx_right, dist_right, 
+            (width, height), 
+            criteria = stereocalibration_criteria, 
+            flags = cv2.CALIB_USE_INTRINSIC_GUESS
+            )
+    ```
+    - Return values: RMSE (total root mean square error? TODO), camera
+2. 
+
+
+
+## 3D Point Cloud Generation Using Depth Estimation 
 

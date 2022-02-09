@@ -97,22 +97,56 @@ class DepthEstimator(object):
         cln, row = points_3d.shape[:2]
         mid_xyz = points_3d[int(row/2), int(cln/2), :]
         cv2.circle(self.normalized_disparity, (int(row/2), int(cln/2)), 3, (0, 255, 255), -1)
-        print("pt 3d: ", mid_xyz)
-        cv2.imshow(self.window_name, self.normalized_disparity)
-        cv2.waitKey(0)
+        # cv2.imshow(self.window_name, self.normalized_disparity)
+        # cv2.waitKey(0)
+        # points_3d now is nx3
+        points_3d = points_3d.reshape(-1, 3)
+        points_3d = points_3d[(~np.isinf(points_3d).any(axis=1))]
         return disparity_img, points_3d
     
-    def visualize_3d_point_cloud(self, points_3d):
+    def project_3d_points_back_to_2d(self, points_3d, camera_params, frame):
+        """
+        project 3d points back to the 2D camera view, whose frame is the same as the world frame
+        return: BGR value of the 2D projected points 
+        """
+        # visualize projected points
+        # We're using the right camera frame as the main world frame.
+        rvec = np.array([[0, 1, 0], 
+                         [-1, 0, 0], 
+                         [0, 0, 1]]).astype(float)
+        # tvec = np.array([0.2, 0.2,0])
+        tvec = np.zeros(3)
+        mtx = camera_params["mtx"]
+        dist = camera_params["dist"]
+        img_points, _ = cv2.projectPoints(points_3d, rvec, tvec, mtx, dist)
+        img_points = img_points.astype(np.uint8)
+        projected_points_bgr = np.array([]).reshape(0,3)
+        for p in img_points: 
+            if (np.all(np.array(p[0]) < np.array(frame.shape[0:2]))): 
+                projected_points_bgr = np.vstack((projected_points_bgr, frame[tuple(p[0])][::-1].astype(float)/255.0))
+            # assign white to unknown pixels
+            else: 
+                projected_points_bgr = np.vstack((projected_points_bgr, np.array([0, 255, 255])))
+
+            #TODO
+            # cv2.circle(frame, tuple(p[0]), 3, (0, 255, 0), 1)
+        # cv2.imshow("3D-2D Projection", frame)
+        # cv2.waitKey(0)
+        print(projected_points_bgr)
+        return projected_points_bgr
+
+
+    def visualize_3d_point_cloud(self, points_3d, projected_points_bgr=None):
         """
         Visualize the 3d point cloud in open3D
         """
         # Pass xyz to Open3D.o3d.geometry.PointCloud and visualize
         pcd = o3d.geometry.PointCloud()
-        points_3d = points_3d.reshape(-1, 3)
-        points_3d = points_3d[(~np.isinf(points_3d).any(axis=1))]
         #TODO
-        print(points_3d)
+        print(points_3d.shape)
+        print(projected_points_bgr.shape)
         pcd.points = o3d.utility.Vector3dVector(points_3d)
+        pcd.colors = o3d.utility.Vector3dVector(projected_points_bgr)
         mesh_frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.6, origin=[0,0,0])
         o3d.visualization.draw_geometries([pcd, mesh_frame])
 
@@ -205,5 +239,5 @@ if __name__ == "__main__":
     frames_list = depth_estimator.load_frames()
     for frames in frames_list: 
         _, points_3d = depth_estimator.get_and_show_depth_image(frames)
-        cv2.waitKey(0)
-        depth_estimator.visualize_3d_point_cloud(points_3d)
+        projected_points_bgr = depth_estimator.project_3d_points_back_to_2d(points_3d=points_3d, camera_params=right_calibrator.params, frame=frames[RIGHT])
+        depth_estimator.visualize_3d_point_cloud(points_3d, projected_points_bgr)
