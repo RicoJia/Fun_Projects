@@ -222,7 +222,29 @@ In this section, I will present some notes and gotchas that I found useful for u
 
 
 ## Stereo Calibration 
-In this article, we are going to calibrate a pair of stereo cameras and generate a good homography between the two cameras. If you haven't done so, please check out my previous article on calibration for a single camera. From here, we assume that we have achieved a good set of extrinsics and intrinsics of the right and left cameras: ```mtx``` (camera intrinsics) and ```dist``` (distorsion)
+Calibrate a pair of stereo cameras is to **generate a good homography between the two cameras**, i.e, the relative position between the two cameras. This information is crucial to depth estimation from a pair of stereo images. If you haven't done so, please check out my previous article on calibration for a single camera. From here, we assume that we have achieved a good set of extrinsics and intrinsics of the right and left cameras: ```mtx``` (camera intrinsics) and ```dist``` (distorsion)
+### Theory 
+To visualize what do with the homography generated in stereo calibration, given a pair of uncalibrated stereo images
+    <p align="center">
+    <img src="https://images2015.cnblogs.com/blog/810956/201602/810956-20160218201509534-648669511.png" height="400" width="width"/>
+    <figcaption align="center">Image source: [CSDN](https://blog.csdn.net/weixin_39116058/article/details/85765543)</figcaption>
+    </p>
+
+With homography we are able to "align" the two cameras against the same plane
+    <p align="center">
+    <img src="https://images2015.cnblogs.com/blog/810956/201602/810956-20160218201746909-1138314477.png" height="400" width="width"/>
+    <figcaption align="center">Image source: [CSDN](https://blog.csdn.net/weixin_39116058/article/details/85765543)</figcaption>
+    </p>
+
+The process to use homography for projecting image points onto the aligned image planes is called "image rectification". After this process, the two rectified camera views might be somewhat distorted, but their [epipolar lines](https://en.wikipedia.org/wiki/Epipolar_geometry) are parallel. This allows us to find matching points easily - we simply need to search for matching points along the epipolar lines/ 
+    <p align="center">
+    <img src="https://user-images.githubusercontent.com/77752418/153250025-50d3d840-fa97-45ef-9f33-1c414ff006b1.png" height="400" width="width"/>
+    <figcaption align="center">Image source [CSDN](https://cloud.tencent.com/developer/article/1811227)</figcaption>
+    </p>
+
+Reference: - nice derivation: https://cloud.tencent.com/developer/article/1811227
+    - summary: https://blog.csdn.net/weixin_30225755/article/details/112497742
+### Code
 
 1. Load parameters for left and right cameras:
 
