@@ -242,8 +242,33 @@ The process to use homography for projecting image points onto the aligned image
     <figcaption align="center">Image source [CSDN](https://cloud.tencent.com/developer/article/1811227)</figcaption>
     </p>
 
-Reference: - nice derivation: https://cloud.tencent.com/developer/article/1811227
-    - summary: https://blog.csdn.net/weixin_30225755/article/details/112497742
+Then to achieve the rotation and translation from left camera to right camera: 
+1. Assume we have point P's coordinates in the left and right camera frames, $p_l, p_r$, and left & right camera frames rotation and translation from the world frame $R_l, T_l$, $R_r, T_r$ (from the single camera calibration process), we can get the transformation from left to right camera views $R_{rl}, T_{rl}$
+    $$
+    p_l = R_lp_w + T_l, 
+    p_r = R_rp_w + T_r
+    \\
+    =>
+    \\
+    p_r = R_r(R_l^{-1}(p_l - T_l)) + T_r
+    \\
+    R_l^{-1} = R_l^T
+    \\
+    => 
+    \\
+    p_r = R_rR_l^{T}P_l + (T_l - R_rR_l^TT_l)
+    \\
+    => 
+    \\
+    R_{rl} = R_rR_l^{T}, T_{rl} = T_l - R_rR_l^TT_l
+    $$
+
+
+
+
+Reference: 
+- nice derivation: https://cloud.tencent.com/developer/article/1811227
+- summary: https://blog.csdn.net/weixin_30225755/article/details/112497742
 ### Code
 
 1. Load parameters for left and right cameras:
@@ -262,10 +287,53 @@ Reference: - nice derivation: https://cloud.tencent.com/developer/article/181122
             flags = cv2.CALIB_USE_INTRINSIC_GUESS
             )
     ```
-    - Return values: RMSE (total root mean square error? TODO), camera
-2. 
-
+    - Return values: RMSE (total root mean square error? TODO), camera matrix (unchanged), C1 distortion coefficients, C2 camera matrix (unchanged), C2 distortion coefficients, rotation matrix, translation vector, essential matrix and fundamental matrix. 
+    - **Transformation in this case is from left camera to the right camera** $R_rl, T_rl$
+    - From above, we can see that to solve for **stereo calibration**, we need not only intrinsics, but also extrinsics in each ```object_points -> image points```. In opencv, ```stereoCalibrate``` will first estimate the homography between each ```object_points -> image points```, then extrinsics can be solved easily (see the single camera calibration section). 
+    - In ```cv2.stereoCalibrate()```,
+        1. For each camera, solve for intrinsics if necessary (```cvCalibrateCamera2```)
+        2. Calculate $R_l$, $R_r$, $T_l$, $T_r$ using ```cvFindExtrinsicCameraParams2``` (First use DLT method to find homography, then find extrinsics by plugging intrinsics in.)
+        3. **The key is to have object points that correponds well to image points from left and right cams**
 
 
 ## 3D Point Cloud Generation Using Depth Estimation 
 
+## Trilateration 
+![](https://www.tothenew.com/blog/wp-content/uploads/2015/08/index.jpeg)
+
+Let the prediction of person's location be $\vec{X}$, and we have 3 beacons at locations $\vec{A}$, $\vec{B}$, $\vec{C}$. Range measurements ```beacon->person``` are $a$, $b$, $c$ respectively 
+$$
+        H = 
+        \begin{bmatrix}
+        (\vec{X} - \vec{A})^T(\vec{X} - \vec{A}) - a^2 \\
+        (\vec{X} - \vec{B})^T(\vec{X} - \vec{B}) - b^2 \\
+        (\vec{X} - \vec{C})^T(\vec{X} - \vec{C}) - c^2 \\
+        \end{bmatrix}
+        =
+        \begin{bmatrix} 0\\ 0\\ 0 \end{bmatrix}
+$$
+
+To solve for ```X```, we can use Gauss-Newton Method. Given the initial guess of ```X0```  
+1. Calculate the difference between the predicted range and the actual range measurements
+        $$
+        H_0 = 
+        \begin{bmatrix}
+        (\vec{X_0} - \vec{A})^T(\vec{X_0} - \vec{A}) - a^2 \\
+        (\vec{X_0} - \vec{B})^T(\vec{X_0} - \vec{B}) - b^2 \\
+        (\vec{X_0} - \vec{C})^T(\vec{X_0} - \vec{C}) - c^2 \\
+        \end{bmatrix}
+        $$
+2. Calculate Jacobian ```J```
+$$
+    J = \frac{\partial{H}}{\partial{\vec{X}}} = 
+        \begin{bmatrix}
+        2(\vec{X} - \vec{A})^T\\
+        2(\vec{X} - \vec{B})^T\\
+        2(\vec{X} - \vec{C})^T\\
+        \end{bmatrix}
+$$
+3. Calculate step_size for $\vec{X}$, $\Delta{X}$
+$$
+    \Delta{X} = -(J^TJ)^{-1}J^TH_0
+$$
+4. Update $\vec{X} = \vec{X} + \Delta{X}$, which will be used as $\vec{X_0}$ for the next iteration. Repeat the above steps for a few more iterations until $H \rightarrow 0$
