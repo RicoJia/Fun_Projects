@@ -44,7 +44,7 @@ def update_corner_points(corner_points, return_state):
 # set up video streaming
 cv2.namedWindow("face_tracker")
 cv2.setMouseCallback("face_tracker", mouse_drawing)
-cap = cv2.VideoCapture(2)
+cap = cv2.VideoCapture(0)
 
 # initialize face tracker
 ranges = get_state_ranges(cap)
@@ -56,13 +56,70 @@ SIGMA_WEIGHT = 0.05      #quite important, too big will not distinuguish the rig
 SIGMA_CONTROL = 2.0     #should add enough randomness to the tracker
 VALID_WEIGHT_LOWER_LIMIT = 0.0/PARTICLE_NUM # value should be decided based on total weight when target is lost. If set to zero, the tracker will never reset states randomly 
 
-INTERVAL = 20   #in ms
+### GAME SPECIFIC CONSTANTS
+INTERVAL = 50   #in ms
+QUEUE_DURATION = 300 # in ms
+PIXEL_PER_SECOND = 50
+KEYS = ('7', '8')
+# KEYS = ('3', '4')
+import queue
+from pynput.keyboard import Controller
 class Motion_FSM(object):
     """Keeping track of the left & right motion of a person's face"""
     def __init__(self):
-        self.THRE = 600/1000 * INTERVAL #600 pixels per second
-        
+        self.Q_size = int(QUEUE_DURATION/INTERVAL)  #0.3s
+        self.THRE = PIXEL_PER_SECOND/1000 * QUEUE_DURATION 
+        # self.THRE = 50
+        self.q = queue.Queue(self.Q_size)
+        self.current_motion = 0
+        self.consecutive_zeros = 0
+        self.todo = 0
+        self.key_idx = 0
+        self.keyboard = Controller()
+    def get_motion(self, corner_points): 
+        """
+        Return: -1 for left, 1 for right, 0 for still
+        """
+        center = (np.array(corner_points[0]) + np.array(np.array(corner_points[1])))/2
+        self.q.put(center[0])
+        if not self.q.full(): 
+            motion = 0
+        else: 
+            motion_diff = (self.q.queue[-1] - self.q.queue[0]) 
+            self.q.get()
+            if motion_diff > self.THRE: 
+                motion = 1
+            elif motion_diff < -1 * self.THRE: 
+                motion = -1
+            else: 
+                motion = 0
 
+        if self.current_motion == 0:
+            if motion != 0:
+                self.current_motion = motion
+                self.todo += 1
+                print(self.todo)
+                return True
+        else:
+            if motion != 0: 
+                self.consecutive_zeros = 0
+            else: 
+                self.consecutive_zeros += 1
+                if self.consecutive_zeros == 700/INTERVAL: 
+                    self.current_motion = 0
+                    self.consecutive_zeros = 0
+        return False
+    def press_key(self, motion):
+        """
+        motion: True/False
+        """
+        if motion: 
+            self.key_idx = (self.key_idx + 1)%len(KEYS)
+            self.keyboard.press(KEYS[self.key_idx])
+            self.keyboard.release(KEYS[self.key_idx])
+
+motion_fsm = Motion_FSM()
+show_img = True
 while True:
     rval, frame = cap.read()
     kernel = np.ones((5, 5), 'uint8')
@@ -84,9 +141,16 @@ while True:
         update_corner_points(corner_points, return_state)
 
         draw_box(frame, corner_points)
+   
+        motion = motion_fsm.get_motion(corner_points)
+        motion_fsm.press_key(motion)
 
-    cv2.imshow("face_tracker", frame)
-    key = cv2.waitKey(INTERVAL)  
-    if key == 27: # exit on ESC
-        break
+    if show_img: 
+        cv2.imshow("face_tracker", frame)
+        key = cv2.waitKey(20)  
+        if key == 27: # Will turn off visualization
+            show_img = False
+            cv2.destroyAllWindows()
+
+
 
