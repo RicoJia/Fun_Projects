@@ -75,7 +75,6 @@ while True:
         # after initializing ROI, run one iteration
         return_state = tracker.run_one_iteration(frame)
         update_corner_points(corner_points, return_state)
-        print("state: ", return_state) 
 
         draw_box(frame, corner_points)
 
