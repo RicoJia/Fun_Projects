@@ -103,3 +103,4 @@ if __name__ == "__main__":
     else: 
         stereo_calibrator.load_params()
 
+# TODO: rectify? 
