@@ -8,37 +8,48 @@ import queue
 keyboard = Controller()
 
 cv2.namedWindow("preview")
-cap = cv2.VideoCapture(2)
+cap = cv2.VideoCapture(0)
 
 # take first frame of the video
 ret, frame = cap.read()
-# setup initial location of window
-x, y, width, height = 100, 100, 250, 250
 
-track_window = (x, y ,width, height)
-
-
+corner_points = []
 SET_ROI = False
 def mouse_drawing(event, x_temp, y_temp, flags, params):
     if event == cv2.EVENT_LBUTTONDOWN:
-        lip_height = 100
-        lip_width= 100
-        global SET_ROI, x,y
-        x = x_temp
-        y = y_temp
-        SET_ROI = True
+        global corner_points, SET_ROI, track_window
+        if not SET_ROI: 
+            corner_points.append(np.array([x_temp, y_temp], dtype=int))
+            if len(corner_points) == 2: 
+                center = ((corner_points[0] + corner_points[1])/2).astype(int)
+                x, y = center[0], center[1]
+                abs_diff = np.abs(corner_points[0] - corner_points[1])
+                height, width = abs_diff[0], abs_diff[1]
+                # setup initial location of window
+                track_window = (x, y ,width, height)
+                #TODO
+                print(f"corner_pts: {corner_points}")
+                print(f"diff: {corner_points[0] - corner_points[1]}")
+                SET_ROI = True
+
+PINK = (179, 102, 255)
+def draw_point(frame, coords): 
+    cv2.circle(frame, tuple(coords), radius=2, color=PINK, thickness=2)
 
 cv2.setMouseCallback("preview", mouse_drawing)
 
 while (SET_ROI==False): 
-    cv2.imshow("preview", frame)
     rval, frame = cap.read()
+    for pt in corner_points:
+        draw_point(frame, pt)
+    cv2.imshow("preview", frame)
     key = cv2.waitKey(20)
     if key == 27: # exit on ESC
         break
 
-roi = frame[y:y+height, x : x+width]
-print("x: ", x, "y: ", y)
+
+x, y, width, height = track_window
+roi = frame[y-height:y+height, x-width : x+width]
 hsv_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
 mask = cv2.inRange(hsv_roi, np.array((0., 60., 32.)), np.array((180., 255., 255)))
 roi_hist = cv2.calcHist([hsv_roi], [0], mask, [180], [0, 180])
