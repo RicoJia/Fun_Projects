@@ -59,7 +59,7 @@ VALID_WEIGHT_LOWER_LIMIT = 0.0/PARTICLE_NUM # value should be decided based on t
 ### GAME SPECIFIC CONSTANTS
 INTERVAL = 50   #in ms
 QUEUE_DURATION = 300 # in ms
-PIXEL_PER_SECOND = 50
+PIXEL_PER_SECOND = 70
 KEYS = ('7', '8')
 # KEYS = ('3', '4')
 import queue
