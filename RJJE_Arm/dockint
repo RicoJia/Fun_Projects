@@ -69,6 +69,9 @@ function docker_build_image {
     fi
     
     #TODO
+    printf "==========================="
+    printf "Building child image with user-root privilege"
+    printf "==========================="
     printf "$dockerfile" | $DOCKER build --build-arg UID=$(id -u) --build-arg GID=$(id -g) --build-arg UNAME=$USER --build-arg BASE=$base_image_tag --tag "$new_image_tag" - 
     if [ $? -ne 0 ]; then
         echo "Failed to create docker image $base_image_tag."
