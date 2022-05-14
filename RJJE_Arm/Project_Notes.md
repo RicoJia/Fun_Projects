@@ -99,6 +99,20 @@
         1. Run ros on it. with an added topic for teaching mode
         2. Add
 
+========================================================================
+## 3D Depth Detection 
+========================================================================
+1. Examples 
+    - [Real Sense Tracker](https://github.com/spkywood/realsense-tracker)
+    - [Robomaster board detection](https://blog.csdn.net/weixin_39298885/article/details/120207053)
+2. We need image and depth map aligned. Since we have images coming from 2 cameras, we need to "align them" by finding reference points. 
+    - /camera/aligned_depth_to_color: aligned info
+    - /camera/color - RGB info
+    - /camera/depth - non-aligned depth information
+3. Also, we can utilize realsense2_camera package to output "ordered" point clouds to us. Therefore have ```ordered_pc:=true``` 
+    - [doc](http://docs.ros.org/en/api/sensor_msgs/html/point__cloud2_8py_source.html#l00060)
+
+
 ## Log
 1. going back to ros:
     - publisher: use the joint msg? - fill up first, see if can publish correctly
@@ -139,4 +153,16 @@
         - include 3D point cloud as a submodule
         - Publish as sensor_msgs::PointCloud2, visualize in Rviz
     2. Implement Feature detection on cam: need a fused image as well.
+        1. YOLO v5 + pick and place. 
+            - YOLO v5 docker, being able to run 
+            - get images -> yolo, test
+            - Questions
+                1. Structure? 
+                    - epochs? # iterations of the whole dataset
+                2. Other smaller alternative? This is what we want
+                3. Training visualization: tensorboard?
+                    - how to label them?
+        - claw (open & close)
+            - 
+
 
