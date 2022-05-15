@@ -5,7 +5,7 @@ input_queue = Queue(maxsize = 10)
 output_queue = Queue(maxsize = 10)
 path = "data/images/"
 
-
+import signal
 import os
 all_files = os.listdir(path)
 import cv2
@@ -22,6 +22,12 @@ def process_func(input_queue, output_queue):
     print("finished run")
 proc = Process(target=process_func, args=(input_queue, output_queue))
 proc.start()
+# TODO
+import time 
+time.sleep(5)
+print("time to kill")
+
+os.killpg(os.getppid(), signal.SIGUSR2)
 proc.join()
 
 # clear queue 
@@ -33,4 +39,3 @@ while not input_queue.empty():
 # cv2.imshow("sdf", img0)
 # cv2.waitKey(0)
 # print("finish run")
-#

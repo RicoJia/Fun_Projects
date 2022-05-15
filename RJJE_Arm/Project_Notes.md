@@ -163,6 +163,7 @@
                 3. Training visualization: tensorboard?
                     - how to label them?
         - claw (open & close)
-            - 
+        -  Teaching mode
+            1. Zero gravity?
 
 
