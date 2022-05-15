@@ -55,12 +55,16 @@ class YoloDetector():
         if pt or jit:
             self.model.model.half() if self.half else self.model.model.float()
 
+        # Run inference
+        bs = 1  # batch_size
+        self.model.warmup(imgsz=(1 if pt else bs, 3, *self.imgsz), half=self.half)  # warmup
+        print("imgsz: ", (1 if pt else bs, 3, *self.imgsz), "half: ", self.half)
+
     @torch.no_grad()
     def run(self): 
         dt = [0.0, 0.0, 0.0]
-        # 1. get padded image
+        # 1. get padded image and resize it
         img0 = self.input_queue.get(block = True)
-        # Padded resize
         im = letterbox(img0, self.imgsz, stride=self.stride)[0]
 
         # Conversion
@@ -68,6 +72,7 @@ class YoloDetector():
         im = np.ascontiguousarray(im)
         t1 = time_sync()
         im = torch.from_numpy(im).to(self.device)
+        # RJ: Have issues if this is running on a separate process as the constructor. Probably some shared state issue
         im = im.half() if self.half else im.float()  # uint8 to fp16/32
         im /= 255  # 0 - 255 to 0.0 - 1.0
         if len(im.shape) == 3:
@@ -75,8 +80,8 @@ class YoloDetector():
         t2 = time_sync()
         dt[0] += t2 - t1
 
-        # Inference
-        pred = self.model(im, augment=self.augment, visualize=False)
-        t3 = time_sync()
-        dt[1] += t3 - t2
-        
+        # # Inference
+        # pred = self.model(im, augment=self.augment, visualize=False)
+        # t3 = time_sync()
+        # dt[1] += t3 - t2
+        #
