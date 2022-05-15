@@ -1,0 +1,8 @@
+<launch>
+  <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+    <arg name="filters" value="pointcloud" />
+    <arg name="ordered_pc" value="true" />
+  </include>
+  
+  <node name="object_tracking" type="object_tracking" pkg="rjje_arm" output="screen"/>
+</launch>

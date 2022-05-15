@@ -13,7 +13,7 @@ from cv_bridge import CvBridge
 import cv2
 import numpy as np
 import threading
-from object_detection.yolo_detect import YoloDetector
+# from object_detection.yolo_detect import YoloDetector
 
 class ObjectTracker(object):
     def __init__(self):
