@@ -13,6 +13,7 @@ from cv_bridge import CvBridge
 import cv2
 import numpy as np
 import threading
+import time
 # from object_detection.yolo_detect import YoloDetector
 
 class ObjectTracker(object):
@@ -26,6 +27,9 @@ class ObjectTracker(object):
         self.pt_cloud_lock = threading.Lock()
 
     def pt_cloud_cb(self, msg): 
+        """
+        Intel realsense D415 runs at around 15hz
+        """
         height, width = msg.height, msg.width
         pt_cloud_gen = pc2.read_points(msg, skip_nans=False, field_names=("x", "y", "z"))
         pt_cloud_aligned = []
@@ -53,7 +57,7 @@ class ObjectTracker(object):
         
 if __name__ == '__main__': 
     rospy.init_node("object_tracking", anonymous=True)     #anonymous=true ensures unique node name by adding random numbers
-    rate = rospy.Rate(4)
+    rate = rospy.Rate(20)
     ot = ObjectTracker()
     while not rospy.is_shutdown(): 
         # for opencv, it's (width, height)
