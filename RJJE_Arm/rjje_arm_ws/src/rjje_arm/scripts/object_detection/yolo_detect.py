@@ -26,6 +26,7 @@ class YoloDetector():
     def __init__(self, 
                  input_queue: Queue, 
                  output_queue: Queue, 
+                 visualize = False
         ):
         self.should_work = True
         signal.signal(signal.SIGUSR2, self.sig_handler_usr2)
@@ -36,13 +37,13 @@ class YoloDetector():
         weights=ROOT / 'yolov5s.pt'  # model.pt path(s)
         data=ROOT / 'data/coco128.yaml'  # dataset.yaml path
         imgsz=(640, 640)  # inference size (height, width)
-        self.conf_thres=0.25  # confidence threshold
+        self.conf_thres=0.50  # confidence threshold
         self.iou_thres=0.45  # NMS IOU threshold
         self.max_det=1000 # maximum detections per image
         self.classes = None
         self.agnostic_nms=False # class-agnostic NMS
         self.augment=False # augmented inference
-        visualize=False # visualize features
+        self.visualize=visualize# visualize features
         self.update=False # update all models
         line_thickness=3 # bounding box thickness (pixels)
         hide_labels=False # hide labels
@@ -97,33 +98,34 @@ class YoloDetector():
                 pred = non_max_suppression(pred, self.conf_thres, self.iou_thres, self.classes, self.agnostic_nms, max_det=self.max_det)
                 dt[2] += time_sync() - t3
 
-                # Second-stage classifier (optional)
-                # pred = utils.general.apply_classifier(pred, classifier_model, im, img0)
-                for i, det in enumerate(pred):  # per image
-                    im0 = img0
+                if self.visualize: 
+                    # Second-stage classifier (optional)
+                    # pred = utils.general.apply_classifier(pred, classifier_model, im, img0)
+                    for i, det in enumerate(pred):  # per image
+                        im0 = img0
 
-                    gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
-                    imc = im0
-                    annotator = Annotator(im0, line_width=3, example=str(self.names))
-                    if len(det):
-                        # Rescale boxes from img_size to im0 size
-                        det[:, :4] = scale_coords(im.shape[2:], det[:, :4], im0.shape).round()
+                        gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
+                        imc = im0
+                        annotator = Annotator(im0, line_width=3, example=str(self.names))
+                        if len(det):
+                            # Rescale boxes from img_size to im0 size
+                            det[:, :4] = scale_coords(im.shape[2:], det[:, :4], im0.shape).round()
 
-                        # Write results
-                        for *xyxy, conf, cls in reversed(det):
-                            c = int(cls)  # integer class
-                            label = f'{self.names[c]} {conf:.2f}'
-                            annotator.box_label(xyxy, label, color=colors(c, True))
-                        try: 
-                            self.output_queue.put_nowait(det)
-                        except Full: 
-                            pass
+                            # Write results
+                            for *xyxy, conf, cls in reversed(det):
+                                c = int(cls)  # integer class
+                                label = f'{self.names[c]} {conf:.2f}'
+                                annotator.box_label(xyxy, label, color=colors(c, True))
+                        # Stream results
+                        im0 = annotator.result()
+                        cv2.imshow("detection", im0)
+                        cv2.waitKey(1)  # 1 millisecond
+                try: 
+                    # self.output_queue.put_nowait(det)
+                    self.output_queue.put_nowait(pred)
+                except Full: 
+                    pass
 
-                    # Stream results
-                    im0 = annotator.result()
-                    #TODO
-                    cv2.imshow("detection", im0)
-                    cv2.waitKey(1)  # 1 millisecond
             except Empty: 
                 pass
 

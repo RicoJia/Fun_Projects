@@ -4,5 +4,7 @@
     <arg name="ordered_pc" value="true" />
   </include>
   
-  <node name="object_tracking" type="object_tracking" pkg="rjje_arm" output="screen"/>
+  <node name="object_tracking" type="object_tracking" pkg="rjje_arm" output="screen">
+      <param name="visualize" value="false"/>
+  </node>
 </launch>
