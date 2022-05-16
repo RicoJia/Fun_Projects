@@ -16,7 +16,7 @@ FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
 
 from multiprocessing import Queue
-from queue import Empty
+from queue import Empty, Full
 import signal
 
 class YoloDetector():
@@ -103,7 +103,7 @@ class YoloDetector():
                     im0 = img0
 
                     gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
-                    imc = im0  
+                    imc = im0
                     annotator = Annotator(im0, line_width=3, example=str(self.names))
                     if len(det):
                         # Rescale boxes from img_size to im0 size
@@ -114,11 +114,16 @@ class YoloDetector():
                             c = int(cls)  # integer class
                             label = f'{self.names[c]} {conf:.2f}'
                             annotator.box_label(xyxy, label, color=colors(c, True))
+                        try: 
+                            self.output_queue.put_nowait(det)
+                        except Full: 
+                            pass
 
                     # Stream results
                     im0 = annotator.result()
-                    cv2.imshow("asdf", im0)
-                    cv2.waitKey(0)  # 1 millisecond
+                    #TODO
+                    cv2.imshow("detection", im0)
+                    cv2.waitKey(1)  # 1 millisecond
             except Empty: 
                 pass
 

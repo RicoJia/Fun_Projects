@@ -7,8 +7,8 @@ path = "data/images/"
 
 import signal
 import os
-all_files = os.listdir(path)
 import cv2
+all_files = os.listdir(path)
 for file_name in all_files: 
     file_path = os.path.join(path, file_name)
     print(file_path)
@@ -22,10 +22,14 @@ def process_func(input_queue, output_queue):
     print("finished run")
 proc = Process(target=process_func, args=(input_queue, output_queue))
 proc.start()
-# TODO
-import time 
-time.sleep(5)
-print("time to kill")
+
+import time
+time.sleep(1)
+while not output_queue.empty():
+    print("2")
+    im0 = output_queue.get(block=True, timeout=0.1)
+    cv2.imshow("asdf", im0)
+    cv2.waitKey(0)  # 1 millisecond
 
 os.kill(proc.pid, signal.SIGUSR2)
 proc.join()

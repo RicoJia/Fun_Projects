@@ -14,17 +14,46 @@ import cv2
 import numpy as np
 import threading
 import time
-# from object_detection.yolo_detect import YoloDetector
+
+from yolo_detect import YoloDetector
+from multiprocessing import Queue
+from queue import Empty, Full
+from multiprocessing import  Process
+import signal
+import os
+import cv2
 
 class ObjectTracker(object):
     def __init__(self):
         self.bridge = CvBridge()
         self.img_sub = rospy.Subscriber("/camera/color/image_raw", Image, self.img_cb)
         self.aligned_pt_cloud_sub = rospy.Subscriber("/camera/depth/color/points", PointCloud2, self.pt_cloud_cb)
-        self.cv_image = None
         self.pt_cloud_aligned = []
-        self.img_lock = threading.Lock()
         self.pt_cloud_lock = threading.Lock()
+
+        self.input_queue = Queue(maxsize = 1)
+        self.output_queue = Queue(maxsize = 1)
+        def process_func(input_queue, output_queue): 
+            yolo_detector = YoloDetector(input_queue = input_queue, output_queue = output_queue)
+            yolo_detector.run()
+            print("finished run")
+        self.yolo_proc = Process(target=process_func, args=(self.input_queue, self.output_queue))
+        self.yolo_proc.start()
+        rospy.loginfo("Successfully Launched object tracker")
+
+    def shutdown_cb(self): 
+        """
+        Function called by ros upon shutdown. Need to be called explicitly as ros doesn't call __del__ automatically? 
+        """
+        os.kill(self.yolo_proc.pid, signal.SIGUSR2)
+        self.yolo_proc.join()
+
+        # clear queues
+        while not self.output_queue.empty(): 
+            self.output_queue.get(block=True, timeout=0.1)
+        while not self.input_queue.empty(): 
+            self.input_queue.get(block=True, timeout=0.1)
+        print(f"Object_Tracker destructed successfully")
 
     def pt_cloud_cb(self, msg): 
         """
@@ -42,61 +71,41 @@ class ObjectTracker(object):
             self.pt_cloud_aligned = pt_cloud_aligned
 
     def img_cb(self, msg): 
-        with self.img_lock:
-            self.cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+         raw_img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+         try: 
+             # self.input_queue.put(raw_img)
+             self.input_queue.put_nowait(raw_img)
+         except Full: 
+             print("queue full, flushin'")
+             pass
+         
+    # def get_coord_at_pixel(self, uv): 
+    #     u, v = uv
+    #     if self.cv_image is not None and self.pt_cloud_aligned: 
+    #         with self.pt_cloud_lock: 
+    #             print(f"coord: {self.pt_cloud_aligned[v][u]}")
+    #         cv2.circle(self.cv_image, tuple(uv), 1, color=(0, 0, 255), thickness=2)
+    #         cv2.imshow("img", self.cv_image)
+    #         cv2.waitKey(1)
 
-    def get_coord_at_pixel(self, uv): 
-        u, v = uv
-        if self.cv_image is not None and self.pt_cloud_aligned: 
-            with self.img_lock and self.pt_cloud_lock: 
-                print(f"coord: {self.pt_cloud_aligned[v][u]}")
-            cv2.circle(self.cv_image, tuple(uv), 1, color=(0, 0, 255), thickness=2)
-            cv2.imshow("img", self.cv_image)
-            cv2.waitKey(1)
+    def find_object_pos(self): 
+        """
+        The long running function that 1. takes in Yolo Detected images 2. Find the x,y position of each object in camera view
+        """
+        try: 
+            detection = self.output_queue.get(block = False)
+            print("det: ", detection)
+        except Empty:
+            pass
 
-        
 if __name__ == '__main__': 
     rospy.init_node("object_tracking", anonymous=True)     #anonymous=true ensures unique node name by adding random numbers
     rate = rospy.Rate(20)
     ot = ObjectTracker()
+    rospy.on_shutdown(ot.shutdown_cb)
     while not rospy.is_shutdown(): 
         # for opencv, it's (width, height)
-        ot.get_coord_at_pixel((320, 240))
+        ot.find_object_pos()
         rate.sleep() 
 
 
-# import numpy as np
-# import cv2
-#
-# # setup initial location of window by using two corner points
-# corner_points = []
-# SET_ROI = False
-# PINK = (179, 102, 255)
-#
-# def draw_point(frame, coords): 
-#     cv2.circle(frame, coords, radius=2, color=PINK, thickness=-1)
-#
-# def draw_box(frame, corners):
-#     cv2.rectangle(frame, corners[0], corners[1], PINK, 3)
-#
-# def mouse_drawing(event, x_temp, y_temp, flags, params):
-#     if event == cv2.EVENT_LBUTTONDOWN:
-#         global corner_points
-#         if not SET_ROI: 
-#             corner_points.append((x_temp, y_temp))
-#
-# # set up video streaming
-# cv2.namedWindow("object_tracking")
-# cv2.setMouseCallback("object_tracking", mouse_drawing)
-# cap = cv2.VideoCapture(2)
-#
-# while True:
-#     rval, frame = cap.read()
-#     # kernel = np.ones((5, 5), 'uint8')
-#     # frame = cv2.erode(frame, kernel, iterations=1)
-#     # frame = cv2.dilate(frame, kernel, iterations=1)
-#
-#     cv2.imshow("object_tracking", frame)
-#     key = cv2.waitKey(20)  
-#     if key == 27: # exit on ESC
-#         break
