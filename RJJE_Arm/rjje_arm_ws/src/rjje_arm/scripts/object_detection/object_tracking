@@ -106,8 +106,8 @@ class ObjectTracker(object):
 if __name__ == '__main__': 
     rospy.init_node("object_tracking", anonymous=True)     #anonymous=true ensures unique node name by adding random numbers
     rate = rospy.Rate(20)
+    # Need ~ if param is for the node!
     visualize = rospy.get_param('~visualize', False)
-    print("==============================", visualize)
     ot = ObjectTracker(visualize=visualize)
     while not rospy.is_shutdown(): 
         # for opencv, it's (width, height)
