@@ -1,4 +1,8 @@
 # RJJE Arm
+## Introduction
+1. Objectives
+    1. Pick and Place using moveit & camera
+    2. Arm mounted on mobile platform
 
 ## Setup
 ### Hardware Setup
@@ -45,7 +49,7 @@
     ```
 
 ## Development Notes
-### Mechanical Design
+### Foundation
 1. Servo Motors
     - The rudder on top of a servo motor has holes that need to be rethreaded. One can use a "tap" for rethreading. 
     - Before installing a servo, the servo's orientation needs to be adjusted to 90 degrees. The orientation of a servo (from 0 to 180 degrees) is shown below
@@ -72,64 +76,69 @@
         - When assembling STL models into a full 3D model of the robot, special attention should be paid to: 
             1. In general, ROS follows multiple ways to express rrotation with angles. [See here](https://www.ros.org/reps/rep-0103.html). In URDF, it's **Z-Y-X** Euler angle
 
-
-## Roadmap
-1. Objectives
-    1. Pick and Place using moveit & camera 
-    2. Arm mounted on mobile platform 
-2. Hardware & Software Setup 
-    - Build Docker and Tools  (D)
-    - STL and Collada files  (D)
-        - STL from 3D printing, Collada has physics as well. 
+3. Software Setup (D)
+    - Build Docker and Tools  
+    - STL and Collada files
+        - STL from 3D printing, Collada has physics as well.
         - seems like STL can -> DAE files. This can be done on oneshape
-        - How to add mesh to URDF step 5: http://wiki.ros.org/urdf/Tutorials/Building%20a%20Visual%20Robot%20Model%20with%20URDF%20from%20Scratch
-    - Put the robot together (D)
+        - [How to add mesh to URDF](http://wiki.ros.org/urdf/Tutorials/Building%20a%20Visual%20Robot%20Model%20with%20URDF%20from%20Scratch) 
+    - Put the robot together 
         - Stepper Motors
         - Mechanical
-        - controlled by computer. 
     - Moveit Pipeline (D)
-3. Arm motion planning (simple case: move arm, then claw)
+
+4. Arm motion planning (simple case: move arm, then claw)
     - Smooth motion execution (D)
         - debug messaging system 
     - Teaching mode
     - Task contructor
-4. TODO
-    - protobuf - nanopb messaging system b/w arduino & laptop
-    - STM 32. 
-        1. Run ros on it. with an added topic for teaching mode
-        2. Add
 
-========================================================================
-## 3D Depth Detection 
-========================================================================
-1. Examples 
-    - [Real Sense Tracker](https://github.com/spkywood/realsense-tracker)
-    - [Robomaster board detection](https://blog.csdn.net/weixin_39298885/article/details/120207053)
-2. We need image and depth map aligned. Since we have images coming from 2 cameras, we need to "align them" by finding reference points. 
-    - /camera/aligned_depth_to_color: aligned info
-    - /camera/color - RGB info
-    - /camera/depth - non-aligned depth information
-3. Also, we can utilize realsense2_camera package to output "ordered" point clouds to us. Therefore have ```ordered_pc:=true``` 
-    - [doc](http://docs.ros.org/en/api/sensor_msgs/html/point__cloud2_8py_source.html#l00060)
+### 3D Object Detection
+1. Visualize point cloud
+    1. Examples 
+        - [Real Sense Tracker](https://github.com/spkywood/realsense-tracker)
+        - [Robomaster board detection](https://blog.csdn.net/weixin_39298885/article/details/120207053)
+    2. We need image and depth map aligned. Since we have images coming from 2 cameras, we need to "align them" by finding reference points. 
+        - /camera/aligned_depth_to_color: aligned info
+        - /camera/color - RGB info
+        - /camera/depth - non-aligned depth information
+    3. Also, we can utilize realsense2_camera package to output "ordered" point clouds to us. Therefore have ```ordered_pc:=true``` 
+        - [doc](http://docs.ros.org/en/api/sensor_msgs/html/point__cloud2_8py_source.html#l00060)
 
+2.  1. YOLO v5 + pick and place. 
+        - YOLO v5 docker, being able to run 
+        - get images -> yolo, test
+
+## TODO List 
+1. DL Questions
+    1. Structure? 
+    2. Other smaller alternative? This is what we want
+    3. Training visualization: tensorboard?
+        - how to label them?
+2. VoiceBox
+3. protobuf - nanopb messaging system b/w arduino & laptop
+4. STM 32. 
+    1. Run ros on it. with an added topic for teaching mode
+    2. Add
+5. Zero gravity?
 
 ## Log
 1. going back to ros:
-    - publisher: use the joint msg? - fill up first, see if can publish correctly
-    - subscriber
-        - can only see two values? no spinOnce
-        - can't distinguish task. Add task id
+    - publisher joint_msg 
+    - subscriber has task id to distinguish task.
     - CPU: too high? event check
     - moveit visualization error? conversion?
-        - checked conversion, all right
-        - checked commanded angles, seems wrong
-        - checked traj points, seems like the traj points are not right. (Moveit Traj's position might be in a different order. Check traj.joint_name)
     - NIT
         - separate out the 5 joints (update self.commanded_angle[:5], from start to end)
         - To transition to a succeeded state, the goal must be in a preempting or active state, it is currently in state: 3 (setting response too many times?)
-        - time (Not an issue, just time scaling needs to be really small)
-        - servo connection check (see what address to check)
 
+
+========================================================================
+## Roadmap 
+========================================================================
+1. claw 
+    - adjust cad
+    - (open & close)
 2. Teaching mode
     - Turn on teaching mode: 360 360 ... Turn off (ros service)
     - sleep, record joint angles, wakeup
@@ -147,23 +156,5 @@
         3. add replay logic
             - replay the right commanded angles
             - move_joints
-
-3. Roadmap 
-    1. Visualize point cloud
-        - include 3D point cloud as a submodule
-        - Publish as sensor_msgs::PointCloud2, visualize in Rviz
-    2. Implement Feature detection on cam: need a fused image as well.
-        1. YOLO v5 + pick and place. 
-            - YOLO v5 docker, being able to run 
-            - get images -> yolo, test
-            - Questions
-                1. Structure? 
-                    - epochs? # iterations of the whole dataset
-                2. Other smaller alternative? This is what we want
-                3. Training visualization: tensorboard?
-                    - how to label them?
-        - claw (open & close)
-        -  Teaching mode
-            1. Zero gravity?
-
+3. Calibration Tools: 2 aruco markers
 
