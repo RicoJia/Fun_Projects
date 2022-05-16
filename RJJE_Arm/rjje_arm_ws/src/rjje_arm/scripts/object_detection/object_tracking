@@ -78,17 +78,15 @@ class ObjectTracker(object):
              # self.input_queue.put(raw_img)
              self.input_queue.put_nowait(raw_img)
          except Full: 
-             print("queue full, flushin'")
              pass
          
-    # def get_coord_at_pixel(self, uv): 
-    #     u, v = uv
-    #     if self.cv_image is not None and self.pt_cloud_aligned: 
-    #         with self.pt_cloud_lock: 
-    #             print(f"coord: {self.pt_cloud_aligned[v][u]}")
-    #         cv2.circle(self.cv_image, tuple(uv), 1, color=(0, 0, 255), thickness=2)
-    #         cv2.imshow("img", self.cv_image)
-    #         cv2.waitKey(1)
+    def _get_coord_at_pixel(self, uv): 
+        u, v = uv
+        with self.pt_cloud_lock: 
+            if self.pt_cloud_aligned: 
+                ret_coord = self.pt_cloud_aligned[v][u]
+                self.pt_cloud_aligned = None
+                return ret_coord
 
     def find_object_pos(self): 
         """
@@ -96,10 +94,13 @@ class ObjectTracker(object):
         """
         try: 
             detection = self.output_queue.get(block = False)
+            for det in detection: 
+                if det.cl=="person": 
+                    mid_pt = np.array((det.left_xy + det.right_xy)/2, dtype=int)
+                    print("det: ", self._get_coord_at_pixel(mid_pt))
             now = time.time()
-            print("frame time: ", now - self.time)
+            print("frame rate: ", 1.0/(now - self.time))
             self.time = now
-            # print("det: ", detection)
         except Empty:
             pass
 

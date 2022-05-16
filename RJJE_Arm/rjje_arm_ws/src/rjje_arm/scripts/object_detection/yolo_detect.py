@@ -18,7 +18,9 @@ ROOT = FILE.parents[0]  # YOLOv5 root directory
 from multiprocessing import Queue
 from queue import Empty, Full
 import signal
+from collections import namedtuple
 
+Detection=namedtuple("Detection", ["left_xy", "right_xy", "cl", "conf"])
 class YoloDetector():
     """
     input_queue -----> run -----> output_queue
@@ -98,33 +100,32 @@ class YoloDetector():
                 pred = non_max_suppression(pred, self.conf_thres, self.iou_thres, self.classes, self.agnostic_nms, max_det=self.max_det)
                 dt[2] += time_sync() - t3
 
+
+                det = pred[0]
+                if len(det):
+                    # Rescale boxes from img_size to img0 size
+                    det[:, :4] = scale_coords(im.shape[2:], det[:, :4], img0.shape).round()
+                    try: 
+                        ret_dets = []
+                        for *xyxy, conf, cls in reversed(det):
+                            xyxy = [pt.data.item() for pt in xyxy] 
+                            c = int(cls)  # integer class
+                            ret_dets.append(Detection(np.array(xyxy[:2]), np.array(xyxy[2:]), self.names[c], conf))
+                        self.output_queue.put_nowait(ret_dets)
+                    except Full: 
+                        pass
+
                 if self.visualize: 
-                    # Second-stage classifier (optional)
-                    # pred = utils.general.apply_classifier(pred, classifier_model, im, img0)
-                    for i, det in enumerate(pred):  # per image
-                        im0 = img0
-
-                        gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
-                        imc = im0
-                        annotator = Annotator(im0, line_width=3, example=str(self.names))
-                        if len(det):
-                            # Rescale boxes from img_size to im0 size
-                            det[:, :4] = scale_coords(im.shape[2:], det[:, :4], im0.shape).round()
-
-                            # Write results
-                            for *xyxy, conf, cls in reversed(det):
-                                c = int(cls)  # integer class
-                                label = f'{self.names[c]} {conf:.2f}'
-                                annotator.box_label(xyxy, label, color=colors(c, True))
-                        # Stream results
-                        im0 = annotator.result()
-                        cv2.imshow("detection", im0)
-                        cv2.waitKey(1)  # 1 millisecond
-                try: 
-                    # self.output_queue.put_nowait(det)
-                    self.output_queue.put_nowait(pred)
-                except Full: 
-                    pass
+                    annotator = Annotator(img0, line_width=3, example=str(self.names))
+                    # Write results
+                    for *xyxy, conf, cls in reversed(det):
+                        c = int(cls)  # integer class
+                        label = f'{self.names[c]} {conf:.2f}'
+                        annotator.box_label(xyxy, label, color=colors(c, True))
+                    # Stream results
+                    img0 = annotator.result()
+                    cv2.imshow("detection", img0)
+                    cv2.waitKey(1)  # 1 millisecond
 
             except Empty: 
                 pass
