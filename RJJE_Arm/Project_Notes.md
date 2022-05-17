@@ -48,7 +48,7 @@
     ./build_and_launch.sh
     ```
 
-## Development Notes
+## Design Notes
 ### Foundation
 1. Servo Motors
     - The rudder on top of a servo motor has holes that need to be rethreaded. One can use a "tap" for rethreading. 
@@ -111,16 +111,17 @@
 
 ## TODO List 
 1. DL Questions
-    1. Structure? 
+    1. Structure of YOLO 
     2. Other smaller alternative? This is what we want
     3. Training visualization: tensorboard?
         - how to label them?
 2. VoiceBox
-3. protobuf - nanopb messaging system b/w arduino & laptop
-4. STM 32. 
+3. Use pyrealsense instead of launching the node itself
+4. protobuf - nanopb messaging system b/w arduino & laptop
+5. STM 32. 
     1. Run ros on it. with an added topic for teaching mode
     2. Add
-5. Zero gravity?
+6. Zero gravity?
 
 ## Log
 1. going back to ros:
@@ -157,4 +158,8 @@
             - replay the right commanded angles
             - move_joints
 3. Calibration Tools: 2 aruco markers
+    - Big marker under the robot (step 1)
+    - optional step: side aruco on robot
+    - Need cardbox to make the calibration plates
+4. Cup pick & place
 
