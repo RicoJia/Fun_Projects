@@ -33,7 +33,8 @@ class ObjectTracker(object):
 
         self.input_queue = Queue(maxsize = 1)
         self.output_queue = Queue(maxsize = 1)
-        self.need_calibration = True
+        # TODO
+        self.need_calibration = False
         def process_func(input_queue, output_queue, visualize): 
             yolo_detector = YoloDetector(input_queue = input_queue, output_queue = output_queue, visualize=visualize)
             yolo_detector.run()

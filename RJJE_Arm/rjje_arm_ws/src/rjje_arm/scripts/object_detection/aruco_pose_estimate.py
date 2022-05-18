@@ -10,12 +10,12 @@
 import numpy as np
 from typing import Dict
 import cv2
+import pyrealsense2 as rs
 
 class ArucoExtrinsics(): 
     def __init__(self):
         pass 
     def calibrate(self, img: np.ndarray): 
-        # get extrinsics 
         # get intrinsics
         # detect aruco markers from camera view
         # aruco_detections = {marker_id: pose}
@@ -25,6 +25,8 @@ class ArucoExtrinsics():
                 cv2.circle(img, tuple(corner.astype(int)), 3, color=(0, 0, 255), thickness=2)
 
         self._estimate_pose(aruco_detections)
+
+    def _get_intrinsics(self): 
 
     def _detect_aruco_markers(self, img: np.ndarray): 
         """
