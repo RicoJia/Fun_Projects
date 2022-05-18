@@ -81,6 +81,7 @@ ENV NVIDIA_VISIBLE_DEVICES \
 ENV NVIDIA_DRIVER_CAPABILITIES \
     ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
 
+RUN pip install opencv-contrib-python pyrealsense2
 
 ################################################################
 
@@ -98,14 +99,7 @@ RUN python3 -m pip install --upgrade pip
 RUN pip uninstall -y torch torchvision torchtext
 RUN pip install --no-cache -r requirements.txt albumentations wandb gsutil notebook \
     torch==1.10.2+cu113 torchvision==0.11.3+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
-# RUN pip install --no-cache -U torch torchvision
-
-# # Create working directory
-# RUN mkdir -p /usr/src/app
-# WORKDIR /usr/src/app
-
-# # Copy contents
-# COPY . /usr/src/app
+RUN pip install --no-cache -U torch torchvision
 
 # Downloads to user config dir
 # ADD https://ultralytics.com/assets/Arial.ttf /root/.config/Ultralytics/

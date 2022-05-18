@@ -1,7 +1,8 @@
 <launch>
   <include file="$(find realsense2_camera)/launch/rs_camera.launch">
     <arg name="filters" value="pointcloud" />
-    <arg name="ordered_pc" value="true" />
+    <arg name="initial_reset" value="true"/>
+    <!-- <arg name="ordered_pc" value="true" /> -->
   </include>
   
   <arg name="visualize" default="true" />

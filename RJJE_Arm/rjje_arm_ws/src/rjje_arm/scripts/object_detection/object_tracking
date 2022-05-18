@@ -33,6 +33,7 @@ class ObjectTracker(object):
 
         self.input_queue = Queue(maxsize = 1)
         self.output_queue = Queue(maxsize = 1)
+        self.need_calibration = True
         def process_func(input_queue, output_queue, visualize): 
             yolo_detector = YoloDetector(input_queue = input_queue, output_queue = output_queue, visualize=visualize)
             yolo_detector.run()
@@ -57,6 +58,7 @@ class ObjectTracker(object):
         self.input_queue.close()
         self.input_queue.join_thread()
 
+    #TODO
     def pt_cloud_cb(self, msg): 
         """
         Intel realsense D415 runs at around 15hz
@@ -74,11 +76,17 @@ class ObjectTracker(object):
 
     def img_cb(self, msg): 
          raw_img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-         try: 
-             # self.input_queue.put(raw_img)
-             self.input_queue.put_nowait(raw_img)
-         except Full: 
-             pass
+         if self.need_calibration: 
+             key = cv2.waitKey(1)
+             if key == ord('a'): 
+                 #TODO
+                 self.need_calibration = False
+         else: 
+             try: 
+                 # self.input_queue.put(raw_img)
+                 self.input_queue.put_nowait(raw_img)
+             except Full: 
+                 pass
          
     def _get_coord_at_pixel(self, uv): 
         u, v = uv
