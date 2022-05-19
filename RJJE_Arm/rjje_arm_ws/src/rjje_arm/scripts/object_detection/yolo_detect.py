@@ -36,7 +36,7 @@ class YoloDetector():
         self.output_queue = output_queue
         self.input_queue = input_queue
         device=''  # cuda device, i.e. 0 or 0,1,2,3 or cpu
-        weights=ROOT / 'yolov5s.pt'  # model.pt path(s)
+        weights=ROOT / 'yolov5m.pt'  # model.pt path(s)
         data=ROOT / 'data/coco128.yaml'  # dataset.yaml path
         imgsz=(640, 640)  # inference size (height, width)
         self.conf_thres=0.50  # confidence threshold

@@ -1,9 +1,14 @@
 #! /usr/bin/python3
 """
 This script is to:
+    1. Query Intel Realsense D415 for RGB and depth frames
+    2. By default, extrinsics calibration is conducted. That requires visible one aruco marker in the camera view
+    3. Use YOLO-V5 to do image recognition
+    4. Detect the center of mass of an object
+Obsolete: 
     1. Listen to /camera/color/image_raw(sensor_msgs/Image), get the image
     2. Get point cloud data, and see the depth of each point
-    3. Use YOLO-V5 to do image recognition
+
 """
 import rospy
 from std_msgs.msg import String
@@ -14,6 +19,7 @@ import cv2
 import numpy as np
 import threading
 import time
+import pyrealsense2 as rs
 
 from yolo_detect import YoloDetector
 from multiprocessing import Queue
@@ -25,25 +31,39 @@ import cv2
 
 class ObjectTracker(object):
     def __init__(self, visualize=False):
-        self.bridge = CvBridge()
-        self.img_sub = rospy.Subscriber("/camera/color/image_raw", Image, self.img_cb)
-        self.aligned_pt_cloud_sub = rospy.Subscriber("/camera/depth/color/points", PointCloud2, self.pt_cloud_cb)
-        self.pt_cloud_aligned = []
-        self.pt_cloud_lock = threading.Lock()
-
+        # yolo process
         self.input_queue = Queue(maxsize = 1)
         self.output_queue = Queue(maxsize = 1)
-        # TODO
-        self.need_calibration = False
+        self.intrinsics_initialized = False
+        self.need_extrinsics = True
         def process_func(input_queue, output_queue, visualize): 
+            """
+            Start yolo detector as a separate process
+            """
             yolo_detector = YoloDetector(input_queue = input_queue, output_queue = output_queue, visualize=visualize)
             yolo_detector.run()
         self.yolo_proc = Process(target=process_func, args=(self.input_queue, self.output_queue, visualize))
         self.yolo_proc.start()
-        rospy.loginfo("Successfully Launched object tracker")
 
-        #TODO
-        self.time = time.time()
+        # RGBD Camera stuff
+        self.pipeline = rs.pipeline()
+        config = rs.config()
+        config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
+        config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+        self.profile = self.pipeline.start(config)
+        align_to_color = rs.stream.color;
+        # creating align object is expensive
+        self.align = rs.align(align_to_color)
+        self.depth_frame = None
+
+        # Obsolete: Getting point cloud and image from intel-realsense ROS node.
+        # self.bridge = CvBridge()
+        # self.img_sub = rospy.Subscriber("/camera/color/image_raw", Image, self.img_cb)
+        # self.aligned_pt_cloud_sub = rospy.Subscriber("/camera/depth/color/points", PointCloud2, self.pt_cloud_cb)
+        # self.pt_cloud_aligned = None
+        # self.pt_cloud_lock = threading.Lock()
+
+        rospy.loginfo("Successfully Launched object tracker")
 
     def on_shutdown(self): 
         """
@@ -51,6 +71,8 @@ class ObjectTracker(object):
             - but after sending shutdown signal, we can close the queues and processes
             - rospy.on_shutdown(cb) calls cb after some objects get destructed
         """
+        self.pipeline.stop()
+
         os.kill(self.yolo_proc.pid, signal.SIGUSR2)
         self.yolo_proc.join()
 
@@ -59,43 +81,27 @@ class ObjectTracker(object):
         self.input_queue.close()
         self.input_queue.join_thread()
 
-    #TODO
-    def pt_cloud_cb(self, msg): 
+    def get_and_push_aligned_frames(self):
         """
-        Intel realsense D415 runs at around 15hz
+        Queries depth and RGB frames from Intel Realsense Camera (D415)
         """
-        height, width = msg.height, msg.width
-        pt_cloud_gen = pc2.read_points(msg, skip_nans=False, field_names=("x", "y", "z"))
-        pt_cloud_aligned = []
-        for v in range(height):
-            current_row = []
-            for u in range(width):
-                current_row.append((next(pt_cloud_gen)))
-            pt_cloud_aligned.append(current_row)
-        with self.pt_cloud_lock: 
-            self.pt_cloud_aligned = pt_cloud_aligned
+        frames = self.pipeline.wait_for_frames()
+        aligned_frames = self.align.process(frames)
+        aligned_depth_frame = aligned_frames.get_depth_frame()
+        aligned_color_frame = aligned_frames.get_color_frame()
+        if not self.intrinsics_initialized: 
+            self.depth_intrinsics = aligned_depth_frame.profile.as_video_stream_profile().intrinsics
+            self.color_intrinsics = aligned_color_frame.profile.as_video_stream_profile().intrinsics
+            self.intrinsics_initialized = True
 
-    def img_cb(self, msg): 
-         raw_img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-         if self.need_calibration: 
-             key = cv2.waitKey(1)
-             if key == ord('a'): 
-                 #TODO
-                 self.need_calibration = False
-         else: 
-             try: 
-                 # self.input_queue.put(raw_img)
-                 self.input_queue.put_nowait(raw_img)
-             except Full: 
-                 pass
-         
-    def _get_coord_at_pixel(self, uv): 
-        u, v = uv
-        with self.pt_cloud_lock: 
-            if self.pt_cloud_aligned: 
-                ret_coord = self.pt_cloud_aligned[v][u]
-                self.pt_cloud_aligned = None
-                return ret_coord
+        if self.need_extrinsics: 
+            self._get_extrinsics()
+            self.need_extrinsics = False
+        try:
+            self.input_queue.put_nowait(np.asanyarray(aligned_color_frame.get_data()))
+            self.depth_frame = aligned_depth_frame
+        except Full:
+            pass
 
     def find_object_pos(self): 
         """
@@ -104,24 +110,75 @@ class ObjectTracker(object):
         try: 
             detection = self.output_queue.get(block = False)
             for det in detection: 
-                if det.cl=="person": 
+                if det.cl=="cell phone": 
                     mid_pt = np.array((det.left_xy + det.right_xy)/2, dtype=int)
                     print("det: ", self._get_coord_at_pixel(mid_pt))
-            now = time.time()
-            print("frame rate: ", 1.0/(now - self.time))
-            self.time = now
+            return True
         except Empty:
+            return False
+
+    def _get_coord_at_pixel(self, uv): 
+        u, v = uv
+        print("u,v: ", uv)
+        depth = self.depth_frame.get_distance(u,v)
+        result = rs.rs2_deproject_pixel_to_point(self.depth_intrinsics, uv, depth)
+        return result
+
+    def _get_extrinsics(self): 
+        key = cv2.waitKey(1)
+        if key == ord('a'): 
+            #TODO
             pass
+
+    ################################################
+    # Functions for Experiencing PointCloud2 and Image, which do not recommend using since it's slow. But we're still keep it since it's a good reference
+    ################################################
+    # def pt_cloud_cb(self, msg): 
+    #     """
+    #     Intel realsense D415 runs at around 15hz
+    #     """
+    #     height, width = msg.height, msg.width
+    #     pt_cloud_gen = pc2.read_points(msg, skip_nans=False, field_names=("x", "y", "z"))
+    #     pt_cloud_aligned = []
+    #     for v in range(height):
+    #         current_row = []
+    #         for u in range(width):
+    #             current_row.append((next(pt_cloud_gen)))
+    #         pt_cloud_aligned.append(current_row)
+    #     with self.pt_cloud_lock: 
+    #         self.pt_cloud_aligned = pt_cloud_aligned
+    #
+    # def img_cb(self, msg): 
+    #      raw_img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+    #      try: 
+    #          # self.input_queue.put(raw_img)
+    #          self.input_queue.put_nowait(raw_img)
+    #      except Full: 
+    #          pass
+    #      
+    # def _get_coord_at_pixel_pt_cloud(self, uv): 
+    #     u, v = uv
+    #     with self.pt_cloud_lock: 
+    #         if self.pt_cloud_aligned is not None: 
+    #             ret_coord = self.pt_cloud_aligned[v][u]
+    #             self.pt_cloud_aligned = None
+    #             return ret_coord
 
 if __name__ == '__main__': 
     rospy.init_node("object_tracking", anonymous=True)     #anonymous=true ensures unique node name by adding random numbers
-    rate = rospy.Rate(20)
+    rate = rospy.Rate(30)
     # Need ~ if param is for the node!
     visualize = rospy.get_param('~visualize', False)
     ot = ObjectTracker(visualize=visualize)
+    start_time = time.time()
     while not rospy.is_shutdown(): 
         # for opencv, it's (width, height)
-        ot.find_object_pos()
+        ot.get_and_push_aligned_frames()
+        if ot.find_object_pos(): 
+            now = time.time()
+            print("frame rate: ", 1.0/(now - start_time))
+            start_time = now
+
         rate.sleep() 
     ot.on_shutdown()
 
