@@ -24,21 +24,25 @@ proc = Process(target=process_func, args=(input_queue, output_queue))
 proc.start()
 
 import time
-time.sleep(1)
 while not output_queue.empty():
     print("2")
     im0 = output_queue.get(block=True, timeout=0.1)
     cv2.imshow("asdf", im0)
     cv2.waitKey(0)  # 1 millisecond
 
+time.sleep(10)
 os.kill(proc.pid, signal.SIGUSR2)
 proc.join()
 
 # clear queue 
-while not output_queue.empty(): 
-    output_queue.get(block=True, timeout=0.1)
-while not input_queue.empty(): 
-    input_queue.get(block=True, timeout=0.1)
+# input_queue.close()
+# input_queue.join_thread()
+# output_queue.close()
+# output_queue.join_thread()
+# while not output_queue.empty(): 
+#     output_queue.get(block=True, timeout=0.1)
+# while not input_queue.empty(): 
+#     input_queue.get(block=True, timeout=0.1)
 
 # cv2.imshow("sdf", img0)
 # cv2.waitKey(0)
