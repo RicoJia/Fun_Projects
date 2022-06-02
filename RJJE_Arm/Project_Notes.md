@@ -137,10 +137,13 @@
 ========================================================================
 ## Roadmap 
 ========================================================================
+0. Esp32 - wifi control for robot
+    - lap -> Esp32 -> what laptop has sent
 1. claw 
     - adjust cad
     - (open & close)
 2. Teaching mode
+    - How to do zero-gravity?
     - Turn on teaching mode: 360 360 ... Turn off (ros service)
     - sleep, record joint angles, wakeup
     - arduino: calibrate angles. If not accurate, the visualization will be off.
