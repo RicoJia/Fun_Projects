@@ -26,6 +26,10 @@
 
     3. I2C Tool can scan I2C devices. Or SMBus devices (protocal based on I2C, a two wire communication). 
 
+3. WIFI Connection
+    1. RJJE arm operates using an ESP32 microcontroller, which comes with a WIFI module. For communication, MQTT protocal is used. 
+        - In a speed test, 1 request(30-byte)-response(30-byte) takes ~0.01s to finish. The router's upload and & download speeds are around ~130 & ~150 mbps. Therefore, we are using WIFI for real time robot arm control.
+
 ### Software Setup
 1. Docker Container Setup 
     1. Pull Docker image: ```docker pull ricojia/rjje_arm``` 
@@ -139,8 +143,9 @@
 ========================================================================
 0. Esp32 - wifi control for robot
     - lap -> Esp32 -> what laptop has sent. Need 60% Flash Memory
-    - ROS test on ESP32 
     - Speed test 
+        - Need to get pub/sub on host machine
+    - ROS test on ESP32 
 1. claw 
     - adjust cad
     - (open & close)

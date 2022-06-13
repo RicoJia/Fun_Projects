@@ -1,59 +1,58 @@
 /*
-SimpleMQTTClient.ino
-The purpose of this exemple is to illustrate a simple handling of MQTT and Wifi connection.
 Once it connects successfully to a Wifi network and a MQTT broker, it subscribe to a topic and send a message to it.
-It will also send a message delayed 5 seconds later.
 Ref: https://github.com/plapointe6/EspMQTTClient/issues/82
 RJ: The previous example, using PubSubClient simply doesn't work. Pretty certain something is broken in that library.
+    - You can do wildcard too: 
+        client.subscribe("mytopic/wildcardtest/#", [](const String & topic, const String & payload) {
+        Serial.println(topic + ": " + payload);
+        });
+
 */
 
 #include "EspMQTTClient.h"
 
 EspMQTTClient client(
-"Unit-380",
-"3ecbe779",
-"100.65.212.26", // MQTT Broker server ip
-"MQTTUsername", // Can be omitted if not needed
-"MQTTPassword", // Can be omitted if not needed
-"ESP", // Client name that uniquely identify your device
-1883 // The MQTT port, default to 1883. this line can be omitted
+    "Unit-380",
+    "3ecbe779",
+    "100.65.212.26", // MQTT Broker server ip
+    "MQTTUsername", // Can be omitted if not needed
+    "MQTTPassword", // Can be omitted if not needed
+    "ESP", // Client name that uniquely identify your device
+    1883 // The MQTT port, default to 1883. this line can be omitted
 );
+unsigned long start_time;
+double angles[6];
+
+void sub_callback(const String & payload) {
+    /* payload looks has 3 digit precision 12.3;32.2;23.0;45.4;66.2;77.1; */
+    int start_i = 0;
+    for (byte i = 0; i < 6; ++i) {
+        int delim_i = payload.indexOf(';', start_i);
+        angles[i] = payload.substring(start_i, delim_i).toDouble();
+        start_i = delim_i + 1;
+    }
+}
 
 void setup()
 {
-Serial.begin(115200);
-
-// Optionnal functionnalities of EspMQTTClient :
-client.enableDebuggingMessages(); // Enable debugging messages sent to serial output
-client.enableHTTPWebUpdater(); // Enable the web updater. User and password default to values of MQTTUsername and MQTTPassword. These can be overrited with enableHTTPWebUpdater("user", "password").
-client.enableLastWillMessage("TestClient/lastwill", "I am going offline"); // You can activate the retain flag by setting the third parameter to true
+    Serial.begin(115200);
+    client.enableDebuggingMessages(); // Enable debugging messages sent to serial output
+    client.enableHTTPWebUpdater(); // Enable the web updater. User and password default to values of MQTTUsername and MQTTPassword. These can be overrited with enableHTTPWebUpdater("user", "password").
+    client.enableLastWillMessage("TestClient/lastwill", "I am going offline"); // You can activate the retain flag by setting the third parameter to true
+    start_time = millis();
 }
 
 // This function is called once everything is connected (Wifi and MQTT)
-// WARNING : YOU MUST IMPLEMENT IT IF YOU USE EspMQTTClient
 void onConnectionEstablished()
 {
-    // Subscribe to "mytopic/test" and display received message to Serial
-    client.subscribe("mytopic/test", [](const String & payload) {
-    Serial.println(payload);
-    });
-
-    // Subscribe to "mytopic/wildcardtest/#" and display received message to Serial
-    client.subscribe("mytopic/wildcardtest/#", [](const String & topic, const String & payload) {
-    Serial.println(topic + ": " + payload);
-    });
-
-    // Publish a message to "mytopic/test"
-    client.publish("mytopic/test", "This is a message"); // You can activate the retain flag by setting the third parameter to true
-
-    /* // Execute delayed instructions */
-    /* client.executeDelayed(5 * 1000, { */
-    /*     client.publish("mytopic/test", "This is a message sent 5 seconds later") */
-    /* }); */
+    client.subscribe("esp/plan", sub_callback);
+    client.publish("esp/joint_states", "this is a message");
 }
 
 void loop()
 {
-client.loop();
-client.enableDebuggingMessages(true);
+    // loop is non-blocking
+    client.loop();
+    client.enableDebuggingMessages(true);
+    /* Serial.println("love"); */
 }
