@@ -138,7 +138,9 @@
 ## Roadmap 
 ========================================================================
 0. Esp32 - wifi control for robot
-    - lap -> Esp32 -> what laptop has sent
+    - lap -> Esp32 -> what laptop has sent. Need 60% Flash Memory
+    - ROS test on ESP32 
+    - Speed test 
 1. claw 
     - adjust cad
     - (open & close)
