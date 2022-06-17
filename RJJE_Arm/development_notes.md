@@ -3,6 +3,8 @@
 1. Objectives
     1. Pick and Place using moveit & camera
     2. Arm mounted on mobile platform
+2. [System Flowchart](https://drive.google.com/file/d/1ujubSrS_AvXeORWJ76qhUnCQ4BP0E4v_/view?usp=sharing)
+
 
 ## Setup
 ### Hardware Setup
@@ -53,7 +55,7 @@
     ```
 
 ## Design Notes
-### Foundation
+### Robot
 1. Servo Motors
     - The rudder on top of a servo motor has holes that need to be rethreaded. One can use a "tap" for rethreading. 
     - Before installing a servo, the servo's orientation needs to be adjusted to 90 degrees. The orientation of a servo (from 0 to 180 degrees) is shown below
@@ -73,12 +75,9 @@
 
     - Analog Servos' feedback can have around 1 degree of error. Which can introduce jittering in replay
 
-2. 3D CAD Modelling
-    1. STL file example - https://create.arduino.cc/projecthub/danny-van-den-heuvel/6dof-robotic-arm-50eab6
-    2. Modelling 
-        - First, obtain the STL files of major parts created by Rico Jia. Note that these STL files were created using Onshape, and some not-important details are omitted. 
-        - When assembling STL models into a full 3D model of the robot, special attention should be paid to: 
-            1. In general, ROS follows multiple ways to express rrotation with angles. [See here](https://www.ros.org/reps/rep-0103.html). In URDF, it's **Z-Y-X** Euler angle
+2. Modelling, [see doc](rjje_arm_ws/src/rjje_arm/docs/rjje_arm_modelling.md)
+    - 3D Modelling 
+    - Gazebo Environment
 
 3. Software Setup (D)
     - Build Docker and Tools  
@@ -113,20 +112,6 @@
         - YOLO v5 docker, being able to run 
         - get images -> yolo, test
 
-## TODO List 
-1. DL Questions
-    1. Structure of YOLO 
-    2. Other smaller alternative? This is what we want
-    3. Training visualization: tensorboard?
-        - how to label them?
-2. VoiceBox
-3. Use pyrealsense instead of launching the node itself
-4. protobuf - nanopb messaging system b/w arduino & laptop
-5. STM 32. 
-    1. Run ros on it. with an added topic for teaching mode
-    2. Add
-6. Zero gravity?
-
 ## Log
 1. going back to ros:
     - publisher joint_msg 
@@ -137,7 +122,6 @@
         - separate out the 5 joints (update self.commanded_angle[:5], from start to end)
         - To transition to a succeeded state, the goal must be in a preempting or active state, it is currently in state: 3 (setting response too many times?)
 
-
 ========================================================================
 ## Roadmap 
 ========================================================================
@@ -146,6 +130,7 @@
     - Speed test 
         - Need to get pub/sub on host machine
     - ROS test on ESP32 
+1. Gazebo Environment
 1. claw 
     - adjust cad
     - (open & close)
@@ -173,4 +158,17 @@
     - Need cardbox to make the calibration plates
 4. Cup pick & place
 
+## TODO List 
+1. DL Questions
+    1. Structure of YOLO 
+    2. Other smaller alternative? This is what we want
+    3. Training visualization: tensorboard?
+        - how to label them?
+2. VoiceBox
+3. Use pyrealsense instead of launching the node itself
+4. protobuf - nanopb messaging system b/w arduino & laptop
+5. STM 32. 
+    1. Run ros on it. with an added topic for teaching mode
+    2. Add
+6. Zero gravity?
 
