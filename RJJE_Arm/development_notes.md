@@ -56,71 +56,18 @@
 
 ## Design Notes
 ### Robot
-1. Servo Motors
-    - The rudder on top of a servo motor has holes that need to be rethreaded. One can use a "tap" for rethreading. 
-    - Before installing a servo, the servo's orientation needs to be adjusted to 90 degrees. The orientation of a servo (from 0 to 180 degrees) is shown below
-        <p align="center">
-        <img src="https://user-images.githubusercontent.com/39393023/135568554-f84da7c6-10e5-4773-9298-33f507092285.JPEG" height="400" width="width"/>
-        <figcaption align="center">Note: the rudder is on the right hand side of the servo</figcaption>
-        </p>
-    
-    - Some servos work well in the range ```[10, 170]``` degrees. [Source](https://www.intorobotics.com/how-to-control-servo-motors-with-arduino-no-noise-no-vibration/)
-
-    - Servos take PWM signals as inputs. The output torque rating goes higher if the input voltage is higher. 
-
-    - **If you have a servo that vibrates, here are some possible reasons: ** [Source](https://electronicguidebook.com/reasons-why-a-servo-motor-vibrates/)
-        - Power is instable, or not adequate. So get a larger power supply, or power cable
-        - Working near the range limits
-        - Motors are cheap so that parts don't work properly. **In my case, some motors did work better than others. I think that's because the good ones have better correspondence to the internal PID control loop**
-
-    - Analog Servos' feedback can have around 1 degree of error. Which can introduce jittering in replay
+1. Hardware, [see doc](rjje_arm_ws/src/rjje_arm/docs/rjje_arm_hardware.md)
+    - Servo Motors
 
 2. Modelling, [see doc](rjje_arm_ws/src/rjje_arm/docs/rjje_arm_modelling.md)
     - 3D Modelling 
     - Gazebo Environment
 
-3. Software Setup (D)
-    - Build Docker and Tools  
-    - STL and Collada files
-        - STL from 3D printing, Collada has physics as well.
-        - seems like STL can -> DAE files. This can be done on oneshape
-        - [How to add mesh to URDF](http://wiki.ros.org/urdf/Tutorials/Building%20a%20Visual%20Robot%20Model%20with%20URDF%20from%20Scratch) 
-    - Put the robot together 
-        - Stepper Motors
-        - Mechanical
-    - Moveit Pipeline (D)
+3. RJJE Arm Motion Planning [see doc](rjje_arm_ws/src/rjje_arm/docs/rjje_arm_motion_planning.md)
+    - Arm motion planning (simple case: move arm, then claw)
 
-4. Arm motion planning (simple case: move arm, then claw)
-    - Smooth motion execution (D)
-        - debug messaging system 
-    - Teaching mode
-    - Task contructor
-
-### 3D Object Detection
-1. Visualize point cloud
-    1. Examples 
-        - [Real Sense Tracker](https://github.com/spkywood/realsense-tracker)
-        - [Robomaster board detection](https://blog.csdn.net/weixin_39298885/article/details/120207053)
-    2. We need image and depth map aligned. Since we have images coming from 2 cameras, we need to "align them" by finding reference points. 
-        - /camera/aligned_depth_to_color: aligned info
-        - /camera/color - RGB info
-        - /camera/depth - non-aligned depth information
-    3. Also, we can utilize realsense2_camera package to output "ordered" point clouds to us. Therefore have ```ordered_pc:=true``` 
-        - [doc](http://docs.ros.org/en/api/sensor_msgs/html/point__cloud2_8py_source.html#l00060)
-
-2.  1. YOLO v5 + pick and place. 
-        - YOLO v5 docker, being able to run 
-        - get images -> yolo, test
-
-## Log
-1. going back to ros:
-    - publisher joint_msg 
-    - subscriber has task id to distinguish task.
-    - CPU: too high? event check
-    - moveit visualization error? conversion?
-    - NIT
-        - separate out the 5 joints (update self.commanded_angle[:5], from start to end)
-        - To transition to a succeeded state, the goal must be in a preempting or active state, it is currently in state: 3 (setting response too many times?)
+4. Vision [see doc](rjje_arm_ws/src/rjje_arm/docs/rjje_arm_vision.md)
+    - 3D Object Detection
 
 ========================================================================
 ## Roadmap 

@@ -1,4 +1,4 @@
-# RJJE_Arm_Modelling
+# RJJE Arm Modelling
 This file is the design documentation of rjje_arm. 
 
 ## 3D CAD Modelling
