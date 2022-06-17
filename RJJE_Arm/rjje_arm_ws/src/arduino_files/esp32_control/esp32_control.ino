@@ -12,9 +12,12 @@ RJ: The previous example, using PubSubClient simply doesn't work. Pretty certain
 #include "EspMQTTClient.h"
 
 EspMQTTClient client(
-    "Unit-380",
-    "3ecbe779",
-    "100.65.212.26", // MQTT Broker server ip
+    "EngelWiFi",
+    "2394Engel",
+    "10.0.1.82",
+    /* "Unit-380", */
+    /* "3ecbe779", */
+    /* "100.65.212.26", // MQTT Broker server ip */
     "MQTTUsername", // Can be omitted if not needed
     "MQTTPassword", // Can be omitted if not needed
     "ESP", // Client name that uniquely identify your device
