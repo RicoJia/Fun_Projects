@@ -4,9 +4,6 @@
 <!-- |    EDITING THIS FILE BY HAND IS NOT RECOMMENDED                                 | -->
 <!-- =================================================================================== -->
 <robot name="rjje_arm">
-  <material name="lightolivegreen">
-    <color rgba="0.6431372549019608 0.7450980392156863 0.3607843137254902 1.0"/>
-  </material>
   <material name="blue">
     <color rgba="0 0 0.8 1"/>
   </material>
@@ -45,7 +42,7 @@
     </visual>
   </link>
   <gazebo reference="base_link">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/Purple</material>
   </gazebo>
   <joint name="world_base_link" type="fixed">
     <axis xyz="0 0 1"/>
@@ -75,7 +72,7 @@
     </visual>
   </link>
   <gazebo reference="link1">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/Turquoise</material>
   </gazebo>
   <joint name="base_link_link1" type="fixed">
     <axis xyz="0 0 1"/>
@@ -105,7 +102,7 @@
     </visual>
   </link>
   <gazebo reference="bracket_1">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/PurpleGlow</material>
   </gazebo>
   <joint name="link1_bracket_1" type="revolute">
     <axis xyz="0 0 1"/>
@@ -135,7 +132,7 @@
     </visual>
   </link>
   <gazebo reference="link_2">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/Wood</material>
   </gazebo>
   <joint name="bracket_1_link_2" type="fixed">
     <axis xyz="0 0 1"/>
@@ -165,7 +162,7 @@
     </visual>
   </link>
   <gazebo reference="bracket_2_1">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/PurpleGlow</material>
   </gazebo>
   <joint name="link_2_bracket_2_1" type="revolute">
     <axis xyz="0 0 1"/>
@@ -195,7 +192,7 @@
     </visual>
   </link>
   <gazebo reference="bracket_2_2">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/PurpleGlow</material>
   </gazebo>
   <joint name="bracket_2_1_bracket_2_2" type="fixed">
     <axis xyz="0 0 1"/>
@@ -225,7 +222,7 @@
     </visual>
   </link>
   <gazebo reference="link_3">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/Indigo</material>
   </gazebo>
   <joint name="bracket_2_2_link_3" type="revolute">
     <axis xyz="0 0 1"/>
@@ -254,7 +251,7 @@
     </inertial>
   </link>
   <gazebo reference="bracket_3_1">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/PurpleGlow</material>
   </gazebo>
   <joint name="link_3_bracket_3_1" type="fixed">
     <axis xyz="0 0 1"/>
@@ -284,7 +281,7 @@
     </visual>
   </link>
   <gazebo reference="bracket_3_2">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/PurpleGlow</material>
   </gazebo>
   <joint name="bracket_3_1_bracket_3_2" type="fixed">
     <axis xyz="0 0 1"/>
@@ -314,7 +311,7 @@
     </visual>
   </link>
   <gazebo reference="link_4">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/Indigo</material>
   </gazebo>
   <joint name="bracket_3_2_link_4" type="revolute">
     <axis xyz="0 0 1"/>
@@ -344,7 +341,7 @@
     </visual>
   </link>
   <gazebo reference="link_5">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/PurpleGlow</material>
   </gazebo>
   <joint name="link_4_link_5" type="fixed">
     <axis xyz="0 0 1"/>
@@ -374,7 +371,7 @@
     </visual>
   </link>
   <gazebo reference="link_6">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/Orange</material>
   </gazebo>
   <joint name="link_5_link_6" type="revolute">
     <axis xyz="0 0 1"/>
@@ -404,7 +401,7 @@
     </visual>
   </link>
   <gazebo reference="left_gripper">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/Gold</material>
   </gazebo>
   <joint name="link_6_left_gripper" type="revolute">
     <axis xyz="0 1 0"/>
@@ -434,7 +431,7 @@
     </visual>
   </link>
   <gazebo reference="right_gripper">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/Gold</material>
   </gazebo>
   <joint name="link_6_right_gripper" type="revolute">
     <axis xyz="0 1 0"/>

@@ -56,7 +56,7 @@
 
 ## Design Notes
 ### Robot
-1. Hardware, [see doc](rjje_arm_ws/src/rjje_arm/docs/rjje_arm_hardware.md)
+1. Hardware, [see doc](rjje_arm_ws/src/arduino_files/README.md)
     - Servo Motors
 
 2. Modelling, [see doc](rjje_arm_ws/src/rjje_arm/docs/rjje_arm_modelling.md)

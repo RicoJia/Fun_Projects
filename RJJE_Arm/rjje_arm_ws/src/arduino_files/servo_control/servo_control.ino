@@ -96,7 +96,7 @@ void setup(){
     motors[5].is_claw_ = true;
     motors[5].offset_ = -10;
 
-    nh.initNode(); 
+    nh.initNode();
     nh.advertise(joint_msg_pub);
     nh.subscribe(arm_sub);
     joint_msg.joint_angles_length = 6; 

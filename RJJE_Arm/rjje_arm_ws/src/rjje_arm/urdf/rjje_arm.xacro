@@ -23,7 +23,7 @@
     />
 
   <gazebo reference="base_link">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/Purple</material>
   </gazebo>
 
   <xacro:m_joint type="fixed"
@@ -45,7 +45,7 @@
     color="dark_green"
     />
   <gazebo reference="link1">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/Turquoise</material>
   </gazebo>
 
   <xacro:m_joint type="fixed"
@@ -67,7 +67,7 @@
     color="blue"
     />
   <gazebo reference="bracket_1">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/PurpleGlow</material>
   </gazebo>
 
   <xacro:m_joint type="revolute"
@@ -90,7 +90,7 @@
     />
 
   <gazebo reference="link_2">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/Wood</material>
   </gazebo>
 
   <xacro:m_joint type="fixed"
@@ -112,7 +112,7 @@
     color="blue"
     />
   <gazebo reference="bracket_2_1">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/PurpleGlow</material>
   </gazebo>
 
   <xacro:m_joint type="revolute"
@@ -134,7 +134,7 @@
     color="blue"
     />
   <gazebo reference="bracket_2_2">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/PurpleGlow</material>
   </gazebo>
 
   <xacro:m_joint type="fixed"
@@ -156,7 +156,7 @@
     color="dark_green"
     />
   <gazebo reference="link_3">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/Indigo</material>
   </gazebo>
 
   <xacro:m_joint type="revolute"
@@ -175,7 +175,7 @@
     radius="0.5"
     />
   <gazebo reference="bracket_3_1">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/PurpleGlow</material>
   </gazebo>
 
   <xacro:m_joint type="fixed"
@@ -197,7 +197,7 @@
     color="blue"
     />
   <gazebo reference="bracket_3_2">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/PurpleGlow</material>
   </gazebo>
 
   <xacro:m_joint type="fixed"
@@ -219,7 +219,7 @@
     color="dark_green"
     />
   <gazebo reference="link_4">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/Indigo</material>
   </gazebo>
 
   <xacro:m_joint type="revolute"
@@ -241,7 +241,7 @@
     color="dark_green"
     />
   <gazebo reference="link_5">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/PurpleGlow</material>
   </gazebo>
 
   <xacro:m_joint type="fixed"
@@ -263,7 +263,7 @@
     color="dark_green"
     />
   <gazebo reference="link_6">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/Orange</material>
   </gazebo>
 
   <xacro:m_joint type="revolute"
@@ -285,7 +285,7 @@
     color="yellow"
     />
   <gazebo reference="left_gripper">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/Gold</material>
   </gazebo>
 
   <xacro:m_joint type="revolute"
@@ -307,7 +307,7 @@
     color="yellow"
     />
   <gazebo reference="right_gripper">
-    <material>Gazebo/RedGlow</material>
+    <material>Gazebo/Gold</material>
   </gazebo>
 
   <xacro:m_mimic_joint 
