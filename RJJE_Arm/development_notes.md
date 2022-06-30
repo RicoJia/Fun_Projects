@@ -5,32 +5,8 @@
     2. Arm mounted on mobile platform
 2. [System Flowchart](https://drive.google.com/file/d/1ujubSrS_AvXeORWJ76qhUnCQ4BP0E4v_/view?usp=sharing)
 
-
 ## Setup
-### Hardware Setup
-1. Motor Testing: [Adafruit_PCA9685](https://learn.adafruit.com/16-channel-pwm-servo-driver?view=all)
-    - Electrical: 
-        - Jack plug for external power 
-        - Vcc is positive for signal, V+ is the positive supply. 
-    - switching directions will cause a lot of noise on the supply. 
-    - may need a cap, like 470 uF for many motors.  
-    - channel-board-pinout mapping
-    - servo_min-servo_max mapping. 
-        - [How to calibrate servos](https://create.arduino.cc/projecthub/jeremy-lindsay/calibrating-my-servos-fa27ce)
-
-2. Servo Motor Control: There are (at least) two ways to do this: Raspberry Pi, or Arduino (nano, uno, etc.)
-    1. [Raspberry Pi I2C config](https://learn.adafruit.com/adafruits-raspberry-pi-lesson-4-gpio-setup/configuring-i2c). 
-    2. [Arduino setup](https://wiki.keyestudio.com/Ks0173_keyestudio_Nano_ch340)
-        - Power: 1. VIN 7v-12v 2. Mini-B USB
-        - In Arduino IDE, select NANO as the board
-        - Bootloader: choose ATMega328P (old bootloader)
-        - Select USB port
-
-    3. I2C Tool can scan I2C devices. Or SMBus devices (protocal based on I2C, a two wire communication). 
-
-3. WIFI Connection
-    1. RJJE arm operates using an ESP32 microcontroller, which comes with a WIFI module. For communication, MQTT protocal is used. 
-        - In a speed test, 1 request(30-byte)-response(30-byte) takes ~0.01s to finish. The router's upload and & download speeds are around ~130 & ~150 mbps. Therefore, we are using WIFI for real time robot arm control.
+1. Hardware setup, [see doc](./rjje_arm_ws/src/arduino_files/README.md)
 
 ### Software Setup
 1. Docker Container Setup 
@@ -56,9 +32,6 @@
 
 ## Design Notes
 ### Robot
-1. Hardware, [see doc](rjje_arm_ws/src/arduino_files/README.md)
-    - Servo Motors
-
 2. Modelling, [see doc](rjje_arm_ws/src/rjje_arm/docs/rjje_arm_modelling.md)
     - 3D Modelling 
     - Gazebo Environment

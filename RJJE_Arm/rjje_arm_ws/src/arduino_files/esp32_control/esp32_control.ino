@@ -6,11 +6,14 @@ RJ: The previous example, using PubSubClient simply doesn't work. Pretty certain
         client.subscribe("mytopic/wildcardtest/#", [](const String & topic, const String & payload) {
         Serial.println(topic + ": " + payload);
         });
-
+Arduino IDE:
+    - board: DOIT ESP32 DEVKIT V1
+    - programmer: 
 */
 
 #include "EspMQTTClient.h"
 #include "esp32_control.hpp"
+#include "servo_control.hpp"
 
 EspMQTTClient client(
     /* "EngelWiFi", */
@@ -25,6 +28,7 @@ EspMQTTClient client(
     1883 // The MQTT port, default to 1883. this line can be omitted
 );
 Esp32Control esp32_control;
+ServoControl servo_control;
 
 double desired_angles[6];
 double actual_angles[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
@@ -66,13 +70,25 @@ void setup()
 }
 
 
+//TODO
+void test_motor_go_around(){
+    static int i = 0;
+    static bool cw = true;
+    servo_control.set_angle(0, i);
+    delay(100);  
+    if (i >= 180) cw = false;
+    else if (i <= 3) cw = true;
+    if (cw) i+=3;
+    else i-=3;
+    Serial.println("Moving to angle: " + String(i));
+}
+
 void loop()
 {
     // loop is non-blocking
     unsigned long start_time = millis();
-    client.loop();
-    client.enableDebuggingMessages(true);
-    client.publish("esp/joint_states", esp32_control.get_joint_states());
+    //client.publish("esp/joint_states", esp32_control.get_joint_states());
     unsigned long diff = millis() - start_time;
+    test_motor_go_around();
     if (diff < (unsigned long)1000/FREQ) delay((unsigned long)1000/FREQ - diff);
 }

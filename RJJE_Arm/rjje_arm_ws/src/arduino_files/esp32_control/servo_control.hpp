@@ -4,6 +4,20 @@
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 
+// set this to 0 if you're using a regular arduino
+#define ESP32 1
+#ifdef ESP32
+const int ANALOG_INPUT = 34;
+// 12-bit ADC
+const double INTERCEPT = 203.5682231220682;
+const double SLOPE = -0.07711167;
+#else 
+const int ANALOG_INPUT = A0;
+// 10-bit ADC
+const double INTERCEPT = -46.3003;
+const double SLOPE = 0.458;
+#endif
+
 #define PWM_BOARD_ADDR 0x40
 #define SERVO_FREQ 50
 // #define SERVO_MIN 120  // for MG96
@@ -29,14 +43,15 @@ bool pwm_board_connected(){
     return (error==0); 
 }
 
-struct Motor{
-    // A, common convention is the right-hand rotation, which defines the positive direction of rotation is counter-clockwise of positive z-axis. 
-    // Below, all angles follow the right-hand convention 
 
-    // In my setup, all motors have their neutral positions at 90 deg
+/**
+ * 1. A common convention is the right-hand rotation, which defines the positive direction of rotation is counter-clockwise of positive z-axis. Below, all angles follow the right-hand convention
+ * 2. In my setup, all motors have their neutral positions at 90 deg
+ * 3. Due to each motor's positioning, we need to "flip" the angle about the neutral position if necessary.
+ */
+struct Motor{
     float last_angle_ = 90;
-    char offset_=0;   //offset should is added on commanded_angle
-    // Therefore we need to "flip" the angle about the neutral position if necessary.
+    char offset_=0;                 //offset is added on commanded_angle
     bool is_claw_ = false;
     bool flip_rotation_ = true;     //false for MG96
 
@@ -45,6 +60,9 @@ struct Motor{
         if (real_angle != -1){
           uint16_t pulselength = map(real_angle, 0, 180, SERVO_MIN, SERVO_MAX);
           pwm.setPWM(channel_id, 0, pulselength);
+          //TODO
+          Serial.println("Actually : " + String(pulselength));
+
           return true;
         }
         else{
@@ -92,35 +110,38 @@ struct Motor{
     }
 }; 
 
-inline void back_to_neutral(Motor* const motors, Adafruit_PWMServoDriver& pwm, float* commanded_angles){
-    commanded_angles[0] = 90; 
-    commanded_angles[1] = 90; 
-    commanded_angles[2] = 90; 
-    commanded_angles[3] = 90; 
-    commanded_angles[4] = 90; 
-    commanded_angles[5] = 90; 
-    for (unsigned int channel_id = 0; channel_id < 6; ++channel_id){
-        motors[channel_id].set_angle(commanded_angles[channel_id], channel_id, pwm);
-    }
-}
-
-void test_arm(float* const commanded_angles, Motor* const motors, const float& step_angle, Adafruit_PWMServoDriver& pwm){
-    static float degrees[6] = {90, 90, 90, 30, 90, 90};
-    for (unsigned int channel_id = 0; channel_id < 6; ++channel_id){
-        commanded_angles[channel_id] += sign(degrees[channel_id] - commanded_angles[channel_id]) * step_angle;
-        motors[channel_id].set_angle(commanded_angles[channel_id], channel_id, pwm);
-    }
-}
-
+// test procedure: 
+//  1. add this to the wifi controlled interface, with set angle, and Motor class
+//
+/**
+ * This class does these things:
+ *  1. starts a pwm object, set it up
+ *  2. Set an angle on a servo
+ *  3. Read from a servo
+ *      - Base on the real world constraints of the motors 
+ */
 class ServoControl
 {
 public:
-    ServoControl (){}
+    ServoControl (): pwm(PWM_BOARD_ADDR){
+        pwm.begin();
+        pwm.setOscillatorFrequency(27000000);
+        pwm.setPWMFreq(SERVO_FREQ);  // Analog servos run at ~50 Hz updates
+        /* pinMode(A0, INPUT_PULLUP);  */
+        pinMode(ANALOG_INPUT, INPUT_PULLUP); 
+        delay(5000); 
+    }
     ~ServoControl (){}
 
-private:
-    /* data */
-};
+    void set_angle(byte index, const float& angle){
+        motors[index].set_angle(angle, 0, pwm);
+    }
 
+private:
+    Adafruit_PWMServoDriver pwm;
+    Motor motors[6];
+};
+#if 0
+#endif
 
 #endif /* end of include guard: __SERVO_CONTROL_HPP__ */

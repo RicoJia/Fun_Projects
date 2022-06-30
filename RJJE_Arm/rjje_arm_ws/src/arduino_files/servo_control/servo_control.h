@@ -46,7 +46,7 @@ struct Motor{
     bool is_claw_ = false;
     bool flip_rotation_ = true;     //false for MG96
 
-    bool set_angle(const float& commanded_angle, const short& channel_id, const Adafruit_PWMServoDriver& pwm){
+    bool set_angle(const float& commanded_angle, const short& channel_id, Adafruit_PWMServoDriver& pwm){
         float real_angle = get_real_angle(commanded_angle);
         if (real_angle != -1){
           int pulselength = map(real_angle, 0, 180, SERVO_MIN, SERVO_MAX);
@@ -98,7 +98,7 @@ struct Motor{
     }
 }; 
 
-inline void back_to_neutral(Motor* const motors, const Adafruit_PWMServoDriver& pwm, float* commanded_angles){
+inline void back_to_neutral(Motor* const motors, Adafruit_PWMServoDriver& pwm, float* commanded_angles){
     commanded_angles[0] = 90; 
     commanded_angles[1] = 90; 
     commanded_angles[2] = 90; 
@@ -110,7 +110,7 @@ inline void back_to_neutral(Motor* const motors, const Adafruit_PWMServoDriver& 
     }
 }
 
-void test_arm(float* const commanded_angles, Motor* const motors, const float& step_angle, const Adafruit_PWMServoDriver& pwm){
+void test_arm(float* const commanded_angles, Motor* const motors, const float& step_angle, Adafruit_PWMServoDriver& pwm){
     static float degrees[6] = {90, 90, 90, 30, 90, 90};
     for (unsigned int channel_id = 0; channel_id < 6; ++channel_id){
         commanded_angles[channel_id] += sign(degrees[channel_id] - commanded_angles[channel_id]) * step_angle;
