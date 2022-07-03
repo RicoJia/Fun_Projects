@@ -51,6 +51,7 @@ struct Motor{
         if (real_angle != -1){
           int pulselength = map(real_angle, 0, 180, SERVO_MIN, SERVO_MAX);
           pwm.setPWM(channel_id, 0, pulselength);
+          Serial.println("commanded: " + String(commanded_angle) + " | real_angle: " + String(real_angle) + " | pwm val: " + String(pulselength));
           return true;
         }
         else{

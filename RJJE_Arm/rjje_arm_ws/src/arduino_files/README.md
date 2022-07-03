@@ -1,5 +1,6 @@
 # RJJE Arm Hardware
 This file is the design documentation of rjje_arm's hardware structure.
+    1. ```esp32_control``` is under active development. servo_control will be merged into ```esp32_control``` and get deprecated.
 
 ## Motors
 - TODO: all connections
@@ -72,5 +73,5 @@ The [System diagram can be accessed using draw.io](https://drive.google.com/file
     - ```EspMQTTClient```
 
 ### Notes 
-1. ```esp32_control``` is under active development. servo_control will be merged into ```esp32_control``` and get deprecated.
-
+1. PCA9685 is not sitting well with ESP32, so this is still on going: 
+    - After testing with esp32_control, PCA9685 stopped responing I2C requests in i2c_scanner. New PCA9685 ordered.

@@ -61,7 +61,7 @@ struct Motor{
           uint16_t pulselength = map(real_angle, 0, 180, SERVO_MIN, SERVO_MAX);
           pwm.setPWM(channel_id, 0, pulselength);
           //TODO
-          Serial.println("Actually : " + String(pulselength));
+          Serial.println("commanded: " + String(commanded_angle) + " | real_angle: " + String(real_angle) + " | pwm val: " + String(pulselength));
 
           return true;
         }
@@ -133,7 +133,7 @@ public:
     }
     ~ServoControl (){}
 
-    void set_angle(byte index, const float& angle){
+    void set_angle(const float& angle, byte index){
         motors[index].set_angle(angle, 0, pwm);
     }
 

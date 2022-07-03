@@ -15,6 +15,7 @@ Arduino IDE:
 #include "esp32_control.hpp"
 #include "servo_control.hpp"
 
+# if 0
 EspMQTTClient client(
     /* "EngelWiFi", */
     /* "2394Engel", */
@@ -27,7 +28,7 @@ EspMQTTClient client(
     "ESP", // Client name that uniquely identify your device
     1883 // The MQTT port, default to 1883. this line can be omitted
 );
-Esp32Control esp32_control;
+#endif
 ServoControl servo_control;
 
 double desired_angles[6];
@@ -38,6 +39,8 @@ byte num_waypoints = 0;
 
 const int FREQ = 10;
 
+#if 0
+Esp32Control esp32_control;
 // This function is called once everything is connected (Wifi and MQTT)
 void onConnectionEstablished()
 {
@@ -58,14 +61,15 @@ void claw_sub_callback(const String & payload) {
 void plan_sub_callback(const String & payload) {
     esp32_control.plan_sub_callback(payload);
 }
+#endif
 
 void setup()
 {
     Serial.begin(115200);
-    esp32_control = Esp32Control();
-    client.enableDebuggingMessages(); // Enable debugging messages sent to serial output
-    client.enableHTTPWebUpdater(); // Enable the web updater. User and password default to values of MQTTUsername and MQTTPassword. These can be overrited with enableHTTPWebUpdater("user", "password").
-    client.enableLastWillMessage("TestClient/lastwill", "I am going offline"); // You can activate the retain flag by setting the third parameter to true
+    /* esp32_control = Esp32Control(); */
+    /* client.enableDebuggingMessages(); // Enable debugging messages sent to serial output */
+    /* client.enableHTTPWebUpdater(); // Enable the web updater. User and password default to values of MQTTUsername and MQTTPassword. These can be overrited with enableHTTPWebUpdater("user", "password"). */
+    /* client.enableLastWillMessage("TestClient/lastwill", "I am going offline"); // You can activate the retain flag by setting the third parameter to true */
     Serial.println("Initialized");
 }
 
@@ -74,13 +78,13 @@ void setup()
 void test_motor_go_around(){
     static int i = 0;
     static bool cw = true;
-    servo_control.set_angle(0, i);
+    servo_control.set_angle(i, 0);
     delay(100);  
     if (i >= 180) cw = false;
     else if (i <= 3) cw = true;
     if (cw) i+=3;
     else i-=3;
-    Serial.println("Moving to angle: " + String(i));
+    /* Serial.println("Moving to angle: " + String(i)); */
 }
 
 void loop()
