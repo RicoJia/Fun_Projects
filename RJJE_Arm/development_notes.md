@@ -45,16 +45,22 @@
 ========================================================================
 ## Roadmap 
 ========================================================================
-0. Esp32 - wifi control for robot
-    - lap -> Esp32 -> what laptop has sent. Need 60% Flash Memory
-    - Speed test 
-        - Need to get pub/sub on host machine
-    - ROS test on ESP32 
-1. Gazebo Environment
-1. claw 
-    - adjust cad
-    - (open & close)
-2. Teaching mode
+1. Esp32 - wifi control for robot
+    - lap -> Esp32 -> what laptop has sent. Need 60% Flash Memory (On hold, PCA9685 stopped working)
+    - ```motion_controller``` node, with joint states, ros services
+2. Gazebo & Motion Planning
+    - claw adjust cad
+    - Motion Planning with fake joint controller
+    - Set up Gazebo 
+3. Calibration Tools: 2 aruco markers
+    - Big marker under the robot (step 1)
+    - RGBD cam detection (D), RGBD camera - interaction with Arm
+    - optional step: side aruco on robot
+    - Need cardbox to make the calibration plates
+
+4. Cup pick & place
+5. Javascript 手撕做个小网站
+6. Teaching mode [Optional]
     - How to do zero-gravity?
     - Turn on teaching mode: 360 360 ... Turn off (ros service)
     - sleep, record joint angles, wakeup
@@ -72,12 +78,6 @@
         3. add replay logic
             - replay the right commanded angles
             - move_joints
-3. Calibration Tools: 2 aruco markers
-    - Big marker under the robot (step 1)
-    - optional step: side aruco on robot
-    - Need cardbox to make the calibration plates
-4. Cup pick & place
-
 ## TODO List 
 1. DL Questions
     1. Structure of YOLO 

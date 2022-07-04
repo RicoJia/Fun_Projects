@@ -1,8 +1,16 @@
 # RJJE Arm Hardware
 This file is the design documentation of rjje_arm's hardware structure.
     1. ```esp32_control``` is under active development. servo_control will be merged into ```esp32_control``` and get deprecated.
+    2. The [System diagram can be accessed using draw.io](https://drive.google.com/file/d/1ujubSrS_AvXeORWJ76qhUnCQ4BP0E4v_/view?usp=sharing) 
 
-## Motors
+## Usage
+1. Open Arduino IDE, install these libraries using ```library manager```
+    - ```Adafruit_PWMServoDriver```
+    - ```EspMQTTClient```
+2. To Control the claw, do ```rosservice call /rjje_arm/claw_control OPEN_VAL```, where ```OPEN_VAL``` = 0 for closing, 1 for opening
+
+## Design
+### Motors
 - TODO: all connections
 1. Simple Motor Testing: [Adafruit_PCA9685, including schematics](https://learn.adafruit.com/16-channel-pwm-servo-driver?view=all)
     - Electrical: 
@@ -59,19 +67,10 @@ This file is the design documentation of rjje_arm's hardware structure.
         - In a speed test, 1 request(30-byte)-response(30-byte) takes ~0.01s to finish. The router's upload and & download speeds are around ~130 & ~150 mbps. Therefore, we are using WIFI for real time robot arm control.
  
 
-## Arduino Files for RJJE Arm 
-
-This directory currently contains Arduino Code for
-- Servo Control 
-- ESP 32 WIFI interface with LCD screen
-
-The [System diagram can be accessed using draw.io](https://drive.google.com/file/d/1ujubSrS_AvXeORWJ76qhUnCQ4BP0E4v_/view?usp=sharing) 
-
-### Usage
-1. Open Arduino IDE, install these libraries using ```library manager```
-    - ```Adafruit_PWMServoDriver```
-    - ```EspMQTTClient```
-
 ### Notes 
 1. PCA9685 is not sitting well with ESP32, so this is still on going: 
     - After testing with esp32_control, PCA9685 stopped responing I2C requests in i2c_scanner. New PCA9685 ordered.
+2. MQTT Speed test Result
+    1. Test setup: a wifi network with upload / Download speed at 150Mb/s. We test the average total time of a "handshake", i.e., publish a message bidirectionally. 
+    2. Results:
+        - Need to get pub/sub on host machine (~0.07s per message exchange (30 bytes), but might take longer)
