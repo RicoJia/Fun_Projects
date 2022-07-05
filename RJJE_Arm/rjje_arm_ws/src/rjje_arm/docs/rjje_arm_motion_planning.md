@@ -11,4 +11,3 @@ This file is the design documentation of rjje_arm. Currently, we are able to do 
 2. According to this [post](https://answers.ros.org/question/313637/openclose-end-effector-with-moveit-rviz/), gripper in Moveit is controlled differently. So there's no ball-and-arrow at eef. Therefore we control the gripper separately
 
 ## Test Plan 
-1. Run Moveit with 
