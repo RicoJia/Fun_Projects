@@ -40,6 +40,7 @@ TEACHING_ROS_RATE = 10.0
 REPLAY_ROS_RATE_DIVIDER = 2
 REPLAY_ROS_RATE = TEACHING_ROS_RATE/REPLAY_ROS_RATE_DIVIDER
 
+# TODO - to make static
 def send_reponse(action_server: actionlib.SimpleActionServer, action_server_name: str, status):
     """
     Send response back to ros action server. Currently only success is sent
@@ -93,66 +94,7 @@ class MotionController:
         self.joint_feedback_sub = rospy.Subscriber("/rjje_arm/joint_feedback", JointFeedback, self.joint_feedback_cb)
         rospy.loginfo("Interface for arduino topics is setup")
 
-        self.mode_switch_server = rospy.Service("/rjje_arm/rjje_mode_switch", ModeSwitch, self.mode_switch_cb)
-        rospy.loginfo("Mode Switch has been enabled")
-        self.mode = REGULAR_MODE
-        self.joint_recording = []
-        self.joint_recording_ptr = 0
-
-#############################################################################################
-    def update_action_servers(self): 
-        with self.__joint_state_lock: 
-            #now the arm action server must be waiting 
-            if np.allclose(np.array(self.joint_state_msg.position[:5]), np.array(self.__convert_to_joint_msg_angles(self.commanded_angles[:5])), atol=self.ANGULAR_THRESHOLD):
-                self.arm_move_event.set()
-        # TODO Potential Bug: our URDF model's gripper isn't accurate, so disabling visualizing the gripper for now
-        # if self.gripper_to_move: 
-        #     if abs(self.joint_state_msg.position[5] - self.commanded_angles[5]) < self.ANGULAR_THRESHOLD: 
-        #         self.gripper_to_move = False
-
-    def mode_switch_cb(self, req): 
-        """
-        Send a sequence to arduino based on the ros service input for mode switching -> clear joint recordings -> send response back
-        """
-        self.mode = req.mode
-        # ask arduino to stop recording
-        with self.__move_joints_lock:
-            self.commanded_angles[5] = TEACHING_MODE_VAL if self.mode == TEACHING_MODE else REGULAR_MODE_VAL
-            self.__move_joints()
-
-        if self.mode == TEACHING_MODE: 
-            print("Recording joint recordings")
-            ros_rate = TEACHING_ROS_RATE
-            self.__reset_joint_recorder()
-        elif self.mode == REGULAR_MODE: 
-            print("Switched to regular mode")
-            ros_rate = REGULAR_ROS_RATE
-            self.__reset_joint_recorder()
-        elif self.mode == REPLAY_MODE: 
-            ros_rate = REPLAY_ROS_RATE
-            print("Switched to replay mode")
-            self.__filter_joint_recordings()
-
-        return ModeSwitchResponse()
-
-    def replay(self): 
-        """
-        Called in the main loop. 
-        Joint_recording follows moveit convention for a unified input convention, so it needs to be transformed
-        """
-        if len(self.joint_recording) > self.joint_recording_ptr:
-            current_record = self.joint_recording[self.joint_recording_ptr]
-            self.joint_recording_ptr+=1
-            with self.__move_joints_lock: 
-                self.commanded_angles = self.__convert_to_rjje_command_angles(current_record)
-                # TODO: Disabling claw atm
-                self.commanded_angles[5] = 0.0
-                self.execution_time = 1.0/ros_rate
-                self.__move_joints()
-
-#############################################################################################
-    def record_joint_recording(self): 
-        self.joint_recording.append(self.joint_state_msg.position)
+######################################Basic Motion Control######################################### 
 
     def publish_joint_state_msg(self): 
         with self.__joint_state_lock:
@@ -228,7 +170,7 @@ class MotionController:
                     rospy.loginfo(f"{action_server_name} is moving joints: {self.commanded_angles}, will accomplish in {self.execution_time}") 
                     self.__move_joints() 
                     # wait for motion to finish 
-                self.arm_move_event.wait(10)    #10s as timeout
+                # self.arm_move_event.wait(10)    #10s as timeout
                 rospy.loginfo(f"update action server: {self.joint_state_msg.position} | vs {self.__convert_to_joint_msg_angles(self.commanded_angles)}")
         send_reponse(action_server, action_server_name, "SUCCESSFUL")
 
@@ -266,20 +208,11 @@ class MotionController:
             self.commanded_angles[i] = traj_point.positions[index]
         self.commanded_angles[:5] = self.__convert_to_rjje_command_angles(self.commanded_angles[:5])
 
-    def __reset_joint_recorder(self): 
-        self.joint_recording.clear()
-        self.joint_recording_ptr = 0
-
 if __name__ == '__main__': 
     mc = MotionController()
     r = rospy.Rate(int(ros_rate))
     while not rospy.is_shutdown():
-        if mc.mode == REGULAR_MODE: 
-            mc.update_action_servers()
-        elif mc.mode == TEACHING_MODE:
-            mc.record_joint_recording() # should be recording inputs from the arduino right now.
-        elif mc.mode == REPLAY_MODE: 
-            mc.replay()
+        # mc.update_action_servers()
 
         mc.publish_joint_state_msg()
 

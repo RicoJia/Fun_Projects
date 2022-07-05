@@ -1,4 +1,8 @@
 <launch>
+<!-- ==============================Custom Switches================================== -->
+  <arg name="fake_execution" value="true"/>
+
+<!-- ==============================Basic Configs================================== -->
 
   <!-- Run Rviz and load the default config to see the state of the move_group node -->
   <node name="$(anon rviz)" launch-prefix="" pkg="rviz" type="rviz" respawn="false"
@@ -6,10 +10,10 @@
   </node>
 
   <!-- We do not have a robot connected, so publish fake joint states -->
-  <!-- RJ: comment this out so we can read the real joint states -->
-  <!-- <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher"> -->
-    <!-- <rosparam param="source_list">[move_group/fake_controller_joint_states]</rosparam>
-  </node>  -->
+  <!-- RJ: joint_state_publisher is only launched when we test with fake execution -->
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" if="$(arg fake_execution)">
+    <rosparam param="source_list">[move_group/fake_controller_joint_states]</rosparam>
+  </node>
 
   <!-- Given the published joint states, publish tf for the robot links -->
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" />
@@ -54,7 +58,9 @@
   <param name="trajectory_execution/allowed_start_tolerance" value="0.01"/> 
   <!-- Load the robot specific controller manager; this sets the moveit_controller_manager ROS parameter -->
   <!-- TODO: change to rjje_arm -->
-  <arg name="moveit_controller_manager" default="rjje_arm"/>
+  <arg name="moveit_controller_manager" default="rjje_arm" unless="$(arg fake_execution)"/>
+  <arg name="moveit_controller_manager" default="fake" if="$(arg fake_execution)"/>
+  <!-- TODO to comment this out -->
   <include file="$(find rjje_arm)/launch/$(arg moveit_controller_manager)_moveit_controller_manager.launch.xml">
     <!-- <arg name="execution_type" value="interpolate" /> -->
   </include>
@@ -62,7 +68,6 @@
 
 <!-- ================================================================ -->
   <arg name="allow_trajectory_execution" value="true"/>
-  <arg name="fake_execution" value="true"/>
   <arg name="info" value="true"/>
   <arg name="pipeline" default="ompl" />
   <arg name="debug" default="false" />
