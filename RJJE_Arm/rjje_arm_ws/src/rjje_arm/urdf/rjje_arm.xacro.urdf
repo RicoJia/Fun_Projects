@@ -389,13 +389,13 @@
     <collision>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <geometry>
-        <mesh filename="package://rjje_arm/meshes/left_gripper.stl" scale="1 1 1"/>
+        <mesh filename="package://rjje_arm/meshes/gripper_finger.stl" scale="1 1 1"/>
       </geometry>
     </collision>
     <visual>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <geometry>
-        <mesh filename="package://rjje_arm/meshes/left_gripper.stl" scale="1 1 1"/>
+        <mesh filename="package://rjje_arm/meshes/gripper_finger.stl" scale="1 1 1"/>
       </geometry>
       <material name="yellow"/>
     </visual>
@@ -404,9 +404,9 @@
     <material>Gazebo/Gold</material>
   </gazebo>
   <joint name="link_6_left_gripper" type="revolute">
-    <axis xyz="0 1 0"/>
-    <limit effort="1000" lower="-0.61" upper="0.0" velocity="1.5"/>
-    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="1000" lower="0.0" upper="0.61" velocity="1.5"/>
+    <origin rpy="1.57 0.0 0.0" xyz="-1.6 0.0 1.6"/>
     <parent link="link_6"/>
     <child link="left_gripper"/>
   </joint>
@@ -419,13 +419,13 @@
     <collision>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <geometry>
-        <mesh filename="package://rjje_arm/meshes/right_gripper.stl" scale="1 1 1"/>
+        <mesh filename="package://rjje_arm/meshes/gripper_finger.stl" scale="1 1 1"/>
       </geometry>
     </collision>
     <visual>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <geometry>
-        <mesh filename="package://rjje_arm/meshes/right_gripper.stl" scale="1 1 1"/>
+        <mesh filename="package://rjje_arm/meshes/gripper_finger.stl" scale="1 1 1"/>
       </geometry>
       <material name="yellow"/>
     </visual>
@@ -434,9 +434,9 @@
     <material>Gazebo/Gold</material>
   </gazebo>
   <joint name="link_6_right_gripper" type="revolute">
-    <axis xyz="0 1 0"/>
-    <limit effort="1000" lower="0.61" upper="0.0" velocity="1.5"/>
-    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="1000" lower="-0.61" upper="0.0" velocity="1.5"/>
+    <origin rpy="1.57 0.0 0.0" xyz="1.6 0.0 1.6"/>
     <parent link="link_6"/>
     <child link="right_gripper"/>
     <mimic joint="link_6_left_gripper" multiplier="-1" offset="0"/>

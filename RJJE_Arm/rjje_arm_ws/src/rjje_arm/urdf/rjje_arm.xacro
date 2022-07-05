@@ -276,7 +276,7 @@
     name="left_gripper"
     origin_xyz="0.0 0.0 0.0"
     origin_rpy="0.0 0.0 0.0"
-    meshfile="package://rjje_arm/meshes/left_gripper.stl"
+    meshfile="package://rjje_arm/meshes/gripper_finger.stl"
     meshscale="1 1 1"
     mass="157.633"
     ixx="13.235" ixy="0" ixz="0"
@@ -289,16 +289,16 @@
   </gazebo>
 
   <xacro:m_joint type="revolute"
-    axis_xyz="0 1 0"
-    origin_xyz="0.0 0.0 0.0" origin_rpy="0.0 0.0 0.0"
+    axis_xyz="0 0 1"
+    origin_xyz="-1.6 0.0 1.6" origin_rpy="1.57 0.0 0.0"
     parent="link_6" child="left_gripper"
-    limit_e="1000" limit_l="-0.61" limit_u="0.0" limit_v="1.5" />
+    limit_e="1000" limit_l="0.0" limit_u="0.61" limit_v="1.5" />
 
   <xacro:m_link_mesh
     name="right_gripper"
     origin_xyz="0.0 0.0 0.0"
     origin_rpy="0.0 0.0 0.0"
-    meshfile="package://rjje_arm/meshes/right_gripper.stl"
+    meshfile="package://rjje_arm/meshes/gripper_finger.stl"
     meshscale="1 1 1"
     mass="157.633"
     ixx="13.235" ixy="0" ixz="0"
@@ -314,10 +314,10 @@
     joint_parent="link_6"
     joint_child="left_gripper"
     type="revolute"
-    axis_xyz="0 1 0"
-    origin_xyz="0.0 0.0 0.0" origin_rpy="0.0 0.0 0.0"
+    axis_xyz="0 0 1"
+    origin_xyz="1.6 0.0 1.6" origin_rpy="1.57 0.0 0.0"
     parent="link_6" child="right_gripper"
-    limit_e="1000" limit_l="0.61" limit_u="0.0" limit_v="1.5" 
+    limit_e="1000" limit_l="-0.61" limit_u="0.0" limit_v="1.5" 
     multiplier="-1"
     offset="0"
     />
