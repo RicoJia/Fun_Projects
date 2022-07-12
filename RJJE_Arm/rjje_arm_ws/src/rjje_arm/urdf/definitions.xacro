@@ -13,6 +13,7 @@
     <color rgba="0.2 0.2 0.1 1.0"/>
   </material>
 
+  <!-- Note on xyz: this is just a string. and {} means to eval -->
   <xacro:macro name="m_link_mesh" params="name origin_xyz origin_rpy meshfile meshscale mass ixx ixy ixz iyy iyz izz color">
     <link name="${name}">
       <inertial>
