@@ -15,10 +15,10 @@
     origin_rpy="0.0 0.0 0.0" 
     meshfile="package://rjje_arm/meshes/base.stl" 
     meshscale="1 1 1"
-    mass="157.633"
-    ixx="13.235" ixy="0" ixz="0"
-    iyy="13.235" iyz="0"
-    izz="9.655"
+    mass="1.57633"
+    ixx="0.13235" ixy="0" ixz="0"
+    iyy="0.13235" iyz="0"
+    izz="0.09655"
     color="yellow"
     />
 
@@ -38,10 +38,10 @@
     origin_rpy="0.0 0.0 0.0"
     meshfile="package://rjje_arm/meshes/motor_and_frame.stl"
     meshscale="1 1 1"
-    mass="157.633"
-    ixx="13.235" ixy="0" ixz="0"
-    iyy="13.235" iyz="0"
-    izz="9.655"
+    mass="1.57633"
+    ixx="0.13235" ixy="0" ixz="0"
+    iyy="0.13235" iyz="0"
+    izz="0.09655"
     color="dark_green"
     />
   <gazebo reference="link1">
@@ -60,10 +60,10 @@
     origin_rpy="0.0 0.0 3.14"
     meshfile="package://rjje_arm/meshes/thin_bracket.stl"
     meshscale="1 1 1"
-    mass="157.633"
-    ixx="13.235" ixy="0" ixz="0"
-    iyy="13.235" iyz="0"
-    izz="9.655"
+    mass="1.57633"
+    ixx="0.13235" ixy="0" ixz="0"
+    iyy="0.13235" iyz="0"
+    izz="0.09655"
     color="blue"
     />
   <gazebo reference="bracket_1">
@@ -82,10 +82,10 @@
     origin_rpy="0.0 0.0 0.0"
     meshfile="package://rjje_arm/meshes/motor_and_frame.stl"
     meshscale="1 1 1"
-    mass="157.633"
-    ixx="13.235" ixy="0" ixz="0"
-    iyy="13.235" iyz="0"
-    izz="9.655"
+    mass="1.57633"
+    ixx="0.13235" ixy="0" ixz="0"
+    iyy="0.13235" iyz="0"
+    izz="0.09655"
     color="dark_green"
     />
 
@@ -105,10 +105,10 @@
     origin_rpy="0.0 0.0 0.0"
     meshfile="package://rjje_arm/meshes/thin_bracket.stl"
     meshscale="1 1 1"
-    mass="157.633"
-    ixx="13.235" ixy="0" ixz="0"
-    iyy="13.235" iyz="0"
-    izz="9.655"
+    mass="1.57633"
+    ixx="0.13235" ixy="0" ixz="0"
+    iyy="0.13235" iyz="0"
+    izz="0.09655"
     color="blue"
     />
   <gazebo reference="bracket_2_1">
@@ -127,10 +127,10 @@
     origin_rpy="0.0 0.0 0.0"
     meshfile="package://rjje_arm/meshes/thin_bracket.stl"
     meshscale="1 1 1"
-    mass="157.633"
-    ixx="13.235" ixy="0" ixz="0"
-    iyy="13.235" iyz="0"
-    izz="9.655"
+    mass="1.57633"
+    ixx="0.13235" ixy="0" ixz="0"
+    iyy="0.13235" iyz="0"
+    izz="0.09655"
     color="blue"
     />
   <gazebo reference="bracket_2_2">
@@ -149,10 +149,10 @@
     origin_rpy="0.0 0.0 0.0"
     meshfile="package://rjje_arm/meshes/motor_and_frame.stl"
     meshscale="1 1 1"
-    mass="157.633"
-    ixx="13.235" ixy="0" ixz="0"
-    iyy="13.235" iyz="0"
-    izz="9.655"
+    mass="1.57633"
+    ixx="0.13235" ixy="0" ixz="0"
+    iyy="0.13235" iyz="0"
+    izz="0.09655"
     color="dark_green"
     />
   <gazebo reference="link_3">
@@ -190,10 +190,10 @@
     origin_rpy="0.0 0.0 0.0"
     meshfile="package://rjje_arm/meshes/thin_bracket.stl"
     meshscale="1 1 1"
-    mass="157.633"
-    ixx="13.235" ixy="0" ixz="0"
-    iyy="13.235" iyz="0"
-    izz="9.655"
+    mass="1.57633"
+    ixx="0.13235" ixy="0" ixz="0"
+    iyy="0.13235" iyz="0"
+    izz="0.09655"
     color="blue"
     />
   <gazebo reference="bracket_3_2">
@@ -212,10 +212,10 @@
     origin_rpy="0.0 0.0 0.0"
     meshfile="package://rjje_arm/meshes/motor_and_frame.stl"
     meshscale="1 1 1"
-    mass="157.633"
-    ixx="13.235" ixy="0" ixz="0"
-    iyy="13.235" iyz="0"
-    izz="9.655"
+    mass="1.57633"
+    ixx="0.13235" ixy="0" ixz="0"
+    iyy="0.13235" iyz="0"
+    izz="0.09655"
     color="dark_green"
     />
   <gazebo reference="link_4">
@@ -234,10 +234,10 @@
     origin_rpy="0.0 0.0 0.0"
     meshfile="package://rjje_arm/meshes/motor_and_frame.stl"
     meshscale="1 1 1"
-    mass="157.633"
-    ixx="13.235" ixy="0" ixz="0"
-    iyy="13.235" iyz="0"
-    izz="9.655"
+    mass="1.57633"
+    ixx="0.13235" ixy="0" ixz="0"
+    iyy="0.13235" iyz="0"
+    izz="0.09655"
     color="dark_green"
     />
   <gazebo reference="link_5">
@@ -256,10 +256,10 @@
     origin_rpy="0.0 0.0 0.0"
     meshfile="package://rjje_arm/meshes/motor_and_frame.stl"
     meshscale="0 0 0"
-    mass="157.633"
-    ixx="13.235" ixy="0" ixz="0"
-    iyy="13.235" iyz="0"
-    izz="9.655"
+    mass="1.57633"
+    ixx="0.13235" ixy="0" ixz="0"
+    iyy="0.13235" iyz="0"
+    izz="0.09655"
     color="dark_green"
     />
   <gazebo reference="link_6">
@@ -278,10 +278,10 @@
     origin_rpy="0.0 0.0 0.0"
     meshfile="package://rjje_arm/meshes/gripper_finger.stl"
     meshscale="1 1 1"
-    mass="157.633"
-    ixx="13.235" ixy="0" ixz="0"
-    iyy="13.235" iyz="0"
-    izz="9.655"
+    mass="1.57633"
+    ixx="0.13235" ixy="0" ixz="0"
+    iyy="0.13235" iyz="0"
+    izz="0.09655"
     color="yellow"
     />
   <gazebo reference="left_gripper">
@@ -300,10 +300,10 @@
     origin_rpy="0.0 0.0 0.0"
     meshfile="package://rjje_arm/meshes/gripper_finger.stl"
     meshscale="1 1 1"
-    mass="157.633"
-    ixx="13.235" ixy="0" ixz="0"
-    iyy="13.235" iyz="0"
-    izz="9.655"
+    mass="1.57633"
+    ixx="0.13235" ixy="0" ixz="0"
+    iyy="0.13235" iyz="0"
+    izz="0.09655"
     color="yellow"
     />
   <gazebo reference="right_gripper">
