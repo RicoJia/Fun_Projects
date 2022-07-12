@@ -13,22 +13,24 @@
     <color rgba="0.2 0.2 0.1 1.0"/>
   </material>
 
+  <xacro:property name="scale_factor" value="0.01" />
+
   <!-- Note on xyz: this is just a string. and {} means to eval -->
   <xacro:macro name="m_link_mesh" params="name origin_xyz origin_rpy meshfile meshscale mass ixx ixy ixz iyy iyz izz color">
     <link name="${name}">
       <inertial>
         <mass value="${mass}" />
-        <origin rpy="${origin_rpy}" xyz="${float(origin_xyz.split(' ')[0])*0.1} ${float(origin_xyz.split(' ')[1])*0.1} ${float(origin_xyz.split(' ')[2])*0.1}" />
+        <origin rpy="${origin_rpy}" xyz="${float(origin_xyz.split(' ')[0])*scale_factor} ${float(origin_xyz.split(' ')[1])*scale_factor} ${float(origin_xyz.split(' ')[2])*scale_factor}" />
         <inertia ixx="${ixx}" ixy="${ixy}" ixz="${ixz}" iyy="${iyy}" iyz="${iyz}" izz="${izz}" />
       </inertial>
       <collision>
-        <origin rpy="${origin_rpy}" xyz="${float(origin_xyz.split(' ')[0])*0.1} ${float(origin_xyz.split(' ')[1])*0.1} ${float(origin_xyz.split(' ')[2])*0.1}" />
+        <origin rpy="${origin_rpy}" xyz="${float(origin_xyz.split(' ')[0])*scale_factor} ${float(origin_xyz.split(' ')[1])*scale_factor} ${float(origin_xyz.split(' ')[2])*scale_factor}" />
         <geometry>
           <mesh filename="${meshfile}" scale="${meshscale}"/>
         </geometry>
       </collision>
       <visual>
-        <origin rpy="${origin_rpy}" xyz="${float(origin_xyz.split(' ')[0])*0.1} ${float(origin_xyz.split(' ')[1])*0.1} ${float(origin_xyz.split(' ')[2])*0.1}" />
+        <origin rpy="${origin_rpy}" xyz="${float(origin_xyz.split(' ')[0])*scale_factor} ${float(origin_xyz.split(' ')[1])*scale_factor} ${float(origin_xyz.split(' ')[2])*scale_factor}" />
         <geometry>
           <mesh filename="${meshfile}" scale="${meshscale}"/>
         </geometry>
@@ -41,7 +43,7 @@
     <joint name="${parent}_${child}" type="${type}">
       <axis xyz="${axis_xyz}"/>
       <limit effort="${limit_e}" lower="${limit_l}" upper="${limit_u}" velocity="${limit_v}" />
-      <origin rpy="${origin_rpy}" xyz="${float(origin_xyz.split(' ')[0])*0.1} ${float(origin_xyz.split(' ')[1])*0.1} ${float(origin_xyz.split(' ')[2])*0.1}"/>
+      <origin rpy="${origin_rpy}" xyz="${float(origin_xyz.split(' ')[0])*scale_factor} ${float(origin_xyz.split(' ')[1])*scale_factor} ${float(origin_xyz.split(' ')[2])*scale_factor}"/>
       <parent link="${parent}" />
       <child link="${child}"/>
     </joint>
@@ -51,7 +53,7 @@
     <joint name="${parent}_${child}" type="${type}">
       <axis xyz="${axis_xyz}"/>
       <limit effort="${limit_e}" lower="${limit_l}" upper="${limit_u}" velocity="${limit_v}" />
-      <origin rpy="${origin_rpy}" xyz="${float(origin_xyz.split(' ')[0])*0.1} ${float(origin_xyz.split(' ')[1])*0.1} ${float(origin_xyz.split(' ')[2])*0.1}"/>
+      <origin rpy="${origin_rpy}" xyz="${float(origin_xyz.split(' ')[0])*scale_factor} ${float(origin_xyz.split(' ')[1])*scale_factor} ${float(origin_xyz.split(' ')[2])*scale_factor}"/>
       <parent link="${parent}" />
       <child link="${child}"/>
       <mimic joint="${joint_parent}_${joint_child}" multiplier="${multiplier}" offset="${offset}"/>
@@ -61,16 +63,16 @@
   <xacro:macro name="m_fake_link" params="name color origin_xyz origin_rpy length radius">
     <link name="${name}">
       <visual>
-        <origin xyz="${float(origin_xyz.split(' ')[0])*0.1} ${float(origin_xyz.split(' ')[1])*0.1} ${float(origin_xyz.split(' ')[2])*0.1}" rpy="${origin_rpy}"/>
+        <origin xyz="${float(origin_xyz.split(' ')[0])*scale_factor} ${float(origin_xyz.split(' ')[1])*scale_factor} ${float(origin_xyz.split(' ')[2])*scale_factor}" rpy="${origin_rpy}"/>
         <geometry>
-            <cylinder length="${length}" radius="${radius}"/>
+            <cylinder length="${length *scale_factor }" radius="${radius *scale_factor }"/>
          </geometry>
          <material name="${color}"/>
       </visual>
       <collision>
-          <origin xyz="${float(origin_xyz.split(' ')[0])*0.1} ${float(origin_xyz.split(' ')[1])*0.1} ${float(origin_xyz.split(' ')[2])*0.1}" rpy="${origin_rpy}"/>
+          <origin xyz="${float(origin_xyz.split(' ')[0])*scale_factor} ${float(origin_xyz.split(' ')[1])*scale_factor} ${float(origin_xyz.split(' ')[2])*scale_factor}" rpy="${origin_rpy}"/>
           <geometry>
-              <cylinder length="${length}" radius="${radius}"/>
+              <cylinder length="${length *scale_factor }" radius="${radius *scale_factor }"/>
           </geometry>
       </collision>
       <inertial>
