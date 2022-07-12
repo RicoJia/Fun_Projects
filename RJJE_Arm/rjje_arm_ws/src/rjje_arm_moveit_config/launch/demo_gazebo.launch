@@ -28,7 +28,7 @@
   <arg name="urdf_path" default="$(find rjje_arm)/urdf/rjje_arm.xacro.urdf"/>
 
   <!-- launch the gazebo simulator and spawn the robot -->
-  <include file="$(find rjje_arm)/launch/gazebo.launch" >
+  <include file="$(find rjje_arm)/launch/launch_gazebo/gazebo.launch" >
     <arg name="paused" value="$(arg paused)"/>
     <arg name="gazebo_gui" value="$(arg gazebo_gui)"/>
     <arg name="urdf_path" value="$(arg urdf_path)"/>

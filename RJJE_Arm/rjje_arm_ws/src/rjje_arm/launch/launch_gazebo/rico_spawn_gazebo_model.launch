@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <launch>
+  <!-- This launch file spawns the RJJE_arm model in gazebo -->
   <arg name="urdf_path" default="$(find rjje_arm)/urdf/rjje_arm.xacro.urdf"/>
   <!-- send robot urdf to param server -->
   <param name="robot_description" textfile="$(arg urdf_path)" />
