@@ -17,17 +17,17 @@
     <link name="${name}">
       <inertial>
         <mass value="${mass}" />
-        <origin rpy="${origin_rpy}" xyz="${origin_xyz}" />
+        <origin rpy="${origin_rpy}" xyz="${float(origin_xyz.split(' ')[0])*0.1} ${float(origin_xyz.split(' ')[1])*0.1} ${float(origin_xyz.split(' ')[2])*0.1}" />
         <inertia ixx="${ixx}" ixy="${ixy}" ixz="${ixz}" iyy="${iyy}" iyz="${iyz}" izz="${izz}" />
       </inertial>
       <collision>
-        <origin rpy="${origin_rpy}" xyz="${origin_xyz}" />
+        <origin rpy="${origin_rpy}" xyz="${float(origin_xyz.split(' ')[0])*0.1} ${float(origin_xyz.split(' ')[1])*0.1} ${float(origin_xyz.split(' ')[2])*0.1}" />
         <geometry>
           <mesh filename="${meshfile}" scale="${meshscale}"/>
         </geometry>
       </collision>
       <visual>
-        <origin rpy="${origin_rpy}" xyz="${origin_xyz}" />
+        <origin rpy="${origin_rpy}" xyz="${float(origin_xyz.split(' ')[0])*0.1} ${float(origin_xyz.split(' ')[1])*0.1} ${float(origin_xyz.split(' ')[2])*0.1}" />
         <geometry>
           <mesh filename="${meshfile}" scale="${meshscale}"/>
         </geometry>
@@ -40,7 +40,7 @@
     <joint name="${parent}_${child}" type="${type}">
       <axis xyz="${axis_xyz}"/>
       <limit effort="${limit_e}" lower="${limit_l}" upper="${limit_u}" velocity="${limit_v}" />
-      <origin rpy="${origin_rpy}" xyz="${origin_xyz}"/>
+      <origin rpy="${origin_rpy}" xyz="${float(origin_xyz.split(' ')[0])*0.1} ${float(origin_xyz.split(' ')[1])*0.1} ${float(origin_xyz.split(' ')[2])*0.1}"/>
       <parent link="${parent}" />
       <child link="${child}"/>
     </joint>
@@ -50,7 +50,7 @@
     <joint name="${parent}_${child}" type="${type}">
       <axis xyz="${axis_xyz}"/>
       <limit effort="${limit_e}" lower="${limit_l}" upper="${limit_u}" velocity="${limit_v}" />
-      <origin rpy="${origin_rpy}" xyz="${origin_xyz}"/>
+      <origin rpy="${origin_rpy}" xyz="${float(origin_xyz.split(' ')[0])*0.1} ${float(origin_xyz.split(' ')[1])*0.1} ${float(origin_xyz.split(' ')[2])*0.1}"/>
       <parent link="${parent}" />
       <child link="${child}"/>
       <mimic joint="${joint_parent}_${joint_child}" multiplier="${multiplier}" offset="${offset}"/>
@@ -60,14 +60,14 @@
   <xacro:macro name="m_fake_link" params="name color origin_xyz origin_rpy length radius">
     <link name="${name}">
       <visual>
-        <origin xyz="${origin_xyz}" rpy="${origin_rpy}"/>
+        <origin xyz="${float(origin_xyz.split(' ')[0])*0.1} ${float(origin_xyz.split(' ')[1])*0.1} ${float(origin_xyz.split(' ')[2])*0.1}" rpy="${origin_rpy}"/>
         <geometry>
             <cylinder length="${length}" radius="${radius}"/>
          </geometry>
          <material name="${color}"/>
       </visual>
       <collision>
-          <origin xyz="${origin_xyz}" rpy="${origin_rpy}"/>
+          <origin xyz="${float(origin_xyz.split(' ')[0])*0.1} ${float(origin_xyz.split(' ')[1])*0.1} ${float(origin_xyz.split(' ')[2])*0.1}" rpy="${origin_rpy}"/>
           <geometry>
               <cylinder length="${length}" radius="${radius}"/>
           </geometry>
