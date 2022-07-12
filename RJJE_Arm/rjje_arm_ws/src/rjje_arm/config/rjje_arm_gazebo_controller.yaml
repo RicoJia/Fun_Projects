@@ -1,0 +1,4 @@
+# should appear in rotopic list
+joint_1_controller:
+  type: "position_controllers/JointPositionController"
+  joint: "link1_bracket_1"

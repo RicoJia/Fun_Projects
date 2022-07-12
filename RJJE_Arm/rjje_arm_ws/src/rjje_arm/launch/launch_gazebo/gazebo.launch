@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="paused" default="false"/>
+  <arg name="paused" default="true"/>
   <arg name="gazebo_gui" default="true"/>
 
   <!-- startup simulated world -->
@@ -16,5 +16,7 @@
   <!-- ROS control -->
   <!-- Given the published joint states, publish tf for the robot links -->
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" />
-  <rosparam command="load" file="$(find rjje_arm)/config/ros_controllers.yaml">
+  <rosparam command="load" file="$(find rjje_arm)/config/rjje_arm_gazebo_controller.yaml"/>
+  <!-- arg here are all joints in rjje_arm_gazebo_controller.yaml -->
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" args="joint_1_controller"/>
 </launch>
