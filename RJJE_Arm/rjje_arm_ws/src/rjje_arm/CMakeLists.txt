@@ -71,6 +71,9 @@ include_directories(
 # ${catkin_INCLUDE_DIRS}
 )
 
-catkin_install_python(PROGRAMS scripts/motion_controller.py scripts/test_scripts/test_pub.py
+catkin_install_python(PROGRAMS 
+  scripts/motion_controller.py 
+  scripts/gazebo_motion_controller.py
+  scripts/test_scripts/test_pub.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

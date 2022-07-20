@@ -30,6 +30,10 @@
     ./build_and_launch.sh
     ```
 
+5. To visualize the robot only, you can see the robot with 
+   - In Gazebo, ```./build_and_visualize.sh gazebo``` 
+   - In Rviz: ```./build_and_visualize.sh```
+
 ## Design Notes
 ### Robot
 2. Modelling, [see doc](rjje_arm_ws/src/rjje_arm/docs/rjje_arm_modelling.md)

@@ -1,6 +1,7 @@
 <launch>
-<!-- ==============================Custom Switches================================== -->
+<!-- ==============================All Custom Switches================================== -->
   <arg name="fake_execution" value="true"/>
+  <arg name="run_in_gazebo" value="false"/>
 
 <!-- ==============================Basic Configs================================== -->
 
@@ -95,5 +96,10 @@
     <param name="planning_scene_monitor/publish_state_updates" value="true" />
     <param name="planning_scene_monitor/publish_transforms_updates" value="true" />
   </node>
+
+<!-- ============================== Gazebo ================================== -->
+  <include file="$(find rjje_arm)/launch/gazebo.launch" if="$(arg run_in_gazebo)">
+    <arg name="run_control_node" value="true" />
+  </include>
 
 </launch>

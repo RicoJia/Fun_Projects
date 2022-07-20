@@ -26,8 +26,6 @@ joint_4_controller:
   type: effort_controllers/JointPositionController
   joint: bracket_3_2_link_4
   pid: {p: 600.0, i: 0.01, d: 10.0}
-  # pid: {p: 000.0, i: 0.00, d: 10.0}
-
 
 joint_5_controller:
   type: effort_controllers/JointPositionController
