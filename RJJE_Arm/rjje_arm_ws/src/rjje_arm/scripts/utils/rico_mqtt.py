@@ -6,6 +6,16 @@ class MqttSubscriberCbs:
     def simple_decode(userdata, msg):
         return str(msg.payload.decode("utf-8"))
     @staticmethod
+    def get_array_from_string(nums: str):
+        ret = []
+        for num in nums:
+            try:
+                ret.append(float(num))
+            except ValueError:
+                pass
+        return ret
+
+    @staticmethod
     def get_numerical_array(userdata, msg, delim : str =";"):
         """
         Assume a numerical array separated by a delimiter is passed in, e.g., [1.0; 2.0;]
@@ -16,21 +26,16 @@ class MqttSubscriberCbs:
             delim (str, optional): delimiter
         """
         nums = str(msg.payload.decode("utf-8")).split(delim)
-        ret = []
-        for num in nums:
-            try:
-                ret.append(float(num))
-            except ValueError:
-                pass
-        return ret
+        return MqttSubscriberCbs.get_array_from_string(nums)
 
 class MqttClient:
     def __init__(self, broker_ip:str, 
                  broker_port:int, 
-                 subscribed_topics: List[str],
                  subscriber_cbs: Dict[str, Callable[[int, bytes], None]], 
                  client_name:str = ""):
+
         def on_connect(client, userdata, flags, rc):
+            subscribed_topics = list(subscriber_cbs.keys())
             for topic in subscribed_topics:
                 client.subscribe(topic)  # Subscribe to the topic “digitest/test1”, receive any messages published on it
             print(f"{client_name} subscribes to {subscribed_topics}, result code {0}".format(str(rc)))  # Print result of connection attempt
@@ -60,7 +65,7 @@ if __name__ == "__main__":
         arr = MqttSubscriberCbs.get_numerical_array(userdata, msg)
         print(arr)
 
-    c = MqttClient("127.0.0.1", 1883, ["test_topic1", "test_topic2"],
+    c = MqttClient("127.0.0.1", 1883,
                    {"test_topic1": topic1_cb, 
                     "test_topic2": topic2_cb}, 
                    "hello")
