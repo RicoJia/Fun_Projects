@@ -49,7 +49,7 @@ class GazeboMotionController:
             commanded_angles = MqttSubscriberCbs.get_array_from_string(command.split(";"))
             if len(commanded_angles) == Params.JOINT_NUM + Params.TIME_NUM:
                 plans.append(commanded_angles)
-        # #TODO
+        #TODO - to finish smooth execution
         print(plans)
         for plan in plans:
             execution_time = plan[Params.JOINT_NUM]
