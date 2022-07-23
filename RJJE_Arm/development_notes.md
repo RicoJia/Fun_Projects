@@ -27,12 +27,12 @@
     source devel/setup.bash
     roscd rjje_arm/
     cd scripts
-    ./build_and_launch.sh
+    ./build_and_visualize.sh
     ```
 
 5. To visualize the robot only, you can see the robot with 
    - In Gazebo, ```./build_and_visualize.sh gazebo``` 
-   - In Rviz: ```./build_and_visualize.sh```
+   - In Rviz: ```./build_and_visualize.sh rviz```
 
 ## Design Notes
 ### Robot

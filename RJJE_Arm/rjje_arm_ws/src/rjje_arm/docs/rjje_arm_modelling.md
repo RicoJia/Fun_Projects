@@ -11,5 +11,13 @@ This file is the design documentation of rjje_arm.
 
 ## URDF
 
-## Gazebo Environment
-1. ROS control. 
+## Gazebo Simulation 
+1.  The Gazebo simulation is a behavior level abstraction of the physical RJJE arm. It is used as a tool to validate the correctness of the software. 
+    1.  Below behaviours are simulated:
+        1.  RJJE physical simulation ```URDF -> SDF```
+        2.  MQTT command interface of the RJJE arm controller
+            1.  ROS control is used to control the robot  
+    2.  Below behaviours are not simulated: 
+        1.  Problems in MQTT Orchestration
+        2. Failure in RJJE Arm hardware failure  
+
