@@ -5,11 +5,15 @@
 
   <!-- Instances -->
   <!-- Gazebo colors: https://github.com/osrf/gazebo/blob/master/media/materials/scripts/gazebo.material -->
-  <!-- rosrun xacro xacro - -inorder -o model.urdf model.urdf.xacro -->
+  <!-- rosrun xacro xacro - -inorder -o 
+  .urdf model.urdf.xacro -->
 
   <link name="world">
   </link>
   
+  <gazebo>
+      <plugin name="JointStatePublisher" filename="libJointStatePublisher.so"/>
+  </gazebo>
   <!-- scale_factor is defined in definitions.xacro -->
   <xacro:m_link_mesh 
     name="base_link" 

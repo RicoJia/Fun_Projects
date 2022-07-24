@@ -91,9 +91,13 @@
   </gazebo>
   <!-- Instances -->
   <!-- Gazebo colors: https://github.com/osrf/gazebo/blob/master/media/materials/scripts/gazebo.material -->
-  <!-- rosrun xacro xacro - -inorder -o model.urdf model.urdf.xacro -->
+  <!-- rosrun xacro xacro - -inorder -o 
+  .urdf model.urdf.xacro -->
   <link name="world">
   </link>
+  <gazebo>
+    <plugin filename="libJointStatePublisher.so" name="JointStatePublisher"/>
+  </gazebo>
   <link name="base_link">
     <inertial>
       <mass value="0.0157633"/>
