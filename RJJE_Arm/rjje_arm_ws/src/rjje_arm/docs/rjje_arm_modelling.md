@@ -20,4 +20,6 @@ This file is the design documentation of rjje_arm.
     2.  Below behaviours are not simulated: 
         1.  Problems in MQTT Orchestration
         2. Failure in RJJE Arm hardware failure  
+2. Third party [Gazebo Joint State publisher](https://github.com/yossioo/gazebo_ros_joints_publisher) plugin is being used to publish ```/rjje_arm_gazebo/joint_states``` directly from Gazebo, which gets relayed into ```Gazebo_Motion_Controller```
+   1. This is installed as a git submodule
 
