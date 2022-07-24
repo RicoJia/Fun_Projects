@@ -1,0 +1,331 @@
+<?xml version="1.0"?>
+<robot name="rjje_arm" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:include filename="$(find rjje_arm)/urdf/definitions.xacro" />
+  <xacro:include filename="$(find rjje_arm)/urdf/ros_control.xacro" />
+
+  <!-- Instances -->
+  <!-- Gazebo colors: https://github.com/osrf/gazebo/blob/master/media/materials/scripts/gazebo.material -->
+  <!-- rosrun xacro xacro - -inorder -o 
+  .urdf model.urdf.xacro -->
+
+  <link name="world">
+  </link>
+  
+  <gazebo>
+      <plugin name="JointStatePublisher" filename="libJointStatePublisher.so"/>
+  </gazebo>
+  <!-- scale_factor is defined in definitions.xacro -->
+  <xacro:m_link_mesh 
+    name="base_link" 
+    origin_xyz="0.0 0.0 0.0" 
+    origin_rpy="0.0 0.0 0.0" 
+    meshfile="package://rjje_arm/meshes/base.stl" 
+    meshscale="${scale_factor} ${scale_factor} ${scale_factor}"
+    mass="0.0157633"
+    ixx="0.0013235" ixy="0" ixz="0"
+    iyy="0.0013235" iyz="0"
+    izz="0.0009655"
+    color="yellow"
+    />
+
+  <gazebo reference="base_link">
+    <material>Gazebo/Purple</material>
+  </gazebo>
+
+  <xacro:m_joint type="fixed"
+    axis_xyz="0 0 1"
+    origin_rpy="0 0 0" origin_xyz="0 0 0.0"
+    parent="world" child="base_link"
+    limit_e="50" limit_l="0" limit_u="0.5" limit_v="0.5" />
+
+  <xacro:m_link_mesh
+    name="link1"
+    origin_xyz="0.0 0.0 0.0"
+    origin_rpy="0.0 0.0 0.0"
+    meshfile="package://rjje_arm/meshes/motor_and_frame.stl"
+    meshscale="${scale_factor} ${scale_factor} ${scale_factor}"
+    mass="0.0157633"
+    ixx="0.0013235" ixy="0" ixz="0"
+    iyy="0.0013235" iyz="0"
+    izz="0.0009655"
+    color="dark_green"
+    />
+  <gazebo reference="link1">
+    <material>Gazebo/Turquoise</material>
+  </gazebo>
+
+  <xacro:m_joint type="fixed"
+    axis_xyz="0 0 1"
+    origin_rpy="0 0 0" origin_xyz="3.45 4.2 4.0"
+    parent="base_link" child="link1"
+    limit_e="50" limit_l="0" limit_u="0.5" limit_v="0.5" />
+
+  <xacro:m_link_mesh
+    name="bracket_1"
+    origin_xyz="0.0 0.0 0.0"
+    origin_rpy="0.0 0.0 3.14"
+    meshfile="package://rjje_arm/meshes/thin_bracket.stl"
+    meshscale="${scale_factor} ${scale_factor} ${scale_factor}"
+    mass="0.0157633"
+    ixx="0.0013235" ixy="0" ixz="0"
+    iyy="0.0013235" iyz="0"
+    izz="0.0009655"
+    color="blue"
+    />
+  <gazebo reference="bracket_1">
+    <material>Gazebo/PurpleGlow</material>
+  </gazebo>
+
+  <xacro:m_joint type="revolute"
+    axis_xyz="0 0 1"
+    origin_rpy="0 0 0" origin_xyz="0 0 5.3"
+    parent="link1" child="bracket_1"
+    limit_e="50" limit_l="-1.57" limit_u="1.57" limit_v="1.5" />
+
+  <xacro:m_link_mesh
+    name="link_2"
+    origin_xyz="0.0 0.0 0.0"
+    origin_rpy="0.0 0.0 0.0"
+    meshfile="package://rjje_arm/meshes/motor_and_frame.stl"
+    meshscale="${scale_factor} ${scale_factor} ${scale_factor}"
+    mass="0.0157633"
+    ixx="0.0013235" ixy="0" ixz="0"
+    iyy="0.0013235" iyz="0"
+    izz="0.0009655"
+    color="dark_green"
+    />
+
+  <gazebo reference="link_2">
+    <material>Gazebo/Wood</material>
+  </gazebo>
+
+  <xacro:m_joint type="fixed"
+    axis_xyz="0 0 1"
+    origin_xyz="2.2 0.0 1.4" origin_rpy="1.57 0.0 -1.57"
+    parent="bracket_1" child="link_2"
+    limit_e="50" limit_l="-1.57" limit_u="1.57" limit_v="0.5" />
+
+  <xacro:m_link_mesh
+    name="bracket_2_1"
+    origin_xyz="0.0 0.0 0.0"
+    origin_rpy="0.0 0.0 0.0"
+    meshfile="package://rjje_arm/meshes/thin_bracket.stl"
+    meshscale="${scale_factor} ${scale_factor} ${scale_factor}"
+    mass="0.0157633"
+    ixx="0.0013235" ixy="0" ixz="0"
+    iyy="0.0013235" iyz="0"
+    izz="0.0009655"
+    color="blue"
+    />
+  <gazebo reference="bracket_2_1">
+    <material>Gazebo/PurpleGlow</material>
+  </gazebo>
+
+  <xacro:m_joint type="revolute"
+    axis_xyz="0 0 1"
+    origin_xyz="0.0 0.0 5.3" origin_rpy="0.0 0.0 0.0"
+    parent="link_2" child="bracket_2_1"
+    limit_e="50" limit_l="-1.57" limit_u="1.57" limit_v="1.5" />
+
+  <xacro:m_link_mesh
+    name="bracket_2_2"
+    origin_xyz="0.0 0.0 0.0"
+    origin_rpy="0.0 0.0 0.0"
+    meshfile="package://rjje_arm/meshes/thin_bracket.stl"
+    meshscale="${scale_factor} ${scale_factor} ${scale_factor}"
+    mass="0.0157633"
+    ixx="0.0013235" ixy="0" ixz="0"
+    iyy="0.0013235" iyz="0"
+    izz="0.0009655"
+    color="blue"
+    />
+  <gazebo reference="bracket_2_2">
+    <material>Gazebo/PurpleGlow</material>
+  </gazebo>
+
+  <xacro:m_joint type="fixed"
+    axis_xyz="0 0 1"
+    origin_xyz="0.0 10.5 0.0" origin_rpy="0.0 0.0 3.14"
+    parent="bracket_2_1" child="bracket_2_2"
+    limit_e="50" limit_l="-1.57" limit_u="1.57" limit_v="0.5" />
+
+  <xacro:m_link_mesh
+    name="link_3"
+    origin_xyz="0.0 0.0 0.0"
+    origin_rpy="0.0 0.0 0.0"
+    meshfile="package://rjje_arm/meshes/motor_and_frame.stl"
+    meshscale="${scale_factor} ${scale_factor} ${scale_factor}"
+    mass="0.0157633"
+    ixx="0.0013235" ixy="0" ixz="0"
+    iyy="0.0013235" iyz="0"
+    izz="0.0009655"
+    color="dark_green"
+    />
+  <gazebo reference="link_3">
+    <material>Gazebo/Indigo</material>
+  </gazebo>
+
+  <xacro:m_joint type="revolute"
+    axis_xyz="0 0 1"
+    origin_xyz="0.0 0.0 -5.3" origin_rpy="0.0 0.0 3.14"
+    parent="bracket_2_2" child="link_3"
+    limit_e="50" limit_l="-1.57" limit_u="1.57" limit_v="1.5" />
+
+  <!-- This is a "fake" link that represents attachment to link 3 -->
+  <xacro:m_fake_link
+    name="bracket_3_1"
+    color="Yellow"
+    origin_xyz="0.0 0.0 0.75"
+    origin_rpy="0.0 0.0 0.0"
+    length="1.5"
+    radius="0.5"
+    />
+  <gazebo reference="bracket_3_1">
+    <material>Gazebo/PurpleGlow</material>
+  </gazebo>
+
+  <xacro:m_joint type="fixed"
+    axis_xyz="0 0 1"
+    origin_xyz="4.0 0.0 2.0" origin_rpy="0.0 1.57 0.0"
+    parent="link_3" child="bracket_3_1"
+    limit_e="50" limit_l="-1.57" limit_u="1.57" limit_v="0.5" />
+
+  <xacro:m_link_mesh
+    name="bracket_3_2"
+    origin_xyz="0.0 0.0 0.0"
+    origin_rpy="0.0 0.0 0.0"
+    meshfile="package://rjje_arm/meshes/thin_bracket.stl"
+    meshscale="${scale_factor} ${scale_factor} ${scale_factor}"
+    mass="0.0157633"
+    ixx="0.0013235" ixy="0" ixz="0"
+    iyy="0.0013235" iyz="0"
+    izz="0.0009655"
+    color="blue"
+    />
+  <gazebo reference="bracket_3_2">
+    <material>Gazebo/PurpleGlow</material>
+  </gazebo>
+
+  <xacro:m_joint type="fixed"
+    axis_xyz="0 0 1"
+    origin_xyz="-2.65 0.0 6.75" origin_rpy="-1.57 0.0 1.57"
+    parent="bracket_3_1" child="bracket_3_2"
+    limit_e="50" limit_l="-1.57" limit_u="1.57" limit_v="0.5" />
+
+  <xacro:m_link_mesh
+    name="link_4"
+    origin_xyz="0.0 0.0 0.0"
+    origin_rpy="0.0 0.0 0.0"
+    meshfile="package://rjje_arm/meshes/motor_and_frame.stl"
+    meshscale="${scale_factor} ${scale_factor} ${scale_factor}"
+    mass="0.0157633"
+    ixx="0.0013235" ixy="0" ixz="0"
+    iyy="0.0013235" iyz="0"
+    izz="0.0009655"
+    color="dark_green"
+    />
+  <gazebo reference="link_4">
+    <material>Gazebo/Indigo</material>
+  </gazebo>
+
+  <xacro:m_joint type="revolute"
+    axis_xyz="0 0 1"
+    origin_xyz="0.0 0.0 -5.3" origin_rpy="0.0 0.0 -1.57"
+    parent="bracket_3_2" child="link_4"
+    limit_e="50" limit_l="-1.57" limit_u="0.43" limit_v="1.5" />
+
+  <xacro:m_link_mesh
+    name="link_5"
+    origin_xyz="0.0 0.0 0.0"
+    origin_rpy="0.0 0.0 0.0"
+    meshfile="package://rjje_arm/meshes/motor_and_frame.stl"
+    meshscale="${scale_factor} ${scale_factor} ${scale_factor}"
+    mass="0.0157633"
+    ixx="0.0013235" ixy="0" ixz="0"
+    iyy="0.0013235" iyz="0"
+    izz="0.0009655"
+    color="dark_green"
+    />
+  <gazebo reference="link_5">
+    <material>Gazebo/PurpleGlow</material>
+  </gazebo>
+
+  <xacro:m_joint type="fixed"
+    axis_xyz="0 0 1"
+    origin_xyz="0.0 2.4 2.2" origin_rpy="0.0 1.57 0.0"
+    parent="link_4" child="link_5"
+    limit_e="50" limit_l="-1.57" limit_u="1.57" limit_v="0.5" />
+
+  <xacro:m_link_mesh
+    name="link_6"
+    origin_xyz="0.0 0.0 0.0"
+    origin_rpy="0.0 0.0 0.0"
+    meshfile="package://rjje_arm/meshes/motor_and_frame.stl"
+    meshscale="0 0 0"
+    mass="0.0157633"
+    ixx="0.0013235" ixy="0" ixz="0"
+    iyy="0.0013235" iyz="0"
+    izz="0.0009655"
+    color="dark_green"
+    />
+  <gazebo reference="link_6">
+    <material>Gazebo/Orange</material>
+  </gazebo>
+
+  <xacro:m_joint type="revolute"
+    axis_xyz="0 0 1"
+    origin_xyz="0.0 0.0 5.2" origin_rpy="0.0 0.0 0.0"
+    parent="link_5" child="link_6"
+    limit_e="50" limit_l="-1.57" limit_u="1.57" limit_v="1.5" />
+
+  <xacro:m_link_mesh
+    name="left_gripper"
+    origin_xyz="0.0 0.0 0.0"
+    origin_rpy="0.0 0.0 0.0"
+    meshfile="package://rjje_arm/meshes/gripper_finger.stl"
+    meshscale="${scale_factor} ${scale_factor} ${scale_factor}"
+    mass="0.0157633"
+    ixx="0.0013235" ixy="0" ixz="0"
+    iyy="0.0013235" iyz="0"
+    izz="0.0009655"
+    color="yellow"
+    />
+  <gazebo reference="left_gripper">
+    <material>Gazebo/Gold</material>
+  </gazebo>
+
+  <xacro:m_joint type="revolute"
+    axis_xyz="0 0 1"
+    origin_xyz="-1.6 0.0 1.6" origin_rpy="1.57 0.0 0.0"
+    parent="link_6" child="left_gripper"
+    limit_e="50" limit_l="0.0" limit_u="0.61" limit_v="1.5" />
+
+  <xacro:m_link_mesh
+    name="right_gripper"
+    origin_xyz="0.0 0.0 0.0"
+    origin_rpy="0.0 0.0 0.0"
+    meshfile="package://rjje_arm/meshes/gripper_finger.stl"
+    meshscale="${scale_factor} ${scale_factor} ${scale_factor}"
+    mass="0.0157633"
+    ixx="0.0013235" ixy="0" ixz="0"
+    iyy="0.0013235" iyz="0"
+    izz="0.0009655"
+    color="yellow"
+    />
+  <gazebo reference="right_gripper">
+    <material>Gazebo/Gold</material>
+  </gazebo>
+
+  <xacro:m_mimic_joint 
+    joint_parent="link_6"
+    joint_child="left_gripper"
+    type="revolute"
+    axis_xyz="0 0 1"
+    origin_xyz="1.6 0.0 1.6" origin_rpy="1.57 0.0 0.0"
+    parent="link_6" child="right_gripper"
+    limit_e="50" limit_l="-0.61" limit_u="0.0" limit_v="1.5" 
+    multiplier="-1"
+    offset="0"
+    />
+
+</robot>

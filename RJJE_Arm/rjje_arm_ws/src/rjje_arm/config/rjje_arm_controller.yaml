@@ -1,0 +1,22 @@
+controller_list:
+ - name: rjje_arm_controller
+   action_ns: follow_joint_trajectory
+   type: FollowJointTrajectory
+   default: true
+   joints:
+     - link1_bracket_1
+     - link_2_bracket_2_1
+     - bracket_2_2_link_3
+     - bracket_3_2_link_4
+     - link_5_link_6
+#  - name: rjje_gripper_controller
+#    action_ns: gripper_command
+#    type: GripperCommand
+#    default: true
+#    parallel: false
+#    joints:
+     - link_6_left_gripper
+initial:  # Define initial robot poses.
+  - group: rjje_arm
+    pose: neutral
+

@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<launch>
+    
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+    <node name="joint_state_publisher_gui" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui"/>
+    <node pkg="rviz" type="rviz" name="rviz" required="true" args="&#45;d $(find rjje_arm)/rviz/rjje_arm.rviz"/>
+    <param name="robot_description" command="cat '$(find rjje_arm)/urdf/rjje_arm.xacro.urdf'" />
+
+    <!-- <node name="motion_controller" pkg="rjje_arm" type="motion_controller.py" output="screen">
+    </node> -->
+
+    <!-- <node name="serial_node" pkg="rosserial_python" type="serial_node.py" output="screen">
+        <param name="port" value="/dev/ttyUSB1"/>
+    </node> -->
+
+  <!-- If needed, broadcast static tf for robot root -->
+
+    <!-- <include file="$(find gazebo_ros)/launch/empty_world.launch"/> -->
+    <!-- <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" output="screen" args="&#45;param robot_description &#45;urdf &#45;model rjje_arm"/> -->
+</launch>

@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+
+    <robot name="definitions" xmlns:xacro="http://www.ros.org/wiki/xacro">
+        <xacro:macro name="m_transmission" params="index joint_name">
+            <transmission name="tran_${index}">
+            <type>transmission_interface/SimpleTransmission</type>
+            <joint name="${joint_name}">
+                <hardwareInterface>EffortJointInterface</hardwareInterface>
+            </joint>
+            <actuator name="motor_${index}">
+                <hardwareInterface>EffortJointInterface</hardwareInterface>
+                <mechanicalReduction>1</mechanicalReduction>
+            </actuator>
+            </transmission>
+        </xacro:macro>
+
+        <xacro:m_transmission index="1" joint_name="link1_bracket_1"/>
+        <xacro:m_transmission index="2" joint_name="link_2_bracket_2_1"/>
+        <xacro:m_transmission index="3" joint_name="bracket_2_2_link_3"/>
+        <xacro:m_transmission index="4" joint_name="bracket_3_2_link_4"/>
+        <xacro:m_transmission index="5" joint_name="link_5_link_6"/>
+        <xacro:m_transmission index="6" joint_name="link_6_left_gripper"/>
+        <xacro:m_transmission index="7" joint_name="link_6_right_gripper"/>
+
+        <gazebo>
+            <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so"/>
+        </gazebo>
+</robot>
