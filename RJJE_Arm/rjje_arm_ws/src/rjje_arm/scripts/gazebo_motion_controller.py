@@ -10,6 +10,7 @@ import os
 import time
 import inspect
 from functools import partial
+import numpy as np
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 sys.path.insert(0, currentdir) 
@@ -42,16 +43,17 @@ class GazeboMotionController:
         self.rate = rospy.Rate(Params.EXECUTION_PUBLISH_FREQ)
        
         self.gazebo_joint_state_sub = rospy.Subscriber("/rjje_arm_gazebo/joint_states", JointState, self.gazebo_joint_state_cb) 
-        self.joint_states = {}
+        self.joint_states = []
 
     def gazebo_joint_state_cb(self, msg):
         '''
         Published message looks like: joint_1_name; ... | joint_1_value; ... |
+        ASSUMPTION: joint_states published from Gazebo is in the same order as plan
         ''' 
         names = ";".join(msg.name)
         positions = ";".join([str(p) for p in msg.position])
         self.mqtt_client.publish("esp/joint_states", names + "|" + positions)
-        self.joint_states = {name: pos for name, pos in zip(msg.name, msg.position)}
+        self.joint_states = msg.position
             
     def plan_cb(self, userdata, msg):
         """
@@ -67,10 +69,15 @@ class GazeboMotionController:
         print(plans)
         for plan in plans:
             execution_time = plan[Params.JOINT_NUM]
-            for i in range(Params.JOINT_NUM):
-                topic, pub = self.publishers[i]
-                pub.publish(Float64(plan[i]))
-            self.rate.sleep()
+            num_intervals = int(np.ceil(execution_time * Params.EXECUTION_PUBLISH_FREQ))
+            delta_intervals = (np.array(plan[:Params.JOINT_NUM]) - np.array(self.joint_states[:Params.JOINT_NUM]))/num_intervals
+            for interval in range(num_intervals):
+                for i in range(Params.JOINT_NUM):
+                    topic, pub = self.publishers[i]
+                    angle_to_pub = plan[i] - (num_intervals - interval + 1) * delta_intervals[i]
+                    # print(plan[i])
+                    pub.publish(Float64(angle_to_pub))
+                self.rate.sleep()
 
     def hand_cb(self, userdata, msg):
         """
