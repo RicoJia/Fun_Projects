@@ -42,6 +42,7 @@ class GazeboMotionController:
         self.rate = rospy.Rate(Params.EXECUTION_PUBLISH_FREQ)
        
         self.gazebo_joint_state_sub = rospy.Subscriber("/rjje_arm_gazebo/joint_states", JointState, self.gazebo_joint_state_cb) 
+        self.joint_states = {}
 
     def gazebo_joint_state_cb(self, msg):
         '''
@@ -50,6 +51,7 @@ class GazeboMotionController:
         names = ";".join(msg.name)
         positions = ";".join([str(p) for p in msg.position])
         self.mqtt_client.publish("esp/joint_states", names + "|" + positions)
+        self.joint_states = {name: pos for name, pos in zip(msg.name, msg.position)}
             
     def plan_cb(self, userdata, msg):
         """
