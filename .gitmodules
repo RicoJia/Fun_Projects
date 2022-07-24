@@ -1,3 +1,6 @@
 [submodule "filter_projects/face_tracker/pybind11"]
 	path = filter_projects/face_tracker/pybind11
 	url = https://github.com/pybind/pybind11.git
+[submodule "RJJE_Arm/rjje_arm_ws/src/gazebo_ros_joints_publisher"]
+	path = RJJE_Arm/rjje_arm_ws/src/gazebo_ros_joints_publisher
+	url = https://github.com/yossioo/gazebo_ros_joints_publisher.git
