@@ -1,4 +1,0 @@
-float32[] commanded_angles
-float32 execution_time
----
-std_msgs/Empty empty_result
