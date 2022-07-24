@@ -4,6 +4,7 @@ import rospy
 import rosgraph
 import rostopic
 from std_msgs.msg import Float64
+from sensor_msgs.msg import JointState
 import sys 
 import os
 import time
@@ -29,7 +30,7 @@ class GazeboMotionController:
         joint_topics = list (filter(lambda topic: "command" in topic, sub_topics))
         self.publishers = tuple(((topic, rospy.Publisher(topic, Float64, queue_size=10) ) for topic in joint_topics))
             
-        print(joint_topics, self.publishers)
+        print("Recording joints: ", joint_topics)
         
         self.mqtt_client = MqttClient("127.0.0.1", 1883,
                         {
@@ -39,7 +40,17 @@ class GazeboMotionController:
                         "gazebo_motion_controller")
     
         self.rate = rospy.Rate(Params.EXECUTION_PUBLISH_FREQ)
-        
+       
+        self.gazebo_joint_state_sub = rospy.Subscriber("/rjje_arm_gazebo/joint_states", JointState, self.gazebo_joint_state_cb) 
+
+    def gazebo_joint_state_cb(self, msg):
+        '''
+        Published message looks like: joint_1_name; ... | joint_1_value; ... |
+        ''' 
+        names = ";".join(msg.name)
+        positions = ";".join([str(p) for p in msg.position])
+        self.mqtt_client.publish("esp/joint_states", names + "|" + positions)
+            
     def plan_cb(self, userdata, msg):
         """
         Each plan has 5 joint angles 3 digit precision + execution time. Ex: 12.3;32.2;23.0;45.4;66.2;0.02;|... , where 0.02 is the execution time*/
