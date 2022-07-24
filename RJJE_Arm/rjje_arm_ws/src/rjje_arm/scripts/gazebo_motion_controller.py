@@ -14,6 +14,7 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 sys.path.insert(0, currentdir) 
 from utils.rico_mqtt import MqttClient, MqttSubscriberCbs
 
+
 class Params:
     JOINT_NUM = 5
     TIME_NUM=1
