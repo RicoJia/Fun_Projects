@@ -57,14 +57,14 @@ class GazeboMotionController:
         names = ";".join(msg.name)
         positions = ";".join([str(p) for p in msg.position])
         self.mqtt_client.publish("esp/joint_states", names + "|" + positions)
-        self.arm_joint_states = msg.position[: -Params.HAND_JOINTS_NUM]
-        self.hand_joint_states = msg.position[-Params.HAND_JOINTS_NUM :] 
+        self.arm_joint_states = list(msg.position[: -Params.HAND_JOINTS_NUM])
+        self.hand_joint_states = list(msg.position[-Params.HAND_JOINTS_NUM :])
     
     def __execute_plans(self, userdata, msg, publishers: list, joint_states: list, apply_mimic_joint: bool = False):
         """
         Parse plans that look like: val_a1; val_a2; ... time_1;| val_b1, ... time_2;| ... 
         Then execute each plan according to its time
-
+        note that a copy of all these data is executed in the MQTT callback
         Args:
             userdata (_type_): Custom User data 
             msg (_type_): Actual MQTT Message
@@ -88,12 +88,13 @@ class GazeboMotionController:
         for plan in plans:
             execution_time = plan[-1]
             num_intervals = int(np.ceil(execution_time * Params.EXECUTION_PUBLISH_FREQ))
-            delta_intervals = (np.array(plan[:-1]) - np.array(joint_states))/num_intervals
+            delta_intervals = (np.array(plan[:-1]) - np.array(joint_states))/(num_intervals)
+            angles_to_pub = joint_states
             for interval in range(num_intervals):
                 for i in range(plan_length - 1):
                     topic, pub = publishers[i]
-                    angle_to_pub = plan[i] - (num_intervals - interval + 1) * delta_intervals[i]
-                    pub.publish(Float64(angle_to_pub))
+                    angles_to_pub[i] += + delta_intervals[i]
+                    pub.publish(Float64(angles_to_pub[i]))
                 self.rate.sleep()
             
     def arm_joints_cb(self, userdata, msg):
