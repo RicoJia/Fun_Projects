@@ -19,7 +19,7 @@ from utils.rico_mqtt import MqttClient, MqttSubscriberCbs
 
 class Params:
     ARM_JOINTS_NUM = 5
-    HAND_JOINTS_NUM = 1
+    HAND_JOINTS_NUM = 2
     TIME_NUM=1
     EXECUTION_PUBLISH_FREQ = 100
     
@@ -31,8 +31,8 @@ class GazeboMotionController:
         # filter returns a filter object, cannot be unpacked directly
         joint_topics = list (filter(lambda topic: "command" in topic, sub_topics))
         publishers = tuple(((topic, rospy.Publisher(topic, Float64, queue_size=10) ) for topic in joint_topics))
-        self.arm_publishers = publishers[:-1]
-        self.hand_publishers = [publishers[-1]]
+        self.arm_publishers = publishers[: -Params.HAND_JOINTS_NUM]
+        self.hand_publishers = publishers[-Params.HAND_JOINTS_NUM :]
             
         print("Recording joints: ", joint_topics)
         
@@ -57,10 +57,10 @@ class GazeboMotionController:
         names = ";".join(msg.name)
         positions = ";".join([str(p) for p in msg.position])
         self.mqtt_client.publish("esp/joint_states", names + "|" + positions)
-        self.arm_joint_states = msg.position[:-1]
-        self.hand_joint_states = [msg.position[-1]] 
+        self.arm_joint_states = msg.position[: -Params.HAND_JOINTS_NUM]
+        self.hand_joint_states = msg.position[-Params.HAND_JOINTS_NUM :] 
     
-    def __execute_plans(self, userdata, msg, publishers: list, joint_states: list):
+    def __execute_plans(self, userdata, msg, publishers: list, joint_states: list, apply_mimic_joint: bool = False):
         """
         Parse plans that look like: val_a1; val_a2; ... time_1;| val_b1, ... time_2;| ... 
         Then execute each plan according to its time
@@ -69,6 +69,7 @@ class GazeboMotionController:
             userdata (_type_): Custom User data 
             msg (_type_): Actual MQTT Message
             publishers (list): Length of each plan
+            apply_mimic_joint (bool): Hardcoded patch for simulate mimic joint issues
 
         Returns:
         """
@@ -79,6 +80,10 @@ class GazeboMotionController:
             commanded_angles_and_time = MqttSubscriberCbs.get_array_from_string(command.split(";"))
             if len(commanded_angles_and_time) == plan_length: 
                 plans.append(commanded_angles_and_time)
+            elif apply_mimic_joint and len(commanded_angles_and_time) != 0:
+                new_angle = commanded_angles_and_time[0] * -1
+                new_commanded_angles_and_time = [commanded_angles_and_time[0], new_angle, commanded_angles_and_time[1]]
+                plans.append(new_commanded_angles_and_time) 
 
         for plan in plans:
             execution_time = plan[-1]
@@ -89,8 +94,6 @@ class GazeboMotionController:
                     topic, pub = publishers[i]
                     angle_to_pub = plan[i] - (num_intervals - interval + 1) * delta_intervals[i]
                     pub.publish(Float64(angle_to_pub))
-                    #TODO
-                    print(angle_to_pub)
                 self.rate.sleep()
             
     def arm_joints_cb(self, userdata, msg):
@@ -103,7 +106,7 @@ class GazeboMotionController:
         """
         Payload = 0, claw will be closed, 1 will be open
         """
-        self.__execute_plans(userdata, msg, self.hand_publishers, self.hand_joint_states)
+        self.__execute_plans(userdata, msg, self.hand_publishers, self.hand_joint_states, apply_mimic_joint=True)
     
 if __name__ == '__main__':
     rospy.init_node("gazebo_motion_controller")
