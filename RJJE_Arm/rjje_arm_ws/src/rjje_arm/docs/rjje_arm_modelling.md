@@ -22,6 +22,8 @@ This file is the design documentation of rjje_arm.
         2. Failure in RJJE Arm hardware failure  
 2. Third party [Gazebo Joint State publisher](https://github.com/yossioo/gazebo_ros_joints_publisher) plugin is being used to publish ```/rjje_arm_gazebo/joint_states``` directly from Gazebo, which gets relayed into ```Gazebo_Motion_Controller```
    1. This is installed as a git submodule
-3. Effect
-   1. In Gazebo, there might be a delay coming from communication & control execution (~10%). In the future, this could be improved. 
-
+3. Assumptions 
+   1. Gazebo does not support mimic joints. Therefore for the hand, we simulate mimic joints by copying the joint command for the driving motor. 
+4. Performance
+   1. In Gazebo, there might be a delay coming from communication & control execution (~10%), for both the arm and the hand. In the future, this could be improved. 
+   
