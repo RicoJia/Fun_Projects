@@ -1,5 +1,5 @@
 #!/usr/local/python3
-# MQTT Topic esp/plan -> this node -> /joint_1_controller/command ...
+# MQTT Topic esp/arm -> this node -> /joint_1_controller/command ...
 import rospy
 import rosgraph
 import rostopic
@@ -38,7 +38,7 @@ class GazeboMotionController:
         
         self.mqtt_client = MqttClient("127.0.0.1", 1883,
                         {
-                            "esp/plan": self.arm_joints_cb,
+                            "esp/arm": self.arm_joints_cb,
                             "esp/hand": self.hand_joint_cb
                         }, 
                         "gazebo_motion_controller")
