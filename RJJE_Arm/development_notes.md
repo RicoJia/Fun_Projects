@@ -27,13 +27,12 @@
     source devel/setup.bash
     roscd rjje_arm/
     cd scripts
-    ./build_and_visualize.sh
     ```
 
 5. To visualize the robot only, you can see the robot with 
-   - In Gazebo, ```./build_and_visualize.sh gazebo``` 
-   - In Rviz: ```./build_and_visualize.sh rviz```
-
+    - In Gazebo, ```./build_and_visualize.sh gazebo``` 
+    - In Rviz: ```./build_and_visualize.sh rviz```
+    - **Launch the full project**: ```    ./build_and_visualize.sh```
 ## Design Notes
 ### Robot
 2. Modelling, [see doc](rjje_arm_ws/src/rjje_arm/docs/rjje_arm_modelling.md)
@@ -83,16 +82,19 @@
             - replay the right commanded angles
             - move_joints
 ## TODO List 
-1. DL Questions
+1. Potential bugs
+   1. motion_controller.py: Assumption: MQTT topics for joint angle exeuction follows the same order as joint_states 
+
+2. DL Questions
     1. Structure of YOLO 
     2. Other smaller alternative? This is what we want
     3. Training visualization: tensorboard?
         - how to label them?
-2. VoiceBox
-3. Use pyrealsense instead of launching the node itself
-4. protobuf - nanopb messaging system b/w arduino & laptop
-5. STM 32. 
+3. VoiceBox
+4. Use pyrealsense instead of launching the node itself
+5. protobuf - nanopb messaging system b/w arduino & laptop
+6. STM 32. 
     1. Run ros on it. with an added topic for teaching mode
     2. Add
-6. Zero gravity?
+7. Zero gravity?
 

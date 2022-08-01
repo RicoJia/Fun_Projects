@@ -1,3 +1,4 @@
+#!/bin/bash
 # This file can be used to install, and launch rviz or gazebo models
 # To visualize the robot only, you can see the robot with 
 #    - In Gazebo, ./build_and_visualize.sh gazebo

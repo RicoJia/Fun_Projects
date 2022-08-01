@@ -27,7 +27,6 @@
   </node>
 
   <!-- motion controller -->
-  TODO
-  <!-- <node name="gazebo_motion_controller" type="gazebo_motion_controller.py" pkg="rjje_arm" 
-  if="$(arg run_control_node)" output="screen"/> -->
+  <node name="gazebo_motion_controller" type="gazebo_motion_controller.py" pkg="rjje_arm" 
+  if="$(arg run_control_node)" output="screen"/>
 </launch>

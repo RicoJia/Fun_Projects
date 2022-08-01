@@ -12,6 +12,7 @@ This file is the design documentation of rjje_arm. Currently, we are able to do 
     - Teaching mode
     - Task contructor
 2. According to this [post](https://answers.ros.org/question/313637/openclose-end-effector-with-moveit-rviz/), gripper in Moveit is controlled differently. So there's no ball-and-arrow at eef. Therefore we control the gripper separately
+
 3. ```motion_controller``` 
    1. Inputs: 
       1. MQTT topics
@@ -24,6 +25,12 @@ This file is the design documentation of rjje_arm. Currently, we are able to do 
           1. ```/joint_states```
        2. MQTT Topics
           1. ```esp/arm```
-          1. ```esp/hand```
+          2. ```esp/hand```
+4. ROS Moveit! action servers setup
+   1. ```controller.yaml```
+      - ```fake_controller.yaml``` for fake execution (no gazebo required)
+      - ```rjje_```
+   2. ```/joint_states``` must be published. Otherwise actions will not be even published to their topics.
+      1. Even tho the action servers will take care of the action execution result
 
 ## Test Plan 

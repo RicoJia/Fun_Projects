@@ -1,6 +1,5 @@
 <launch>
 <!-- ==============================All Custom Switches================================== -->
-  <arg name="fake_execution" value="true"/>
   <arg name="run_in_gazebo" value="false"/>
 
 <!-- ==============================Basic Configs================================== -->
@@ -12,12 +11,9 @@
 
   <!-- We do not have a robot connected, so publish fake joint states -->
   <!-- RJ: joint_state_publisher is only launched when we test with fake execution -->
-  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" if="$(arg fake_execution)">
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" unless="$(arg run_in_gazebo)">
     <rosparam param="source_list">[move_group/fake_controller_joint_states]</rosparam>
   </node>
-
-  <!-- Given the published joint states, publish tf for the robot links -->
-  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" />
 
 <!-- ==============================planning_context================================== -->
 
@@ -59,8 +55,8 @@
   <param name="trajectory_execution/allowed_start_tolerance" value="0.01"/> 
   <!-- Load the robot specific controller manager; this sets the moveit_controller_manager ROS parameter -->
   <!-- TODO: change to rjje_arm -->
-  <arg name="moveit_controller_manager" default="rjje_arm" unless="$(arg fake_execution)"/>
-  <arg name="moveit_controller_manager" default="fake" if="$(arg fake_execution)"/>
+  <arg name="moveit_controller_manager" default="rjje_arm" if ="$(arg run_in_gazebo)"/>
+  <arg name="moveit_controller_manager" default="fake" unless="$(arg run_in_gazebo)"/>
   <!-- TODO to comment this out -->
   <include file="$(find rjje_arm)/launch/$(arg moveit_controller_manager)_moveit_controller_manager.launch.xml">
     <!-- <arg name="execution_type" value="interpolate" /> -->
@@ -98,8 +94,13 @@
   </node>
 
 <!-- ============================== Gazebo ================================== -->
-  <include file="$(find rjje_arm)/launch/gazebo.launch" if="$(arg run_in_gazebo)">
+  <include file="$(find rjje_arm)/launch/launch_gazebo/gazebo.launch" if="$(arg run_in_gazebo)">
     <arg name="run_control_node" value="true" />
   </include>
 
+  <!-- Given the published joint states, publish tf for the robot links -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" unless="$(arg run_in_gazebo)"/>
+<!-- ============================== Motion Controller ================================== -->
+<!-- TODO -->
+<!-- <node name="motion_controller" type="motion_controller.py" pkg="rjje_arm"> -->
 </launch>

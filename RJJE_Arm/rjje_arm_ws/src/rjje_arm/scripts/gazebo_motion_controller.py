@@ -5,13 +5,13 @@ import rosgraph
 import rostopic
 from std_msgs.msg import Float64
 from sensor_msgs.msg import JointState
-import sys 
-import os
 import time
-import inspect
 from functools import partial
 import numpy as np
 
+import sys 
+import os
+import inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 sys.path.insert(0, currentdir) 
 from utils.rico_mqtt import MqttClient, MqttSubscriberCbs
