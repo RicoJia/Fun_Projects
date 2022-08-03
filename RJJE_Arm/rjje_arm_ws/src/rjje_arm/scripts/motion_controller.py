@@ -13,6 +13,7 @@ On arduino, all motors go from (0, 180) following the right-hand convention, wit
 """
 import rospy
 import numpy as np
+import time
 import math
 import threading
 from control_msgs.msg import FollowJointTrajectoryAction
@@ -131,6 +132,9 @@ class MotionController:
         # parse joint_state_indices
         # send them out 
         # time it
+        total_time = traj.points[-1].time_from_start.to_sec()
+        rospy.loginfo("Executing plan")
+        time.sleep(total_time)
         send_reponse(action_server, action_server_name, "SUCCESSFUL")
         rospy.loginfo("Successful action execution")
  
