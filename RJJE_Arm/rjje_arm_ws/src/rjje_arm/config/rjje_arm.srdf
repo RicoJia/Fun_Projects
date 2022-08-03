@@ -22,7 +22,6 @@
         <joint name="bracket_3_2_link_4"/>
         <joint name="link_4_link_5"/>
         <joint name="link_5_link_6"/>
-        <joint name="link_6_left_gripper"/>
     </group>
     <group name="gripper">
         <!-- <link name="left_gripper"/> -->

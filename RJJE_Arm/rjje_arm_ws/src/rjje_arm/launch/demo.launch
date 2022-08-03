@@ -1,6 +1,6 @@
 <launch>
 <!-- ==============================All Custom Switches================================== -->
-  <arg name="run_in_gazebo" value="false"/>
+  <arg name="run_in_gazebo" value="true"/>
 
 <!-- ==============================Basic Configs================================== -->
 
