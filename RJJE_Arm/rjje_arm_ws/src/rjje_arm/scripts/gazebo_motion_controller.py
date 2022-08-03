@@ -74,7 +74,6 @@ class GazeboMotionController:
         Returns:
         """
         plans = []
-        # TODO: Bug: not length of publishers
         plan_length = len(publishers) + 1
         commands = str(msg.payload.decode("utf-8")).split("|")
         for command in commands:
@@ -85,9 +84,6 @@ class GazeboMotionController:
                 new_angle = commanded_angles_and_time[0] * -1
                 new_commanded_angles_and_time = [commanded_angles_and_time[0], new_angle, commanded_angles_and_time[1]]
                 plans.append(new_commanded_angles_and_time) 
-
-            #TODO
-            print(f'{command}, {len(commanded_angles_and_time)}, {plan_length}')
 
         for plan in plans:
             execution_time = plan[-1]

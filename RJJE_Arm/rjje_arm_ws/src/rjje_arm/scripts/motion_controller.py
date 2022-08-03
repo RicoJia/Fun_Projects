@@ -126,7 +126,7 @@ class MotionController:
         # So we need to publish joints in the same order
         
         self.calculate_arm_joint_state_indices(traj)
-        mqtt_command = self.get_mqtt_string(traj)
+        mqtt_command = self.publish_mqtt_string(traj)
         print(self.arm_joint_state_indices)
         # parse joint_state_indices
         # send them out 
@@ -134,7 +134,7 @@ class MotionController:
         send_reponse(action_server, action_server_name, "SUCCESSFUL")
         rospy.loginfo("Successful action execution")
  
-    def get_mqtt_string(self,traj):
+    def publish_mqtt_string(self,traj):
         mqtt_string = ""
         last_time = 0
         for pt in traj.points[1:]:
@@ -144,7 +144,8 @@ class MotionController:
             value_str = ";".join(str(v) for v in values) + ";" + str(interval) + "|"
             mqtt_string += value_str
             last_time = current_time
-        print(mqtt_string)
+        self.mqtt_client.publish("esp/arm", mqtt_string)
+
             
     def calculate_arm_joint_state_indices(self, traj):
         '''
