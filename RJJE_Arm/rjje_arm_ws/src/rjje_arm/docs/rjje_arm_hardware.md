@@ -28,10 +28,22 @@ This file is the design documentation of rjje_arm's hardware structure.
         <figcaption align="center">Pinouts of ESP32</figcaption>
         </p>
 
-        ```
-        Analog 4 (GPIO32) -> SDA (GPIO 21)
-        Analog 5 (GPIO33) -> SCL (GPIO 22)
-        ```
+        - Arduino Nano -> ESP32 pinouts:
+            ```
+            Analog 4 (GPIO32) -> SDA (GPIO 21)
+            Analog 5 (GPIO33) -> SCL (GPIO 22)
+            ```
+        - ESP 32 connections -> PCA9685
+            ``` 
+            EN -> Vcc (5v)
+            GND -> GND
+            D21 -> SDA
+            D22 -> SCL
+            ```
+        
+        
+
+            
 
 2. Servo Motors
     - The rudder on top of a servo motor has holes that need to be rethreaded. One can use a "tap" for rethreading.

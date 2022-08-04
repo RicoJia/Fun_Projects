@@ -48,13 +48,14 @@
 ========================================================================
 ## Roadmap 
 ========================================================================
-1. Esp32 - wifi control for robot
-    - lap -> Esp32 -> what laptop has sent. Need 60% Flash Memory (On hold, PCA9685 stopped working)
-    - ```motion_controller``` node, with joint states, ros services
-2. Gazebo & Motion Planning
-    - claw adjust cad
-    - Motion Planning with fake joint controller
-    - Set up Gazebo 
+1. Gazebo & Motion Planning (D)
+    - claw adjust cad (D)
+    - Motion Planning with fake joint controller (D)
+    - Set up Gazebo (D)
+    - Motion Controller (D)
+2. Esp32 - wifi control for robot
+    - ESP32 -> motor control.
+    - lap -> Esp32 -> what laptop has sent. Need 60% Flash Memory 
 3. Calibration Tools: 2 aruco markers
     - Big marker under the robot (step 1)
     - RGBD cam detection (D), RGBD camera - interaction with Arm

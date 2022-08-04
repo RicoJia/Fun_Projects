@@ -28,18 +28,6 @@ EspMQTTClient client(
     "ESP", // Client name that uniquely identify your device
     1883 // The MQTT port, default to 1883. this line can be omitted
 );
-#endif
-ServoControl servo_control;
-
-double desired_angles[6];
-double actual_angles[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-/* double (*waypoints)[5] = nullptr; */
-double **waypoints = nullptr;
-byte num_waypoints = 0;
-
-const int FREQ = 10;
-
-#if 0
 Esp32Control esp32_control;
 // This function is called once everything is connected (Wifi and MQTT)
 void onConnectionEstablished()
@@ -62,6 +50,14 @@ void plan_sub_callback(const String & payload) {
     esp32_control.plan_sub_callback(payload);
 }
 #endif
+ServoControl servo_control;
+double desired_angles[6];
+double actual_angles[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+/* double (*waypoints)[5] = nullptr; */
+double **waypoints = nullptr;
+byte num_waypoints = 0;
+
+const int FREQ = 10;
 
 void setup()
 {
