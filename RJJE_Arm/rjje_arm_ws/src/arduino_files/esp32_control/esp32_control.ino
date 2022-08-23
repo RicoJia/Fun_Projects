@@ -49,11 +49,11 @@ void claw_sub_callback(const String & payload) {
 void plan_sub_callback(const String & payload) {
     esp32_control.plan_sub_callback(payload);
 }
-#endif
 ServoControl servo_control;
+#endif
+
 double desired_angles[6];
 double actual_angles[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-/* double (*waypoints)[5] = nullptr; */
 double **waypoints = nullptr;
 byte num_waypoints = 0;
 

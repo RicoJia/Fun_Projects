@@ -21,7 +21,7 @@ This file is the design documentation of rjje_arm's hardware structure.
     - channel-board-pinout mapping
     - servo_min-servo_max mapping. 
         - [How to calibrate servos](https://create.arduino.cc/projecthub/jeremy-lindsay/calibrating-my-servos-fa27ce)
-    - on ESP32: 
+    - on ESP32: [Nice article on ESP 32 - PCA9865](https://dronebotworkshop.com/esp32-servo/)  
 
         <p align="center">
         <img src="https://user-images.githubusercontent.com/106101331/175851195-075cdfe5-a3cd-4bd5-86f6-e74e4d874305.png" height="400" width="width"/>
@@ -35,7 +35,7 @@ This file is the design documentation of rjje_arm's hardware structure.
             ```
         - ESP 32 connections -> PCA9685
             ``` 
-            EN -> Vcc (5v)
+            VIN -> Vcc (5v)
             GND -> GND
             D21 -> SDA
             D22 -> SCL
