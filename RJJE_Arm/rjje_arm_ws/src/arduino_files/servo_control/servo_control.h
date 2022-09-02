@@ -11,7 +11,7 @@
 #include <Adafruit_PWMServoDriver.h>
 
 #define PWM_BOARD_ADDR 0x40
-#define SERVO_FREQ 50
+#define SERVO_FREQ 60
 // #define SERVO_MIN 120  // for MG96
 // #define SERVO_MAX 480    
 #define SERVO_MIN 124   // For Analog Feedback servos

@@ -12,7 +12,7 @@ This file is the design documentation of rjje_arm's hardware structure.
 ## Design
 ### Motors
 - TODO: all connections
-1. Simple Motor Testing: [Adafruit_PCA9685, including schematics](https://learn.adafruit.com/16-channel-pwm-servo-driver?view=all)
+1. Simple Motor Testing: [Working Adafruit_PCA9685 video, including schematics](https://www.youtube.com/watch?v=y8X9X10Tn1k)
     - Electrical: 
         - Jack plug for external power 
         - Vcc is positive for signal, V+ is the positive supply. 
@@ -21,6 +21,9 @@ This file is the design documentation of rjje_arm's hardware structure.
     - channel-board-pinout mapping
     - servo_min-servo_max mapping. 
         - [How to calibrate servos](https://create.arduino.cc/projecthub/jeremy-lindsay/calibrating-my-servos-fa27ce)
+    - Some notes: 
+        1. The working frequency is around 60hz, not 50hz
+        2. Some brands of PCA9685 requires V+ to be connected to 5v.
     - on ESP32: [Nice article on ESP 32 - PCA9865](https://dronebotworkshop.com/esp32-servo/)  
 
         <p align="center">
