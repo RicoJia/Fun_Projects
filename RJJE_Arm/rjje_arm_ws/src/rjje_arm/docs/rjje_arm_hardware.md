@@ -73,3 +73,4 @@ This file is the design documentation of rjje_arm's hardware structure.
     1. Test setup: a wifi network with upload / Download speed at 150Mb/s. We test the average total time of a "handshake", i.e., publish a message bidirectionally. 
     2. Results:
         - Need to get pub/sub on host machine (~0.07s per message exchange (30 bytes), but might take longer)
+2. For servo controller, I recommend 

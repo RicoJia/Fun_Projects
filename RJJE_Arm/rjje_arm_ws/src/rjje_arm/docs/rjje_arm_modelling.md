@@ -3,6 +3,9 @@ This file is the design documentation of rjje_arm.
 
 ## 3D CAD Modelling
 1. STL file example - https://create.arduino.cc/projecthub/danny-van-den-heuvel/6dof-robotic-arm-50eab6
+    - Illustration of the robot at neutral position
+        ![Screenshot from 2022-09-03 17-13-32](https://user-images.githubusercontent.com/106101331/188289152-804a9ba5-a919-4928-9aa1-a9497506350b.png)
+
 2. Modelling 
     - First, obtain the STL files of major parts created by Rico Jia. Note that these STL files were created using Onshape, and some not-important details are omitted. 
     - When assembling STL models into a full 3D model of the robot, special attention should be paid to: 

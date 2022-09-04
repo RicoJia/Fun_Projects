@@ -4,32 +4,18 @@
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 
-// set this to 0 if you're using a regular arduino
-#define ESP32 1
-#ifdef ESP32
-const int ANALOG_INPUT = 34;
-// 12-bit ADC
-const double INTERCEPT = 203.5682231220682;
-const double SLOPE = -0.07711167;
-#else 
-const int ANALOG_INPUT = A0;
-// 10-bit ADC
-const double INTERCEPT = -46.3003;
-const double SLOPE = 0.458;
-#endif
 
 #define PWM_BOARD_ADDR 0x40
-#define SERVO_FREQ 50
-// #define SERVO_MIN 120  // for MG96
-// #define SERVO_MAX 480    
-#define SERVO_MIN 124   // For Analog Feedback servos
-#define SERVO_MAX 348       
-#define UPDATE_FREQUENCY 100    //hz
-#define ANGULAR_THRESHOLD 0.5   //degrees
-#define TEACHING_MODE_VAL 361.0
-#define REGULAR_MODE_VAL 362.0
-#define INTERCEPT_ANALOG -46.3003
-#define SLOPE_ANALOG 0.4580
+#define SERVO_FREQ 60
+#define SERVO_MIN 120  // for MG96
+#define SERVO_MAX 580    
+// #define SERVO_MIN 124   // For Analog Feedback servos
+// #define SERVO_MAX 348       
+const byte ARM_MOTOR_NUM = 5;
+const byte MAX_WAYPOINT_NUM = 64;
+#define ANGULAR_THRESHOLD 0.01   //radians
+#define UPDATE_FREQUENCY 10   //hz
+
 
 inline int sign(float i){
   if (i == 0) return 0; 
@@ -43,6 +29,9 @@ bool pwm_board_connected(){
     return (error==0); 
 }
 
+double convert_to_rjje_commanded_angles(double angle){
+  return 180 * (angle/3.1415) + 90;
+}
 
 /**
  * 1. A common convention is the right-hand rotation, which defines the positive direction of rotation is counter-clockwise of positive z-axis. Below, all angles follow the right-hand convention
@@ -53,16 +42,15 @@ struct Motor{
     float last_angle_ = 90;
     char offset_=0;                 //offset is added on commanded_angle
     bool is_claw_ = false;
-    bool flip_rotation_ = true;     //false for MG96
+    bool flip_rotation_ = false;     //false for MG96
 
     bool set_angle(const float& commanded_angle, const short& channel_id, Adafruit_PWMServoDriver& pwm){
         float real_angle = get_real_angle(commanded_angle);
         if (real_angle != -1){
           uint16_t pulselength = map(real_angle, 0, 180, SERVO_MIN, SERVO_MAX);
-          pwm.setPWM(channel_id, 0, pulselength);
           //TODO
           Serial.println("commanded: " + String(commanded_angle) + " | real_angle: " + String(real_angle) + " | pwm val: " + String(pulselength));
-
+          pwm.setPWM(channel_id, 0, pulselength);
           return true;
         }
         else{
@@ -70,16 +58,6 @@ struct Motor{
         }
     }
     
-    float convert_to_commanded_angle(const int& raw_value){
-        float real_angle = SLOPE_ANALOG * raw_value + INTERCEPT_ANALOG; 
-        if (is_claw_){
-            return (90 - (real_angle - offset_)) * 2; 
-        }
-        else{
-            return (flip_rotation_) ? (180 - real_angle - offset_) : (real_angle - offset_); 
-        }
-    }
-
   private: 
     /**
     * @brief: For claw, commanded_angle is the commanded angle between two fingers.
@@ -89,18 +67,14 @@ struct Motor{
     */
     float get_real_angle (float commanded_angle){
        if (is_claw_){
+           //TODO
            float rotation_angle = commanded_angle/2;
-           //we're hard coding this because we're running out of memory
-           if (0 <= rotation_angle && rotation_angle <= 90){
-              return 90-rotation_angle + offset_;    //offset due to mislignment of rudder and finger 
-           }
-           else return -1; 
+            return rotation_angle + offset_;    //offset due to mislignment of rudder and finger 
        }
        else{
-         commanded_angle += offset_; 
-         float real_angle = (flip_rotation_) ? 180 - commanded_angle : commanded_angle;
-         if (0 <= real_angle && real_angle <= 180){
-           last_angle_ = real_angle;
+         if (0 <= commanded_angle && commanded_angle <= 180){
+           commanded_angle += offset_; 
+           float real_angle = (flip_rotation_) ? 180 - commanded_angle : commanded_angle;
            return real_angle; 
          }
          else{
@@ -110,15 +84,10 @@ struct Motor{
     }
 }; 
 
-// test procedure: 
-//  1. add this to the wifi controlled interface, with set angle, and Motor class
-//
 /**
  * This class does these things:
  *  1. starts a pwm object, set it up
  *  2. Set an angle on a servo
- *  3. Read from a servo
- *      - Base on the real world constraints of the motors 
  */
 class ServoControl
 {
@@ -126,20 +95,39 @@ public:
     ServoControl (): pwm(PWM_BOARD_ADDR){
         pwm.begin();
         pwm.setOscillatorFrequency(27000000);
-        pwm.setPWMFreq(SERVO_FREQ);  // Analog servos run at ~50 Hz updates
-        /* pinMode(A0, INPUT_PULLUP);  */
-        pinMode(ANALOG_INPUT, INPUT_PULLUP); 
+        pwm.setPWMFreq(SERVO_FREQ);  // Analog servos run at ~60 Hz updates
+        delay(5000);
+
+        // motors[0].offset_ = 30;
+        // motors[4].offset_ = 35;
+        motors[5].is_claw_ = true;
+
+        double initial_arm_angles[ARM_MOTOR_NUM] = {0,0,0,0,0};
+        double initial_claw_angle = 0.0;
+        execute_arm_angles(initial_arm_angles); 
+        execute_claw_angle(initial_claw_angle); 
+        Serial.println("Servo Control Initialized");
         delay(5000); 
     }
     ~ServoControl (){}
 
-    void set_angle(const float& angle, byte index){
-        motors[index].set_angle(angle, 0, pwm);
+    void execute_arm_angles(double* arm_execution_angles){
+        // TODO
+        Serial.println("executing arm angle");
+        for (byte i = 0; i < ARM_MOTOR_NUM; i++)
+        {
+          motors[i].set_angle(convert_to_rjje_commanded_angles(arm_execution_angles[i]), i, pwm);
+        }
+    }
+
+    void execute_claw_angle(double angle){
+        motors[ARM_MOTOR_NUM].set_angle(convert_to_rjje_commanded_angles(angle), ARM_MOTOR_NUM, pwm);
     }
 
 private:
     Adafruit_PWMServoDriver pwm;
-    Motor motors[6];
+    Motor motors[ARM_MOTOR_NUM+1];
+
 };
 #if 0
 #endif

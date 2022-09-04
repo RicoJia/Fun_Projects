@@ -11,18 +11,17 @@ Arduino IDE:
     - programmer: 
 */
 
-#include "EspMQTTClient.h"
+#include <EspMQTTClient.h>
 #include "esp32_control.hpp"
 #include "servo_control.hpp"
 
-# if 0
 EspMQTTClient client(
     /* "EngelWiFi", */
     /* "2394Engel", */
     /* "10.0.1.82", */
-    "Unit-380",
-    "3ecbe779",
-    "100.65.212.26", // MQTT Broker server ip
+    "Unit-503",
+    "3c1d2684",
+    "100.66.47.31", // MQTT Broker server ip
     "MQTTUsername", // Can be omitted if not needed
     "MQTTPassword", // Can be omitted if not needed
     "ESP", // Client name that uniquely identify your device
@@ -49,46 +48,35 @@ void claw_sub_callback(const String & payload) {
 void plan_sub_callback(const String & payload) {
     esp32_control.plan_sub_callback(payload);
 }
-ServoControl servo_control;
-#endif
 
-double desired_angles[6];
-double actual_angles[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-double **waypoints = nullptr;
-byte num_waypoints = 0;
-
-const int FREQ = 10;
+ServoControl* servo_control = nullptr;
 
 void setup()
 {
     Serial.begin(115200);
-    /* esp32_control = Esp32Control(); */
-    /* client.enableDebuggingMessages(); // Enable debugging messages sent to serial output */
-    /* client.enableHTTPWebUpdater(); // Enable the web updater. User and password default to values of MQTTUsername and MQTTPassword. These can be overrited with enableHTTPWebUpdater("user", "password"). */
-    /* client.enableLastWillMessage("TestClient/lastwill", "I am going offline"); // You can activate the retain flag by setting the third parameter to true */
+    Serial.println("Initializing");
+    client.enableDebuggingMessages(); // Enable debugging messages sent to serial output 
+    client.enableHTTPWebUpdater(); // Enable the web updater. User and password default to values of MQTTUsername and MQTTPassword. These can be overrited with enableHTTPWebUpdater("user", "password").
+    client.enableLastWillMessage("TestClient/lastwill", "I am going offline"); // You can activate the retain flag by setting the third parameter to true 
+    servo_control = new ServoControl(); 
     Serial.println("Initialized");
 }
 
 
-//TODO
-void test_motor_go_around(){
-    static int i = 0;
-    static bool cw = true;
-    servo_control.set_angle(i, 0);
-    delay(100);  
-    if (i >= 180) cw = false;
-    else if (i <= 3) cw = true;
-    if (cw) i+=3;
-    else i-=3;
-    /* Serial.println("Moving to angle: " + String(i)); */
-}
-
 void loop()
 {
     // loop is non-blocking
+    client.loop();
+    client.enableDebuggingMessages(false);
     unsigned long start_time = millis();
-    //client.publish("esp/joint_states", esp32_control.get_joint_states());
+    double* arm_execution_angles = esp32_control.get_arm_current_angles();
+    if (arm_execution_angles != nullptr){
+        servo_control->execute_arm_angles(arm_execution_angles);
+    }
+    if (esp32_control.claw_angle_unexecuted_){
+        servo_control->execute_claw_angle(esp32_control.get_claw_angle());
+    }
+    client.publish("esp/joint_states", esp32_control.get_joint_states());
     unsigned long diff = millis() - start_time;
-    test_motor_go_around();
-    if (diff < (unsigned long)1000/FREQ) delay((unsigned long)1000/FREQ - diff);
+    if (diff < (unsigned long)1000/UPDATE_FREQUENCY) delay((unsigned long)1000/UPDATE_FREQUENCY - diff);
 }

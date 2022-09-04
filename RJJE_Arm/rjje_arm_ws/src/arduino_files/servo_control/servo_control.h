@@ -12,10 +12,10 @@
 
 #define PWM_BOARD_ADDR 0x40
 #define SERVO_FREQ 60
-// #define SERVO_MIN 120  // for MG96
-// #define SERVO_MAX 480    
-#define SERVO_MIN 124   // For Analog Feedback servos
-#define SERVO_MAX 348       
+#define SERVO_MIN 120  // for MG96
+#define SERVO_MAX 580    
+// #define SERVO_MIN 124   // For Analog Feedback servos
+// #define SERVO_MAX 348       
 #define UPDATE_FREQUENCY 100    //hz
 #define ANGULAR_THRESHOLD 0.5   //degrees
 #define TEACHING_MODE_VAL 361.0
@@ -99,8 +99,9 @@ struct Motor{
     }
 }; 
 
-inline void back_to_neutral(Motor* const motors, Adafruit_PWMServoDriver& pwm, float* commanded_angles){
-    commanded_angles[0] = 90; 
+inline void back_to_neutral(Motor* const motors, Adafruit_PWMServoDriver& pwm){
+    float commanded_angles[6];
+    commanded_angles[0] = 10; 
     commanded_angles[1] = 90; 
     commanded_angles[2] = 90; 
     commanded_angles[3] = 90; 
@@ -108,6 +109,7 @@ inline void back_to_neutral(Motor* const motors, Adafruit_PWMServoDriver& pwm, f
     commanded_angles[5] = 90; 
     for (unsigned int channel_id = 0; channel_id < 6; ++channel_id){
         motors[channel_id].set_angle(commanded_angles[channel_id], channel_id, pwm);
+        Serial.print("channel_id: " + String(channel_id) + "|");
     }
 }
 

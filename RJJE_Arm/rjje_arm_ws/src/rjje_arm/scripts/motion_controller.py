@@ -172,8 +172,11 @@ class MotionController:
 
 if __name__ == '__main__': 
     rospy.init_node(Constants.NODE_NAME)
-    mc = MotionController()
+    Constants.BROKER_IP = rospy.get_param("~broker_ip")
+    rospy.loginfo("================================================================" )
     rospy.loginfo("Started: " + Constants.NODE_NAME)
+    rospy.loginfo("Broker IP: " + Constants.BROKER_IP)
+    mc = MotionController()
     r = rospy.Rate(100)
     while not rospy.is_shutdown():
         # mc.update_action_servers()
