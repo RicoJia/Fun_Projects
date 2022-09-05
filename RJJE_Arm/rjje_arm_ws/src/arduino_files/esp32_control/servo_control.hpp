@@ -14,7 +14,7 @@
 const byte ARM_MOTOR_NUM = 5;
 const byte MAX_WAYPOINT_NUM = 64;
 #define ANGULAR_THRESHOLD 0.01   //radians
-#define UPDATE_FREQUENCY 10   //hz
+#define UPDATE_FREQUENCY 40   //hz
 
 
 inline int sign(float i){
@@ -48,8 +48,6 @@ struct Motor{
         float real_angle = get_real_angle(commanded_angle);
         if (real_angle != -1){
           uint16_t pulselength = map(real_angle, 0, 180, SERVO_MIN, SERVO_MAX);
-          //TODO
-          Serial.println("commanded: " + String(commanded_angle) + " | real_angle: " + String(real_angle) + " | pwm val: " + String(pulselength));
           pwm.setPWM(channel_id, 0, pulselength);
           return true;
         }
@@ -98,22 +96,19 @@ public:
         pwm.setPWMFreq(SERVO_FREQ);  // Analog servos run at ~60 Hz updates
         delay(5000);
 
-        // motors[0].offset_ = 30;
-        // motors[4].offset_ = 35;
+        motors[2].flip_rotation_ = true;
+        motors[3].flip_rotation_ = true;
         motors[5].is_claw_ = true;
 
         double initial_arm_angles[ARM_MOTOR_NUM] = {0,0,0,0,0};
         double initial_claw_angle = 0.0;
         execute_arm_angles(initial_arm_angles); 
         execute_claw_angle(initial_claw_angle); 
-        Serial.println("Servo Control Initialized");
         delay(5000); 
     }
     ~ServoControl (){}
 
     void execute_arm_angles(double* arm_execution_angles){
-        // TODO
-        Serial.println("executing arm angle");
         for (byte i = 0; i < ARM_MOTOR_NUM; i++)
         {
           motors[i].set_angle(convert_to_rjje_commanded_angles(arm_execution_angles[i]), i, pwm);

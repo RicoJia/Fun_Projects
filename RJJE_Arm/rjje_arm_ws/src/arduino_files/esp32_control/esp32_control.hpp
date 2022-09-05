@@ -17,7 +17,8 @@ public:
     * @return: actual angles
     */
     String get_joint_states(){
-        String msg;
+        // e.g., msg: '0.00;0.00;0.00;0.00;0.00;0.00|'
+        String msg = "link1_bracket_1;link_2_bracket_2_1;bracket_2_2_link_3;bracket_3_2_link_4;link_5_link_6;link_6_left_gripper|";
         for (byte i = 0; i < ARM_MOTOR_NUM; ++i) {
             msg += String(arm_actual_angles_[i]);
             msg += ";";
@@ -71,34 +72,37 @@ public:
 
     /**
     * @brief Get the step angles of the arms if a series of new waypoints have been passed in 
-    * @param arm_step_angles_: step angles to populate
     * @return ptr to angles for execution, which are the "current_angles"
     */
     double* get_arm_current_angles() {
         if (num_waypoints_ == 0) return nullptr;
         auto& commanded_angles = waypoints_[current_waypoint_];
-        //TODO
         if (current_waypoint_ == num_waypoints_){
             reset_waypoints();
             return nullptr;
         }
         else {
-            // Logic: update step angle; update current angle; if we can switch, switch
-            for(unsigned char i =0; i < ARM_MOTOR_NUM; ++i){
-                // when we are at the start of a waypoint
-                if (!arm_step_angles_set_){
+            // when we are at the start of a waypoint
+            if (!arm_step_angles_set_){
+                for(unsigned char i =0; i < ARM_MOTOR_NUM; ++i){
                     arm_step_angles_[i] = (commanded_angles[i] - arm_actual_angles_[i])/execution_times_[current_waypoint_]/UPDATE_FREQUENCY;
                 }
+                arm_step_angles_set_ = true;
+            }
+
+            // Logic: update step angle; update current angle; if we can switch, switch
+            for(unsigned char i =0; i < ARM_MOTOR_NUM; ++i){
                 // when we approach the end of current waypoint
                 if(abs(arm_step_angles_[i]) > abs(commanded_angles[i] - arm_actual_angles_[i])){
                     arm_step_angles_[i] = commanded_angles[i] - arm_actual_angles_[i]; 
                 }
                 arm_actual_angles_[i] += arm_step_angles_[i];
             }
-        // Flag after initializing all arm step angles
-        if(!arm_step_angles_set_) arm_step_angles_set_ = true;
-        if (can_switch(commanded_angles)) current_waypoint_ += 1;
-            return arm_actual_angles_;
+        if (can_switch(commanded_angles)){
+            arm_step_angles_set_ = false;
+            current_waypoint_ += 1;
+        } 
+        return arm_actual_angles_;
         }
     }
 
@@ -120,7 +124,6 @@ private:
     void reset_waypoints(){
         num_waypoints_ = 0;
         current_waypoint_ = 0; 
-        arm_step_angles_set_ = false;
     }
 
     bool can_switch(double* commanded_angles){

@@ -10,6 +10,8 @@ On arduino, all motors go from (0, 180) following the right-hand convention, wit
         1. esp/joint_states: MQTT topic from robot
     - Outputs:
         1. /joint_states: ROS topic of robot joint states
+3. For testing with mosquito:
+    - mosquitto_sub -d -t "esp/arm"
 """
 import rospy
 import numpy as np
@@ -127,7 +129,7 @@ class MotionController:
         # So we need to publish joints in the same order
         
         self.calculate_arm_joint_state_indices(traj)
-        mqtt_command = self.publish_mqtt_string(traj)
+        self.publish_mqtt_string(traj)
         print(self.arm_joint_state_indices)
         # parse joint_state_indices
         # send them out 
@@ -148,6 +150,8 @@ class MotionController:
             value_str = ";".join(str(v) for v in values) + ";" + str(interval) + "|"
             mqtt_string += value_str
             last_time = current_time
+        #TODO
+        print("mqtt:"+mqtt_string)
         self.mqtt_client.publish("esp/arm", mqtt_string)
 
             

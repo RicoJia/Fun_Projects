@@ -10,36 +10,36 @@ default_acceleration_scaling_factor: 0.1
 joint_limits:
   bracket_2_2_link_3:
     has_velocity_limits: true
-    max_velocity: 0.5
+    max_velocity: 1.57
     has_acceleration_limits: false
     max_acceleration: 0
   bracket_3_2_link_4:
     has_velocity_limits: true
-    max_velocity: 0.5
+    max_velocity: 1.57
     has_acceleration_limits: false
     max_acceleration: 0
   link1_bracket_1:
     has_velocity_limits: true
-    max_velocity: 0.5
+    max_velocity: 1.57
     has_acceleration_limits: false
     max_acceleration: 0
   link_2_bracket_2_1:
     has_velocity_limits: true
-    max_velocity: 0.5
+    max_velocity: 1.57
     has_acceleration_limits: false
     max_acceleration: 0
   link_5_link_6:
     has_velocity_limits: true
-    max_velocity: 0.5
+    max_velocity: 1.57
     has_acceleration_limits: false
     max_acceleration: 0
   link_6_left_gripper:
     has_velocity_limits: true
-    max_velocity: 0.5
+    max_velocity: 1.57
     has_acceleration_limits: false
     max_acceleration: 0
   link_6_right_gripper:
     has_velocity_limits: true
-    max_velocity: 0.5
+    max_velocity: 1.57
     has_acceleration_limits: false
     max_acceleration: 0

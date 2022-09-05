@@ -31,7 +31,7 @@ Esp32Control esp32_control;
 // This function is called once everything is connected (Wifi and MQTT)
 void onConnectionEstablished()
 {
-    client.subscribe("esp/plan", plan_sub_callback);
+    client.subscribe("esp/arm", plan_sub_callback);
     client.subscribe("esp/hand", claw_sub_callback);
 }
 
@@ -54,12 +54,17 @@ ServoControl* servo_control = nullptr;
 void setup()
 {
     Serial.begin(115200);
-    Serial.println("Initializing");
+    Serial.println("Initializing WIFI MQTT Client and Servo");
     client.enableDebuggingMessages(); // Enable debugging messages sent to serial output 
     client.enableHTTPWebUpdater(); // Enable the web updater. User and password default to values of MQTTUsername and MQTTPassword. These can be overrited with enableHTTPWebUpdater("user", "password").
     client.enableLastWillMessage("TestClient/lastwill", "I am going offline"); // You can activate the retain flag by setting the third parameter to true 
+    // 16kb, approximately 120 waypoints, which should be way more than enough. 
+    // Without this we can send up to 256 bytes.
+    client.setMaxPacketSize(16384);
+    Serial.println("WIFI MQTT Client and Control Initialized");
     servo_control = new ServoControl(); 
-    Serial.println("Initialized");
+    Serial.println("Servo Control Initialized");
+    Serial.println("RJJE arm initialized");
 }
 
 
