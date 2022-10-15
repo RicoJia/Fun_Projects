@@ -106,8 +106,23 @@ public:
         }
     }
 
+    /**
+     * @brief we publish heart beat every interval_ms  
+     * @param interval_ms - interval between heart beats in milliseconds
+     * @return true 
+     * @return false 
+     */
+    bool should_publish_heartbeat(int interval_ms){
+        if (millis() - last_heartbeat_time_ >= interval_ms){
+            last_heartbeat_time_ = millis();
+            return true;
+        }
+        return false;
+    }
+
     bool claw_angle_unexecuted_ = false;
 private:
+    unsigned long last_heartbeat_time_ = millis();
     double arm_actual_angles_[ARM_MOTOR_NUM] = {0.0, 0.0, 0.0, 0.0, 0.0};
     double claw_angle_ = 0.0;
 

@@ -82,6 +82,9 @@ void loop()
         servo_control->execute_claw_angle(esp32_control.get_claw_angle());
     }
     client.publish("esp/joint_states", esp32_control.get_joint_states());
+    if (esp32_control.should_publish_heartbeat(1000)){
+        client.publish("esp/heartbeat", "heartbeat");
+    }
     unsigned long diff = millis() - start_time;
     if (diff < (unsigned long)1000/UPDATE_FREQUENCY) delay((unsigned long)1000/UPDATE_FREQUENCY - diff);
 }

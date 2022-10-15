@@ -61,14 +61,15 @@ void servo_read(){
 void loop()
 {
   
-  for (int i = 0; i <=180; i+=90) {
-      motors[0].set_angle(i, 0, pwm);
-      delay(3000);  
-  }
+      motors[0].set_angle(90, 0, pwm);
+  // for (int i = 0; i <=180; i+=90) {
+  //     motors[0].set_angle(i, 0, pwm);
+  //     delay(3000);  
+  // }
 
-    for (int i = 180; i >= 0; i-=90) {
-      motors[0].set_angle(i, 0, pwm);
-      delay(3000);
-  }
+  //   for (int i = 180; i >= 0; i-=90) {
+  //     motors[0].set_angle(i, 0, pwm);
+  //     delay(3000);
+  // }
 }
 

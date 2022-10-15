@@ -72,6 +72,10 @@ class MotionController:
             Constants.NODE_NAME
         )
         self.joint_state_msg = JointState()
+        self.joint_state_msg.header.frame_id = ''
+        self.joint_state_msg.header.stamp = rospy.get_rostime()
+        # self.joint_state_msg.header.seq = some_num
+        
         # index (our internal representation -> joint moveit's trajectory )
         self.traj_point_joint_name_lookup = []
         rospy.loginfo("joint state lookup has been set up")
