@@ -43,5 +43,7 @@
         - Need to associate point RGB with point cloud 
         - Visualize
 
+5. Depth Camera
+
 
     
