@@ -1,4 +1,7 @@
 /*
+If you try to run mosquitto_pub -t "esp/joint_states" -h IP
+and get "connection refused", Make sure in your machine, run 
+"mosquitto" to turn on the broker
 Once it connects successfully to a Wifi network and a MQTT broker, it subscribe to a topic and send a message to it.
 Ref: https://github.com/plapointe6/EspMQTTClient/issues/82
 RJ: The previous example, using PubSubClient simply doesn't work. Pretty certain something is broken in that library.
@@ -21,7 +24,7 @@ EspMQTTClient client(
     /* "10.0.1.82", */
     "Unit-503",
     "3c1d2684",
-    "100.66.47.31", // MQTT Broker server ip
+    "100.64.0.184", // MQTT Broker server ip
     "MQTTUsername", // Can be omitted if not needed
     "MQTTPassword", // Can be omitted if not needed
     "ESP", // Client name that uniquely identify your device

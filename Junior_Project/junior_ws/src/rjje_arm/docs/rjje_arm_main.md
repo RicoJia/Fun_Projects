@@ -74,6 +74,7 @@ Introduction
         - Working near the range limits
         - Motors are cheap so that parts don't work properly. **In my case, some motors did work better than others. I think that's because the good ones have better correspondence to the internal PID control loop**
     5. Analog Servos' feedback can have around 1 degree of error. Which can introduce jittering in replay
+    6. If motors start to have large oscillations, and power LEDs blink, then make sure no other appliances are connected to the power source
 
 ### WIFI
 1. WIFI Connection

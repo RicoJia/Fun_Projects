@@ -180,7 +180,7 @@ class MotionController:
 
 if __name__ == '__main__': 
     rospy.init_node(Constants.NODE_NAME)
-    Constants.BROKER_IP = rospy.get_param("~broker_ip")
+    Constants.BROKER_IP = rospy.get_param("~broker_ip", Constants.BROKER_IP)
     rospy.loginfo("================================================================" )
     rospy.loginfo("Started: " + Constants.NODE_NAME)
     rospy.loginfo("Broker IP: " + Constants.BROKER_IP)

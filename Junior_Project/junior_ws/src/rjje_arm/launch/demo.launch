@@ -105,6 +105,6 @@
 <!-- TODO -->
 <node name="motion_controller" type="motion_controller.py" pkg="rjje_arm" output="screen">
   <param name="broker_ip" value="127.0.0.1" if ="$(arg run_in_gazebo)" />
-  <param name="broker_ip" value="100.66.47.31" unless ="$(arg run_in_gazebo)" />
+  <param name="broker_ip" value="127.0.0.1" unless ="$(arg run_in_gazebo)" />
 </node>
 </launch>
