@@ -4,3 +4,6 @@
 [submodule "RJJE_Arm/rjje_arm_ws/src/gazebo_ros_joints_publisher"]
 	path = RJJE_Arm/rjje_arm_ws/src/gazebo_ros_joints_publisher
 	url = https://github.com/yossioo/gazebo_ros_joints_publisher.git
+[submodule "Junior_Project/junior_ws/src/SimpleRoboticsPythonUtils"]
+	path = Junior_Project/junior_ws/src/SimpleRoboticsPythonUtils
+	url = git@github.com:RicoJia/SimpleRoboticsPythonUtils.git
