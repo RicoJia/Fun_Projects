@@ -41,10 +41,11 @@ Juniors Main components include:
     - ESP32 -> motor control.
     - lap -> Esp32 -> what laptop has sent. Need 60% Flash Memory 
 3. Calibration Tools: 2 aruco markers
-    - Big marker under the robot (step 1)
-    - RGBD cam detection (D), RGBD camera - interaction with Arm
-    - optional step: side aruco on robot
-    - Need cardbox to make the calibration plates
+    - RGBD cam detection (D), RGBD camera - Detect Aruco Marker Pose
+    - Hand-Eye Calibration, with manual moveit commands
+    - Summarize RGBD Camera Bring Up, Aruco Detection, Marker Pose & Hand-Eye Calibration procedure
+4. Moveit tool Overhaul
+    - Make a custom moveit interface
 4. Coffee Bot Recommission
 5. Voice Interacter
 

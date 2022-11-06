@@ -17,12 +17,14 @@ MARKER_SIZE = 0.134
 
 class ArucoDetector:
     def __init__(self, visualize) -> None:
-        self.pipeline = rs.pipeline()
-        self.config = rs.config()
-        self.config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
-        self.profile = self.pipeline.start(self.config)
         self.visualize = visualize
         self.camera_matrices_initialized = False
+        rospy.loginfo("Connecting to Intel Real Sense Camera...")
+        # self.pipeline = rs.pipeline()
+        # self.config = rs.config()
+        # self.config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+        # self.profile = self.pipeline.start(self.config)
+        rospy.loginfo("Aruco Detector initialization Successful")
     
     def detect_aruco(self) -> bool:
         frames = self.pipeline.wait_for_frames()
@@ -59,6 +61,7 @@ class ArucoDetector:
                     cv2.aruco.drawAxis(color_img, self.camera_matrix, self.distortion_matrix, rvec, tvec, 0.03)  
                     print(f"position: {tvec}")
             ArucoDetector.show_aruco(color_img, corners, ids)
+        return ids, rvec_list, tvec_list
         
     @staticmethod
     def show_aruco(color_img, corners, ids):
@@ -72,10 +75,11 @@ class ArucoDetector:
                 top_left = marker_corner[0:]
                 cv2.putText(color_img, str(id),tuple(top_left - np.array([0, 10], int)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
         cv2.imshow("Aruco Detection", color_img)
-        cv2.waitKey(2)
+        cv2.waitKey(0)
 
     def on_shutdown(self):
         self.pipeline.stop()
+        cv2.destroyAllWindows()
         
 if __name__ == "__main__":
     rospy.init_node("aruco_detection")     
