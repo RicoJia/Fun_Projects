@@ -12,6 +12,7 @@ import numpy as np
 import sys 
 import os
 import inspect
+import re
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 sys.path.insert(0, currentdir) 
 from utils.rico_mqtt import MqttClient, MqttSubscriberCbs
@@ -25,16 +26,25 @@ class Params:
     
 class GazeboMotionController:
     def __init__(self) -> None:
-        master = rosgraph.Master('/rostopic')
-        pubs, subs = rostopic.get_topic_list(master=master)
-        sub_topics = [topic for topic, *_ in subs]
-        # filter returns a filter object, cannot be unpacked directly
-        joint_topics = list (filter(lambda topic: "controller/command" in topic, sub_topics))
+        # Create ros controller command topics: /joint_3_controller/command, from the rosparam names
+        # like /joint_6_controller/joint
+        ros_params = rospy.get_param_names()
+        # Here we have names such as /joint_3_controller repeating multiple times
+        joint_controller_names = set(re.findall("/joint_._controller", "|".join(ros_params)))
+        joint_topics = [p+"/command" for p in joint_controller_names]
+
+        
+        # master = rosgraph.Master('/rostopic')
+        # pubs, subs = rostopic.get_topic_list(master=master)
+        # sub_topics = [topic for topic, *_ in subs]
+        # print("subs: ", subs, "sub_topics", sub_topics)
+        # # filter returns a filter object, cannot be unpacked directly
+        # joint_topics = list (filter(lambda topic: "controller/command" in topic, sub_topics))
         publishers = tuple(((topic, rospy.Publisher(topic, Float64, queue_size=10) ) for topic in joint_topics))
         self.arm_publishers = publishers[: -Params.HAND_JOINTS_NUM]
         self.hand_publishers = publishers[-Params.HAND_JOINTS_NUM :]
             
-        print("Recording joints: ", joint_topics)
+        print("Joint control topics: ", joint_topics)
         
         self.mqtt_client = MqttClient("127.0.0.1", 1883,
                         {
@@ -78,9 +88,15 @@ class GazeboMotionController:
         commands = str(msg.payload.decode("utf-8")).split("|")
         for command in commands:
             commanded_angles_and_time = MqttSubscriberCbs.get_array_from_string(command.split(";"))
+            #TODO
+            print(f'commanded_angles_and_time: {len(commanded_angles_and_time)}, plan_length: {plan_length}')
             if len(commanded_angles_and_time) == plan_length: 
+                #TODO
+                print(f'1')
                 plans.append(commanded_angles_and_time)
             elif apply_mimic_joint and len(commanded_angles_and_time) != 0:
+                #TODO
+                print(f'2')
                 new_angle = commanded_angles_and_time[0] * -1
                 new_commanded_angles_and_time = [commanded_angles_and_time[0], new_angle, commanded_angles_and_time[1]]
                 plans.append(new_commanded_angles_and_time) 
@@ -95,6 +111,8 @@ class GazeboMotionController:
                     topic, pub = publishers[i]
                     angles_to_pub[i] += + delta_intervals[i]
                     pub.publish(Float64(angles_to_pub[i]))
+                    #TODO
+                    print(f'{topic}: {Float64(angles_to_pub[i])}')
                 self.rate.sleep()
             
     def arm_joints_cb(self, userdata, msg):

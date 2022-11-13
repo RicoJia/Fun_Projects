@@ -155,7 +155,7 @@ class MotionController:
             mqtt_string += value_str
             last_time = current_time
         #TODO
-        print("mqtt:"+mqtt_string)
+        rospy.loginfo("sent to mqtt:" + mqtt_string)
         self.mqtt_client.publish("esp/arm", mqtt_string)
 
             
