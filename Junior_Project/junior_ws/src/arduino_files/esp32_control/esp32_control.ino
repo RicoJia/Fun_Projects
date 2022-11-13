@@ -24,7 +24,7 @@ EspMQTTClient client(
     /* "10.0.1.82", */
     "Unit-503",
     "3c1d2684",
-    "100.64.0.184", // MQTT Broker server ip
+    "100.66.47.29", // MQTT Broker server ip
     "MQTTUsername", // Can be omitted if not needed
     "MQTTPassword", // Can be omitted if not needed
     "ESP", // Client name that uniquely identify your device

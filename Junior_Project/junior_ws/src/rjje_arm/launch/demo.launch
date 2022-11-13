@@ -101,10 +101,14 @@
 
   <!-- Given the published joint states, publish tf for the robot links -->
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" if="$(arg fake_execution)"/>
+  <!-- TODO -->
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" respawn="true" output="screen" unless="$(arg fake_execution)"/>
+
 <!-- ============================== Motion Controller ================================== -->
 <!-- TODO -->
 <node name="motion_controller" type="motion_controller.py" pkg="rjje_arm" output="screen">
   <param name="broker_ip" value="127.0.0.1" if ="$(arg run_in_gazebo)" />
-  <param name="broker_ip" value="127.0.0.1" unless ="$(arg run_in_gazebo)" />
+  <param name="broker_ip" value="100.66.47.29" unless ="$(arg run_in_gazebo)" />
+  <!-- <param name="broker_ip" value="127.0.0.1" unless ="$(arg run_in_gazebo)" /> -->
 </node>
 </launch>

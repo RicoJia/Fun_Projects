@@ -60,7 +60,7 @@ class ArucoDetector:
             self.show_aruco(color_img, corners, ids, rvec_list, tvec_list)
         return ids, rvec_list, tvec_list
         
-    def show_aruco(self, color_img: np.ndarray, corners: list, ids: np.ndarray, rvec_list: list = [], tvec_list: list = []) -> int:
+    def show_aruco(self, color_img: np.ndarray, corners: list, ids: np.ndarray, rvec_list: list = [], tvec_list: list = [], show_static_img = False) -> int:
         if rvec_list:
             for rvec, tvec in zip (rvec_list, tvec_list):
                 cv2.aruco.drawAxis(color_img, self.camera_matrix, self.distortion_matrix, rvec, tvec, 0.03)  
@@ -76,7 +76,8 @@ class ArucoDetector:
                 cv2.putText(color_img, str(id),tuple(top_left - np.array([0, 10], int)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
         cv2.imshow("Aruco Detection", color_img)
-        key_pressed = cv2.waitKey(1)
+        timeout = 0 if show_static_img else 1 
+        key_pressed = cv2.waitKey(timeout)
         return key_pressed
 
     def on_shutdown(self):
@@ -88,7 +89,7 @@ if __name__ == "__main__":
     rate = rospy.Rate(30)
     visualize = rospy.get_param("~visualize", True)
     rospy.logdebug("visualize: ", visualize)
-    ad = ArucoDetector(visualize, DEFAULT_MARKER_SIZE)
+    ad = ArucoDetector(visualize, 0.036)
     
     while not rospy.is_shutdown():
         color_img, corners, ids = ad.detect_aruco()
