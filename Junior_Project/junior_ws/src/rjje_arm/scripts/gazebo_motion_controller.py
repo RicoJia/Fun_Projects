@@ -45,7 +45,7 @@ class GazeboMotionController:
     
         self.rate = rospy.Rate(Params.EXECUTION_PUBLISH_FREQ)
        
-        self.gazebo_joint_state_sub = rospy.Subscriber("/rjje_arm_gazebo/joint_states", JointState, self.gazebo_joint_state_cb) 
+        self.gazebo_joint_state_sub = rospy.Subscriber("/joint_states", JointState, self.gazebo_joint_state_cb) 
         self.arm_joint_states = []
         self.hand_joint_states = []
 

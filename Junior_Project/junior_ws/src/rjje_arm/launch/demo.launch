@@ -14,6 +14,7 @@
   <!-- RJ: joint_state_publisher is only launched when we test with fake execution -->
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" if="$(arg fake_execution)">
     <rosparam param="source_list">[move_group/fake_controller_joint_states]</rosparam>
+    <remap from="joint_states" to="rjje_arm/joint_states"/>
   </node>
 
 <!-- ==============================planning_context================================== -->
@@ -92,6 +93,7 @@
     <param name="planning_scene_monitor/publish_geometry_updates" value="true" />
     <param name="planning_scene_monitor/publish_state_updates" value="true" />
     <param name="planning_scene_monitor/publish_transforms_updates" value="true" />
+    <remap from="joint_states" to="rjje_arm/joint_states"/>
   </node>
 
 <!-- ============================== Gazebo ================================== -->
@@ -103,7 +105,7 @@
 <!-- ============================== Motion Controller ================================== -->
 <!-- Given the published joint states, publish tf for the robot links (gazebo.launch has its onw robot_state_publisher)-->
 <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" unless="$(arg run_in_gazebo)"/>
-<node name="motion_controller" type="motion_controller.py" pkg="rjje_arm" output="screen" unless="$(arg fake_execution)">
+<node name="motion_controller" type="motion_controller.py" pkg="rjje_arm" output="screen" unless="$(arg fake_execution)" ns="rjje_arm">
   <param name="broker_ip" value="127.0.0.1" if ="$(arg run_in_gazebo)" />
   <param name="broker_ip" value="100.66.47.29" unless ="$(arg run_in_gazebo)" />
 </node>
