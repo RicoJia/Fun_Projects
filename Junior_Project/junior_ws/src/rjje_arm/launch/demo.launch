@@ -76,7 +76,7 @@
   </include>
 
     <!-- Start the actual move_group node/action server -->
-  <node name="move_group" launch-prefix="" pkg="moveit_ros_move_group" type="move_group" respawn="false" output="screen" args="">
+  <node name="move_group" launch-prefix="" pkg="moveit_ros_move_group" type="move_group" respawn="false" output="screen" args="" >
     <!-- Set the display variable, in case OpenGL code is used internally -->
     <env name="DISPLAY" value="$(optenv DISPLAY :0)" />
 
@@ -103,9 +103,8 @@
 <!-- ============================== Motion Controller ================================== -->
 <!-- Given the published joint states, publish tf for the robot links (gazebo.launch has its onw robot_state_publisher)-->
 <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" unless="$(arg run_in_gazebo)"/>
-<node name="motion_controller" type="motion_controller.py" pkg="rjje_arm" output="screen">
+<node name="motion_controller" type="motion_controller.py" pkg="rjje_arm" output="screen" unless="$(arg fake_execution)">
   <param name="broker_ip" value="127.0.0.1" if ="$(arg run_in_gazebo)" />
   <param name="broker_ip" value="100.66.47.29" unless ="$(arg run_in_gazebo)" />
-  <!-- <param name="broker_ip" value="127.0.0.1" unless ="$(arg run_in_gazebo)" /> -->
 </node>
 </launch>

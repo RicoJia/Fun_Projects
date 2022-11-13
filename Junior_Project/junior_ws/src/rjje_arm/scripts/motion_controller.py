@@ -53,7 +53,7 @@ def send_reponse(action_server: actionlib.SimpleActionServer, action_server_name
     elif status == "PREEMPTED":
         action_server.set_preempted()
     elif status == "ABORTED":
-        action_server.setAborted() 
+        action_server.set_aborted() 
 
 class Constants:
     NODE_NAME = "motion_controller"
