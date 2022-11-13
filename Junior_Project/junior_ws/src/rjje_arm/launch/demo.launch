@@ -1,7 +1,7 @@
 <launch>
 <!-- ==============================All Custom Switches================================== -->
-  <arg name="run_in_gazebo" value="false"/>
-  <arg name="fake_execution" value="false"/>
+  <arg name="run_in_gazebo" default="false"/>
+  <arg name="fake_execution" default="false"/>
 
 <!-- ==============================Basic Configs================================== -->
 
@@ -99,13 +99,10 @@
     <arg name="run_control_node" value="true" />
   </include>
 
-  <!-- Given the published joint states, publish tf for the robot links -->
-  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" if="$(arg fake_execution)"/>
-  <!-- TODO -->
-  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" respawn="true" output="screen" unless="$(arg fake_execution)"/>
 
 <!-- ============================== Motion Controller ================================== -->
-<!-- TODO -->
+<!-- Given the published joint states, publish tf for the robot links (gazebo.launch has its onw robot_state_publisher)-->
+<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" unless="$(arg run_in_gazebo)"/>
 <node name="motion_controller" type="motion_controller.py" pkg="rjje_arm" output="screen">
   <param name="broker_ip" value="127.0.0.1" if ="$(arg run_in_gazebo)" />
   <param name="broker_ip" value="100.66.47.29" unless ="$(arg run_in_gazebo)" />
