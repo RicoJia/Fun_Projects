@@ -12,7 +12,6 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 sys.path.insert(0, currentdir) 
 from utils.rico_mqtt import MqttClient, MqttSubscriberCbs
 
-#TODO - Can go to utils
 def sort_ls_based_on_indices(ls: list, indices: list):
     zipped_sorted_ls = sorted(zip(ls, indices), key=lambda zipped: zipped[1])
     return [z[0] for z in zipped_sorted_ls]
@@ -115,80 +114,11 @@ class GazeboMotionController:
                 plans.append(new_commanded_angles_and_time) 
 
         for plan in plans:
-            #TODO
-            print(f'plan: {plan[:-1]}, time: {plan[-1]}')
             execution_time = plan[-1]
             for i in range(plan_length - 1):
                 topic, pub = publishers[i]
                 pub.publish(Float64(plan[i]))
             time.sleep(execution_time) 
-    
-    # def gazebo_joint_state_cb(self, msg):
-    #     '''
-    #     Published message looks like: joint_1_name; ... | joint_1_value; ... |
-    #     ASSUMPTION: joint_states published from Gazebo is in the same order as plan
-    #     ''' 
-    #     names = ";".join(msg.name)
-    #     positions = ";".join([str(p) for p in msg.position])
-    #     self.mqtt_client.publish("esp/joint_states", names + "|" + positions)
-    #     self.arm_joint_states = list(msg.position[: -Params.HAND_JOINTS_NUM])
-    #     self.hand_joint_states = list(msg.position[-Params.HAND_JOINTS_NUM :])
-    
-    # def __execute_plans(self, userdata, msg, publishers: list, joint_states: list, apply_mimic_joint: bool = False):
-    #     """
-    #     Parse plans that look like: val_a1; val_a2; ... time_1;| val_b1, ... time_2;| ... 
-    #     Then execute each plan according to its time
-    #     note that a copy of all these data is executed in the MQTT callback
-    #     Args:
-    #         userdata (_type_): Custom User data 
-    #         msg (_type_): Actual MQTT Message
-    #         publishers (list): Length of each plan
-    #         apply_mimic_joint (bool): Hardcoded patch for simulate mimic joint issues
-
-    #     Returns:
-    #     """
-    #     plans = []
-    #     plan_length = len(publishers) + 1
-    #     commands = str(msg.payload.decode("utf-8")).split("|")
-    #     for command in commands:
-    #         commanded_angles_and_time = MqttSubscriberCbs.get_array_from_string(command.split(";"))
-    #         if len(commanded_angles_and_time) == plan_length: 
-    #             plans.append(commanded_angles_and_time)
-    #         elif apply_mimic_joint and len(commanded_angles_and_time) != 0:
-    #             new_angle = commanded_angles_and_time[0] * -1
-    #             new_commanded_angles_and_time = [commanded_angles_and_time[0], new_angle, commanded_angles_and_time[1]]
-    #             plans.append(new_commanded_angles_and_time) 
-
-    #     for plan in plans:
-    #         #TODO
-    #         print(f'plan: {plan[:-1]}, time: {plan[-1]}')
-    #         execution_time = plan[-1]
-    #         for i in range(plan_length - 1):
-    #             topic, pub = publishers[i]
-    #             pub.publish(Float64(plan[i]))
-    #         time.sleep(execution_time) 
-            
-            # num_intervals = int(np.ceil(execution_time * Params.EXECUTION_PUBLISH_FREQ))
-            # delta_intervals = (np.array(plan[:-1]) - np.array(joint_states))/(num_intervals)
-            # angles_to_pub = joint_states
-            # for interval in range(num_intervals):
-            #     for i in range(plan_length - 1):
-            #         topic, pub = publishers[i]
-            #         angles_to_pub[i] += + delta_intervals[i]
-            #         pub.publish(Float64(angles_to_pub[i]))
-            #     self.rate.sleep()
-            
-    # def arm_joints_cb(self, userdata, msg):
-    #     """
-    #     Each plan has 5 joint angles 3 digit precision + execution time. Ex: 12.3;32.2;23.0;45.4;66.2;0.02;|... , where 0.02 is the execution time*/
-    #     """
-    #     self.__execute_plans(userdata, msg, self.arm_publishers, self.arm_joint_states)
-
-    # def hand_joint_cb(self, userdata, msg):
-    #     """
-    #     Payload = 0, claw will be closed, 1 will be open
-    #     """
-    #     self.__execute_plans(userdata, msg, self.hand_publishers, self.hand_joint_states, apply_mimic_joint=True)
     
 if __name__ == '__main__':
     rospy.init_node("gazebo_motion_controller")
