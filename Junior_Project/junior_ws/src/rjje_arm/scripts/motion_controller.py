@@ -148,14 +148,16 @@ class MotionController:
         mqtt_string = ""
         last_time = 0
         for pt in traj.points[1:]:
+            #TODO
+            print(f'self.arm_joint_state_indices: {self.arm_joint_state_indices}, len(pt.positions): {len(pt.positions)}')
             values = list(map(lambda i: pt.positions[i], self.arm_joint_state_indices))
             current_time = pt.time_from_start.to_sec() 
             interval = current_time-last_time
             value_str = ";".join(str(v) for v in values) + ";" + str(interval) + "|"
             mqtt_string += value_str
             last_time = current_time
-        #TODO
-        rospy.loginfo("sent to mqtt:" + mqtt_string)
+            #TODO
+            rospy.loginfo(str(values) + "| time: " + str(interval))
         self.mqtt_client.publish("esp/arm", mqtt_string)
 
             
@@ -174,6 +176,8 @@ class MotionController:
         joint_names, position = msg.payload.decode("utf-8").split("|")
         if len(self.joint_state_msg.name) == 0:
             self.joint_state_msg.name = joint_names.split(";")
+            #TODO
+            print(f'todo: joint_names: {self.joint_state_msg.name}')
         self.joint_state_msg.position = MqttSubscriberCbs.get_array_from_string(position.split(";"))
         self.joint_state_msg.header.stamp = rospy.Time.now()
         self.joint_state_pub.publish(self.joint_state_msg)
