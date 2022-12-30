@@ -1,9 +1,6 @@
 #!/bin/bash
 # This file can be used to install, and launch rviz or gazebo models
-# To visualize the robot only, you can see the robot with 
-#    - In Gazebo, ./build_and_visualize.sh gazebo
-#    - In Rviz: ./build_and_visualize.sh rviz
-#    - Launch the moveit pipeline: ./build_and_visualize.sh
+# See below for different modes this script provides you!
 
 echo "Checking for dependencies..."
 install_pip_package_on_demand(){
@@ -44,7 +41,6 @@ elif [[ ${1} == "gazebo_control" ]]; then
     test_status=test_mqtt
     if $test_status == 0; then roslaunch rjje_arm demo.launch run_in_gazebo:=true; 
     else exit 1; fi
-
 elif [[ ${1} == "rviz_control" ]]; then
     roslaunch rjje_arm demo.launch fake_execution:=true
 elif [[ ${1} == "real_hardware_control" ]]; then
