@@ -38,8 +38,9 @@ class GazeboMotionController:
         ros_params = rospy.get_param_names()
         # Here we have names such as /joint_3_controller repeating multiple times
         joint_controller_names = set(re.findall("/joint_._controller", "|".join(ros_params)))
+        joint_controller_names = list(joint_controller_names)
+        joint_controller_names.sort()
         self.real_joint_names = [rospy.get_param(p+"/joint") for p in joint_controller_names]
-        self.real_joint_names.sort()
         # ASSUMPTION: hand joints have higher joint index than arm joints
 
         # 2. Create arm and hand publishers
@@ -81,8 +82,6 @@ class GazeboMotionController:
         gazebo_joint_names_indices = [self.real_joint_names.index(js) for js in msg.name]
         gazebo_joint_names = sort_ls_based_on_indices(msg.name, gazebo_joint_names_indices)
         gazebo_joint_names = ";".join(gazebo_joint_names)
-
-        print(gazebo_joint_names, "|", self.real_joint_names, "|| indices:", gazebo_joint_names_indices)
 
         positions = sort_ls_based_on_indices(msg.position, gazebo_joint_names_indices)
         positions = ";".join([str(p) for p in positions])

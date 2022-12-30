@@ -52,12 +52,10 @@ Juniors Main components include:
 ========================================================================
 ## Roadmap 
 ========================================================================
-1. Fixes 
-    - gazebo test (1day)
-    - mqtt_test during boot up (1day)
-2. Moveit tool Overhaul
-    - Make a custom moveit interface
-3. Change motors
+1. Moveit tool Overhaul
+    - Make a custom moveit interface (3 days)
+
+2. Change motors (2 days)
     - add one state on ESP32:
         1. Read angular values
         2. Move robot to neutral.
@@ -89,6 +87,7 @@ Juniors Main components include:
 6. STM 32. 
     1. Run ros on it. with an added topic for teaching mode
     2. Add
+
 7. Teaching mode [Optional]
     - How to do zero-gravity?
     - Turn on teaching mode: 360 360 ... Turn off (ros service)
@@ -135,3 +134,6 @@ Juniors Main components include:
     - lap -> Esp32 -> what laptop has sent. Need 60% Flash Memory 
 3. Calibration Tools: 2 aruco markers
     - RGBD cam detection (D), RGBD camera - Detect Aruco Marker Pose
+4. Fixes 
+    - gazebo test (1day)
+    - mqtt_test during boot up (1day)
