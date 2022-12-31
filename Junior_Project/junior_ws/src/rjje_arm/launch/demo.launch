@@ -35,7 +35,7 @@
 
   <!-- Load default settings for kinematics; these settings are overridden by settings in a node's namespace -->
   <group ns="robot_description_kinematics">
-    <rosparam command="load" file="$(find rjje_arm_moveit_config)/config/kinematics.yaml"/>
+    <rosparam command="load" file="$(find rjje_arm)/config/kinematics.yaml"/>
   </group>
 
 <!-- ==============================planning_pipelines================================== -->

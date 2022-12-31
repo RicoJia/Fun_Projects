@@ -108,9 +108,11 @@ class MoveGroupPythonInterfaceTutorial(object):
         move_group.set_goal_tolerance(0.1000000)
         pose_goal = geometry_msgs.msg.Pose()
         pose_goal.orientation = geometry_msgs.msg.Quaternion(0.7665437588561735,  -0.010203678134488959, 0.008562231779498048, 0.64205392211101)
-        pose_goal.position = geometry_msgs.msg.Point(0.051262612425750186, -0.11918940346832263, 0.29)
+        pose_goal.position = geometry_msgs.msg.Point(0.012, -0.102, 0.304)
 
+        # Use approxIK
         move_group.set_joint_value_target(pose_goal, "link_6", True)
+        # move_group.set_pose_target(pose_goal)
 
         success = move_group.go(wait=True)
         # Calling `stop()` ensures that there is no residual movement
