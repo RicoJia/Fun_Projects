@@ -14,6 +14,8 @@
   <!-- RJ: joint_state_publisher is only launched when we test with fake execution -->
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" if="$(arg fake_execution)">
     <rosparam param="source_list">[move_group/fake_controller_joint_states]</rosparam>
+
+    <!-- we need remapping because gazebo has to be joint_states, and we are remapping joint states for move_group -->
     <remap from="joint_states" to="rjje_arm/joint_states"/>
   </node>
 

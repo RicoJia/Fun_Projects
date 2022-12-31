@@ -32,6 +32,8 @@ test_mqtt(){
     else echo "MQTT test failed"; return 1; fi
 }
 
+# TODO: demo.launch should be deprecated
+DEMO_SCRIPT="demo.launch"
 if [[ ${1} == "gazebo_only" ]]; then
     roslaunch rjje_arm gazebo.launch
 elif [[ ${1} == "rviz_only" ]]; then
@@ -39,14 +41,14 @@ elif [[ ${1} == "rviz_only" ]]; then
 elif [[ ${1} == "gazebo_control" ]]; then
     export BROKER_IP="127.0.0.1"
     test_status=test_mqtt
-    if $test_status == 0; then roslaunch rjje_arm demo.launch run_in_gazebo:=true; 
+    if $test_status == 0; then roslaunch rjje_arm ${DEMO_SCRIPT} run_in_gazebo:=true; 
     else exit 1; fi
 elif [[ ${1} == "rviz_control" ]]; then
-    roslaunch rjje_arm demo.launch fake_execution:=true
+    roslaunch rjje_arm ${DEMO_SCRIPT} fake_execution:=true
 elif [[ ${1} == "real_hardware_control" ]]; then
     export BROKER_IP="100.66.47.29"
     test_mqtt
-    roslaunch rjje_arm demo.launch 
+    roslaunch rjje_arm ${DEMO_SCRIPT} 
 else
     echo "Invalid input args, please check this file for valid args of operations"
 fi
