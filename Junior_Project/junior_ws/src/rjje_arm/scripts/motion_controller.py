@@ -88,14 +88,31 @@ class MotionController:
         self.action_server_arm.start()
         rospy.loginfo("Arm action server started")
 
-        self.action_server_gripper = actionlib.SimpleActionServer('/rjje_gripper_controller/gripper_command', GripperCommandAction, execute_cb=self.process_gripper_action, auto_start=False)    #auto_start is false, so we can start at a later time
+        GRIPPER_ACTION_SERVER_NAME = rospy.get_param("/ACTIONS/GRIPPER_ACTION_SERVER_NAME")
+        self.action_server_gripper = actionlib.SimpleActionServer(GRIPPER_ACTION_SERVER_NAME, GripperCommandAction, execute_cb=self.process_gripper_action, auto_start=False)    #auto_start is false, so we can start at a later time
+        self.gripper_motion_time = rospy.get_param("/PARAMS/GRIPPER_MOTION_TIME")
         self.action_server_gripper.start()
         rospy.loginfo("Gripper action server started")
 
     def process_gripper_action(self, goal): 
+        """
+        Note: 
+        Gripper Action may not be executed at the required time, because
+        there's only one point in the gripper action trajectory. So In gazebo, and 
+        on real hardware, execution time largely depends on its PID controller parameters.
+        Args:
+            goal (GripperCommandGoal): position of the gripper.
+        """
         self.__process_action(GRIPPER_ACTION_SERVER, goal)
 
     def process_arm_action(self, goal): 
+        """
+        Execute an arm trajectory from MoveIt!. Execution time can be roughly the same as
+        specified. One TODO is to smooth out the trajectory by interpolating trajectory waypoints.
+
+        Args:
+            goal (FollowJointTrajectoryGoal): arm trajectory
+        """
         self.__process_action(ARM_ACTION_SERVER, goal)
 
     def __process_action(self, action_server_name: str, goal):
@@ -117,32 +134,37 @@ class MotionController:
         # Send response
         if action_server_name == ARM_ACTION_SERVER:
             action_server = self.action_server_arm
+            # we need joint_state being published
+            if len(self.joint_state_msg.name) == 0:
+                rospy.logwarn(f"failed to execute action since joint msg has not been received")
+                send_reponse(action_server,action_server_name, "ABORTED")
+                return 
+            traj = goal.trajectory
+            num_points = len(traj.points)
+
+            # TODO: potential bug - Assumption: MQTT topics for joint angle exeuction follows the same order as joint_states
+            # trajectory joint_names might be in a different order than joint_states
+            # So we need to publish joints in the same order
+            
+            self.calculate_arm_joint_state_indices(traj)
+            self.publish_mqtt_string(traj)
+            print(self.arm_joint_state_indices)
+            # parse joint_state_indices
+            # send them out 
+            # time it
+            total_time = traj.points[-1].time_from_start.to_sec()
+            rospy.loginfo("Executing plan")
+            time.sleep(total_time)
+            send_reponse(action_server, action_server_name, "SUCCESSFUL")
+            rospy.loginfo("Successful action execution")
         elif action_server_name == GRIPPER_ACTION_SERVER:
             action_server = self.action_server_gripper
+            print(f"Gripper joint position: {goal.command.position}, gripper motion time: {self.gripper_motion_time}")
+            mqtt_string = f"{goal.command.position}; {self.gripper_motion_time}|"
+            self.mqtt_client.publish("esp/hand", mqtt_string)
+            # TODO - actually send gripper command to esp
+            action_server.set_succeeded()
 
-        # we need joint_state being published
-        if len(self.joint_state_msg.name) == 0:
-            rospy.logwarn(f"failed to execute action since joint msg has not been received")
-            send_reponse(action_server,action_server_name, "ABORTED")
-            return 
-        traj = goal.trajectory
-        num_points = len(traj.points)
-
-        # TODO: potential bug - Assumption: MQTT topics for joint angle exeuction follows the same order as joint_states
-        # trajectory joint_names might be in a different order than joint_states
-        # So we need to publish joints in the same order
-        
-        self.calculate_arm_joint_state_indices(traj)
-        self.publish_mqtt_string(traj)
-        print(self.arm_joint_state_indices)
-        # parse joint_state_indices
-        # send them out 
-        # time it
-        total_time = traj.points[-1].time_from_start.to_sec()
-        rospy.loginfo("Executing plan")
-        time.sleep(total_time)
-        send_reponse(action_server, action_server_name, "SUCCESSFUL")
-        rospy.loginfo("Successful action execution")
  
     def publish_mqtt_string(self,traj):
         mqtt_string = ""
@@ -190,9 +212,6 @@ if __name__ == '__main__':
     rospy.loginfo("Broker IP: " + Constants.BROKER_IP)
     mc = MotionController()
     r = rospy.Rate(100)
-    while not rospy.is_shutdown():
-        # mc.update_action_servers()
-
-        r.sleep()
+    rospy.spin()
 
 

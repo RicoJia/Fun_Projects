@@ -1,0 +1,8 @@
+PARAMS:
+  # in seconds
+  GRIPPER_MOTION_TIME: 0.5
+SERVICES:
+  ARM_SERVICE: "/rjje_arm/move_arm"
+  HAND_SERVICE: "/rjje_arm/move_hand"
+ACTIONS:
+  GRIPPER_ACTION_SERVER_NAME: "/rjje_gripper_controller/gripper_command"

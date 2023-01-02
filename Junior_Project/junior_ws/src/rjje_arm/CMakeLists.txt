@@ -7,6 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   message_generation
   std_msgs
+  geometry_msgs
 )
 
 ## Generate messages in the 'msg' folder
@@ -21,6 +22,8 @@ add_service_files(
   FILES
   # MotionControl.srv
   ModeSwitch.srv
+  MoveArm.srv
+  MoveHand.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -34,6 +37,7 @@ add_service_files(
 generate_messages(
   DEPENDENCIES
   std_msgs  
+  geometry_msgs
 )
 
 ################################################
@@ -57,7 +61,7 @@ generate_messages(
 # )
 
 catkin_package(
- DEPENDS message_runtime std_msgs
+ DEPENDS message_runtime std_msgs geometry_msgs
 )
 
 ###########
