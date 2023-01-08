@@ -98,9 +98,12 @@
     <remap from="joint_states" to="rjje_arm/joint_states"/>
   </node>
 
+<!-- ============================== Custom Moveit Command code ================================== -->
+<rosparam file="$(find rjje_arm)/config/rjje_arm_resource_registry.yaml"/>
+<node name="rjje_arm_move_group" type="rjje_arm_move_group.py" pkg="rjje_arm" output="screen" unless="$(arg fake_execution)" ns="rjje_arm"/>
+
 <!-- ============================== Motion Controller ================================== -->
 <!-- custom params for downstream nodes -->
-<rosparam file="$(find rjje_arm)/config/rjje_arm_resource_registry.yaml"/>
 <!-- Given the published joint states, publish tf for the robot links (gazebo.launch has its onw robot_state_publisher)-->
 <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" unless="$(arg run_in_gazebo)"/>
 <node name="motion_controller" type="motion_controller.py" pkg="rjje_arm" output="screen" unless="$(arg fake_execution)" ns="rjje_arm">

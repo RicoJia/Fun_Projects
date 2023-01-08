@@ -54,6 +54,7 @@ Juniors Main components include:
 ========================================================================
 1. Moveit tool Overhaul
     - Make a custom moveit interface (3 days)
+    - Code clean up
 
 2. Change motors (2 days)
     - add one state on ESP32:
@@ -73,6 +74,8 @@ Juniors Main components include:
 ## TODO List 
 1. Potential bugs and improvements
     1. motion_controller.py: Assumption: MQTT topics for joint angle exeuction follows the same order as joint_states (low priority)
+    2. Grasping: deep learning based?
+    3. Trajectory execution: can apply a smoothing function to the trajectory waypoints
 
 2. DL Questions
     1. Structure of YOLO 
