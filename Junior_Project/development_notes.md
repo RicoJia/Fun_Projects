@@ -52,9 +52,9 @@ Juniors Main components include:
 ========================================================================
 ## Roadmap 
 ========================================================================
-1. Moveit tool Overhaul
-    - Make a custom moveit interface (3 days)
-    - Code clean up
+1. Moveit tool Overhaul 
+    - Make a custom moveit interface (3 days, D)
+    - Code clean up (1 day)
 
 2. Change motors (2 days)
     - add one state on ESP32:
@@ -65,6 +65,7 @@ Juniors Main components include:
     - Bring the robot back to original state (same hardware)
     - Change wheels, test
         - Change code for the 4x4
+
 5. Mount arms
     - Try with battery pack
 
