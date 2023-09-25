@@ -1,4 +1,5 @@
 # The Junior Project
+
 ## Introduction 
 Junior is a mobile collaborative robot that can:
     - Deliver Coffee, which will be the default mode without the arm 
@@ -126,6 +127,12 @@ Juniors Main components include:
     - Arm: 
         - Elephant Robotics
             - myPalletizer
+
+    - Chassis: 
+        1. [Wave Share Expandable UGV](https://www.waveshare.com/product/robotics/mobile-robots/ugv02.htm?sku=25076)
+            1. 252×230
+        2. [My AGV](https://docs.elephantrobotics.com/docs/gitbook-en/2-serialproduct/2.5-myAGV.html)
+            1. 311 x 236
 
 ## Done
 1. Gazebo & Motion Planning (D)
