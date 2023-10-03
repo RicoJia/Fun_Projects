@@ -1,0 +1,75 @@
+/* MobileRobot.css */
+.mobile-robot-container {
+  display: flex;
+  border: 2px solid #00f0ff;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  color: #00f0ff;
+}
+
+.image-window {
+  display: flex;
+  border-right: 2px solid #00f0ff;
+  justify-content: center;
+  align-items: center;
+}
+
+.image{
+    height: 20vh;
+}
+
+.control-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+}
+
+.column {
+  flex: 1;
+  text-align: center;
+}
+
+.icon-column {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;  /* optional: for rounded corners */
+    padding: 10px;  /* optional: for some spacing around the icon */
+}
+
+.green-icon{
+    background-color: #13c213; 
+}
+
+.black-icon{
+    background-color: #0d0f0d; 
+}
+
+.update-header-font {
+    font-size: 1.2em;
+    color: #00f0ff;
+    text-shadow: 0 0 10px #0400ff, 0 0 20px #00ff59, 0 0 30px #032325, 0 0 40px #ff00de, 0 0 70px #ff00de, 0 0 80px #ff00de, 0 0 100px #ff00de;
+    margin-bottom: 10px;
+}
+
+.update-value-font {
+    font-family: 'Orbitron', sans-serif;  /* Orbitron is a sci-fi styled font */
+    font-size: 1.5em;
+    color: #00f0ff;
+    text-shadow: 
+        0 0 10px #032528, 
+        0 0 20px #021b1d, 
+        0 0 30px #03292c, 
+        0 0 40px #ff00de, 
+        0 0 70px #ff00de, 
+        0 0 80px #ff00de, 
+        0 0 100px #ff00de;
+    letter-spacing: 2px;
+}
