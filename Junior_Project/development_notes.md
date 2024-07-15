@@ -112,6 +112,10 @@ Juniors Main components include:
             - replay the right commanded angles
             - move_joints
 
+### Robot Wishlist
+- irobot create 3 ZagrosRobotics, $380?? Nvidia Jetson Nano has GPU
+- robot arm: ar4 ($1200) SmallRobotArm? 
+
 ## Tmp - [BOM](https://docs.google.com/spreadsheets/d/1E54WXbF1ZFw96C1kWT-nc_feYRRSePSamz8Ig8BraOA/edit?usp=sharing)
 1. V2 We are still going to finish up the prototype, with all software setup. 
     - 3D printed platform 
